@@ -98,32 +98,29 @@ function CategoriesPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-6">
-          <Card variant="flat" className="shadow-elevation-0 bg-white border-0">
-            <CardHeader
-              title="الفئات"
-              subtitle="إدارة وإضافة الفئات في النظام"
-              action={
-                <Button
-                  onClick={() => {
-                    setEditingCategory(null);
-                    setFormData(new BaseModel({ name: '', description: '', notes: '' }));
-                    setIsModalOpen(true);
-                  }}
-                  leftIcon={<PlusIcon className="w-5 h-5" />}
-                  size="md"
-                >
-                  إضافة فئة جديدة
-                </Button>
-              }
-            />
-          </Card>
+      {/* Page Header */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-secondary-900 mb-2">الفئات</h1>
+            <p className="text-secondary-600 text-base">إدارة وإضافة الفئات في النظام</p>
+          </div>
+          <Button
+            onClick={() => {
+              setEditingCategory(null);
+              setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+              setIsModalOpen(true);
+            }}
+            leftIcon={<PlusIcon className="w-5 h-5" />}
+            size="lg"
+          >
+            إضافة فئة جديدة
+          </Button>
         </div>
+      </div>
 
-        {/* Data Table Card */}
-        <Card variant="elevated" className="shadow-elevation-2">
+      {/* Data Table Card */}
+      <Card variant="elevated" className="shadow-elevation-4 border-0">
           <CardBody padding="none">
             <DataTable
               data={categories}

@@ -49,8 +49,8 @@ export function DataTable({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-elevation-2 overflow-hidden animate-fade-in">
-      <div className="p-4 lg:p-6 border-b border-secondary-200 bg-secondary-50">
+    <div className="bg-white rounded-xl shadow-elevation-4 overflow-hidden animate-fade-in border-0">
+      <div className="p-5 lg:p-6 border-b border-secondary-100 bg-gradient-to-r from-secondary-50 to-white">
         <div className="max-w-md">
           <Input
             type="text"
@@ -58,7 +58,7 @@ export function DataTable({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             leftIcon={<SearchIcon className="w-4 h-4" />}
-            className="bg-white"
+            className="bg-white shadow-elevation-1"
           />
         </div>
       </div>
@@ -66,19 +66,19 @@ export function DataTable({
         <div className="inline-block min-w-full align-middle">
           <div className="overflow-hidden">
             {/* Desktop Table */}
-            <table className="hidden md:table min-w-full divide-y divide-secondary-100">
-              <thead className="bg-white border-b-2 border-secondary-200">
+            <table className="hidden md:table min-w-full">
+              <thead className="bg-gradient-to-r from-secondary-50 to-white border-b-2 border-secondary-200">
                 <tr>
                   {columns.map((col) => (
                     <th
                       key={String(col.key)}
-                      className="px-6 py-4 text-right text-xs font-semibold text-secondary-700 uppercase tracking-wider"
+                      className="px-6 py-4 text-right text-xs font-bold text-secondary-800 uppercase tracking-wider"
                     >
                       {col.label}
                     </th>
                   ))}
                   {(onEdit || onDelete) && (
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-secondary-700 uppercase tracking-wider w-32">
+                    <th className="px-6 py-4 text-right text-xs font-bold text-secondary-800 uppercase tracking-wider w-40">
                       الإجراءات
                     </th>
                   )}
@@ -112,7 +112,7 @@ export function DataTable({
                       {columns.map((col) => (
                         <td
                           key={col.key}
-                          className="px-6 py-4 text-sm text-secondary-900 font-normal"
+                          className="px-6 py-4 text-sm text-secondary-900 font-medium"
                         >
                           <div className="truncate max-w-xs">
                             {col.render ? col.render(item) : String(item.get(col.key) || "-")}
@@ -121,7 +121,7 @@ export function DataTable({
                       ))}
                       {(onEdit || onDelete) && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2 justify-end">
+                          <div className="flex items-center gap-3 justify-end">
                             {onEdit && (
                               <Button
                                 variant="ghost"
@@ -222,9 +222,9 @@ export function DataTable({
         </div>
       </div>
       {filteredData.length > 0 && (
-        <div className="px-6 py-4 bg-secondary-50 border-t border-secondary-200">
-          <p className="text-sm text-secondary-600 text-right font-medium">
-            عرض <span className="font-semibold text-secondary-900">{filteredData.length}</span> من <span className="font-semibold text-secondary-900">{data.length}</span> عنصر
+        <div className="px-6 py-4 bg-gradient-to-r from-secondary-50 to-white border-t border-secondary-200">
+          <p className="text-sm text-secondary-700 text-right font-semibold">
+            عرض <span className="text-primary-600 font-bold">{filteredData.length}</span> من <span className="text-primary-600 font-bold">{data.length}</span> عنصر
           </p>
         </div>
       )}

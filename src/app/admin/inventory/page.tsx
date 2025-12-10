@@ -347,16 +347,16 @@ function InventoryPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-6">
-          <Card variant="flat" className="shadow-elevation-0 bg-white border-0">
-            <CardHeader title="الجرد" subtitle="إدارة دورات الجرد وعناصر الجرد" />
-          </Card>
+      {/* Page Header */}
+      <div className="mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">الجرد</h1>
+          <p className="text-secondary-600 text-base">إدارة دورات الجرد وعناصر الجرد</p>
         </div>
+      </div>
 
-        {/* Content Card */}
-        <Card variant="elevated" className="mb-6 shadow-elevation-2">
+      {/* Content Card */}
+      <Card variant="elevated" className="mb-6 shadow-elevation-4 border-0">
           <CardBody padding="md">
             <Tabs
               tabs={[

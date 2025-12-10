@@ -79,26 +79,23 @@ export default function HomePage() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-6">
-          <Card variant="flat" className="shadow-elevation-0 bg-white border-0">
-            <CardHeader 
-              title="لوحة التحكم" 
-              subtitle="نظرة شاملة على النظام"
-            />
-          </Card>
+      {/* Page Header */}
+      <div className="mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">لوحة التحكم</h1>
+          <p className="text-secondary-600 text-base">نظرة شاملة على النظام</p>
         </div>
+      </div>
 
         {!user && (
-          <Card variant="outlined" className="mb-4 sm:mb-6 border-warning-500 bg-warning-50 shadow-elevation-1">
-            <CardBody padding="md">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                <p className="text-warning-800 font-medium text-sm sm:text-base">يرجى تسجيل الدخول للوصول إلى النظام</p>
+          <Card variant="outlined" className="mb-8 border-warning-500 bg-gradient-to-r from-warning-50 to-warning-100/50 shadow-elevation-2">
+            <CardBody padding="lg">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <p className="text-warning-800 font-semibold text-base">يرجى تسجيل الدخول للوصول إلى النظام</p>
                 <a href="/login" className="w-full sm:w-auto">
                   <Button
                     variant="primary"
-                    size="md"
+                    size="lg"
                     className="w-full sm:w-auto"
                   >
                     تسجيل الدخول
@@ -109,51 +106,51 @@ export default function HomePage() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-          <Card hover variant="elevated" className="material-transition">
-            <CardBody padding="md">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm text-secondary-600 mb-1 sm:mb-2">الإدارات</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-secondary-900 truncate">{stats.departments}</p>
+                  <p className="text-sm font-medium text-secondary-600 mb-2">الإدارات</p>
+                  <p className="text-3xl font-bold text-secondary-900 truncate">{stats.departments}</p>
                 </div>
-                <div className="text-3xl sm:text-4xl flex-shrink-0 mr-2 sm:mr-0">🏢</div>
+                <div className="text-4xl flex-shrink-0">🏢</div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated" className="material-transition">
-            <CardBody padding="md">
+          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm text-secondary-600 mb-1 sm:mb-2">المكاتب</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-secondary-900 truncate">{stats.offices}</p>
+                  <p className="text-sm font-medium text-secondary-600 mb-2">المكاتب</p>
+                  <p className="text-3xl font-bold text-secondary-900 truncate">{stats.offices}</p>
                 </div>
-                <div className="text-3xl sm:text-4xl flex-shrink-0 mr-2 sm:mr-0">🚪</div>
+                <div className="text-4xl flex-shrink-0">🚪</div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated" className="material-transition">
-            <CardBody padding="md">
+          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm text-secondary-600 mb-1 sm:mb-2">الأصول</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-secondary-900 truncate">{stats.assets}</p>
+                  <p className="text-sm font-medium text-secondary-600 mb-2">الأصول</p>
+                  <p className="text-3xl font-bold text-secondary-900 truncate">{stats.assets}</p>
                 </div>
-                <div className="text-3xl sm:text-4xl flex-shrink-0 mr-2 sm:mr-0">💼</div>
+                <div className="text-4xl flex-shrink-0">💼</div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated" className="material-transition">
-            <CardBody padding="md">
+          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm text-secondary-600 mb-1 sm:mb-2">المستخدمون</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-secondary-900 truncate">{stats.users}</p>
+                  <p className="text-sm font-medium text-secondary-600 mb-2">المستخدمون</p>
+                  <p className="text-3xl font-bold text-secondary-900 truncate">{stats.users}</p>
                 </div>
-                <div className="text-3xl sm:text-4xl flex-shrink-0 mr-2 sm:mr-0">👥</div>
+                <div className="text-4xl flex-shrink-0">👥</div>
               </div>
             </CardBody>
           </Card>

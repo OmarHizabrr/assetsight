@@ -138,13 +138,13 @@ function ReportsPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-6">
-          <Card variant="flat" className="shadow-elevation-0 bg-white border-0">
-            <CardHeader title="التقارير والإحصائيات" subtitle="نظرة شاملة على بيانات الأصول" />
-          </Card>
+      {/* Page Header */}
+      <div className="mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">التقارير والإحصائيات</h1>
+          <p className="text-secondary-600 text-base">نظرة شاملة على بيانات الأصول</p>
         </div>
+      </div>
 
         {/* إحصائيات عامة */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">

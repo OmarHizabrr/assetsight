@@ -29,8 +29,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-secondary-50">
       {/* Header */}
-      <header className="bg-white shadow-elevation-2 border-b border-secondary-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-white shadow-elevation-2 border-b border-secondary-200 sticky top-0 z-40 backdrop-blur-sm bg-white/95">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
               <button
@@ -75,24 +75,24 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <aside
           className={`${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 sm:w-72 bg-white shadow-elevation-4 border-r border-secondary-200 transform material-transition lg:transition-none`}
+          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 sm:w-72 bg-white/95 backdrop-blur-md shadow-elevation-4 border-r border-secondary-200/50 transform material-transition lg:transition-none`}
         >
-          <nav className="h-full overflow-y-auto py-4">
-            <ul className="space-y-1 px-2 sm:px-3">
+          <nav className="h-full overflow-y-auto py-6">
+            <ul className="space-y-2 px-3">
               {menuItems.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-md material-transition text-sm sm:text-base ripple ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg material-transition text-sm font-medium ripple ${
                       pathname === item.href
-                        ? 'bg-primary-100 text-primary-700 font-medium border-r-4 border-primary-600'
-                        : 'text-secondary-700 hover:bg-secondary-100 hover:text-secondary-900'
+                        ? 'bg-primary-600 text-white shadow-elevation-2'
+                        : 'text-secondary-700 hover:bg-primary-50 hover:text-primary-700'
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >
                     <span className="flex-shrink-0">
                       {typeof item.icon === 'string' ? (
-                        <span className="text-base sm:text-lg">{item.icon}</span>
+                        <span className="text-lg">{item.icon}</span>
                       ) : (
                         <span className="w-5 h-5">{item.icon}</span>
                       )}
@@ -114,9 +114,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 lg:mr-64 xl:mr-72 min-h-[calc(100vh-4rem)] w-full bg-secondary-50">
-          <div className="h-full w-full py-6 lg:py-8">
-            {children}
+        <main className="flex-1 lg:mr-64 xl:mr-72 min-h-[calc(100vh-4rem)] w-full bg-gradient-to-br from-secondary-50 via-white to-secondary-50">
+          <div className="h-full w-full">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-10">
+              {children}
+            </div>
           </div>
         </main>
       </div>

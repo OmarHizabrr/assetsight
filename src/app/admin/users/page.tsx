@@ -176,42 +176,39 @@ function UsersPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-6">
-          <Card variant="flat" className="shadow-elevation-0 bg-white border-0">
-            <CardHeader
-              title="المستخدمون"
-              subtitle="إدارة وإضافة المستخدمين في النظام"
-              action={
-                <Button
-                  onClick={() => {
-                    setEditingUser(null);
-                    setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', is_active: true, notes: '' }));
-                    setIsModalOpen(true);
-                  }}
-                  leftIcon={<PlusIcon className="w-5 h-5" />}
-                  size="md"
-                >
-                  إضافة مستخدم جديد
-                </Button>
-              }
-            />
-          </Card>
+      {/* Page Header */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-secondary-900 mb-2">المستخدمون</h1>
+            <p className="text-secondary-600 text-base">إدارة وإضافة المستخدمين في النظام</p>
+          </div>
+          <Button
+            onClick={() => {
+              setEditingUser(null);
+              setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', is_active: true, notes: '' }));
+              setIsModalOpen(true);
+            }}
+            leftIcon={<PlusIcon className="w-5 h-5" />}
+            size="lg"
+          >
+            إضافة مستخدم جديد
+          </Button>
         </div>
+      </div>
 
-        {/* Data Table Card */}
-        <Card variant="elevated" className="shadow-elevation-2">
-          <CardBody padding="none">
-            <DataTable
-              data={users}
-              columns={columns}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              loading={loading}
-            />
-          </CardBody>
-        </Card>
+      {/* Data Table Card */}
+      <Card variant="elevated" className="shadow-elevation-4 border-0">
+        <CardBody padding="none">
+          <DataTable
+            data={users}
+            columns={columns}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            loading={loading}
+          />
+        </CardBody>
+      </Card>
 
         <Modal
           isOpen={isModalOpen}
