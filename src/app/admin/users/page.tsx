@@ -1,9 +1,15 @@
 'use client';
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { PlusIcon } from "@/components/icons";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/Button";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable } from "@/components/ui/DataTable";
+import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
+import { Select } from "@/components/ui/Select";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { useEffect, useState } from "react";
@@ -230,28 +236,38 @@ function UsersPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">المستخدمون</h1>
-          <button
-            onClick={() => {
-              setEditingUser(null);
-              setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', is_active: true, notes: '' }));
-              setIsModalOpen(true);
-            }}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-          >
-            إضافة مستخدم جديد
-          </button>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card variant="flat" className="mb-6">
+          <CardHeader
+            title="المستخدمون"
+            subtitle="إدارة وإضافة المستخدمين في النظام"
+            action={
+              <Button
+                onClick={() => {
+                  setEditingUser(null);
+                  setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', is_active: true, notes: '' }));
+                  setIsModalOpen(true);
+                }}
+                leftIcon={<PlusIcon className="w-5 h-5" />}
+                size="md"
+              >
+                إضافة مستخدم جديد
+              </Button>
+            }
+          />
+        </Card>
 
-        <DataTable
-          data={users}
-          columns={columns}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          loading={loading}
-        />
+        <Card>
+          <CardBody padding="none">
+            <DataTable
+              data={users}
+              columns={columns}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              loading={loading}
+            />
+          </CardBody>
+        </Card>
 
         <Modal
           isOpen={isModalOpen}
@@ -261,130 +277,100 @@ function UsersPageContent() {
             setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', is_active: true, notes: '' }));
           }}
           title={editingUser ? "تعديل مستخدم" : "إضافة مستخدم جديد"}
+          size="lg"
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  اسم المستخدم <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.get('username')}
-                  onChange={(e) => {
-                    const newData = new BaseModel(formData.getData());
-                    newData.put('username', e.target.value);
-                    setFormData(newData);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  الاسم الكامل <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.get('full_name')}
-                  onChange={(e) => {
-                    const newData = new BaseModel(formData.getData());
-                    newData.put('full_name', e.target.value);
-                    setFormData(newData);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
+              <Input
+                label="اسم المستخدم"
+                type="text"
+                required
+                value={formData.get('username')}
+                onChange={(e) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('username', e.target.value);
+                  setFormData(newData);
+                }}
+                placeholder="أدخل اسم المستخدم"
+              />
+              <Input
+                label="الاسم الكامل"
+                type="text"
+                required
+                value={formData.get('full_name')}
+                onChange={(e) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('full_name', e.target.value);
+                  setFormData(newData);
+                }}
+                placeholder="أدخل الاسم الكامل"
+              />
             </div>
+
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  البريد الإلكتروني
-                </label>
-                <input
-                  type="email"
-                  value={formData.get('email')}
-                  onChange={(e) => {
-                    const newData = new BaseModel(formData.getData());
-                    newData.put('email', e.target.value);
-                    setFormData(newData);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  الهاتف
-                </label>
-                <input
-                  type="tel"
-                  value={formData.get('phone')}
-                  onChange={(e) => {
-                    const newData = new BaseModel(formData.getData());
-                    newData.put('phone', e.target.value);
-                    setFormData(newData);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
+              <Input
+                label="البريد الإلكتروني"
+                type="email"
+                value={formData.get('email')}
+                onChange={(e) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('email', e.target.value);
+                  setFormData(newData);
+                }}
+                placeholder="example@email.com"
+              />
+              <Input
+                label="الهاتف"
+                type="tel"
+                value={formData.get('phone')}
+                onChange={(e) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('phone', e.target.value);
+                  setFormData(newData);
+                }}
+                placeholder="أدخل رقم الهاتف"
+              />
             </div>
+
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  المكتب
-                </label>
-                <select
-                  value={formData.get('office_id')}
-                  onChange={(e) => {
-                    const newData = new BaseModel(formData.getData());
-                    newData.put('office_id', e.target.value);
-                    setFormData(newData);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">اختر المكتب</option>
-                  {offices.map((office) => (
-                    <option key={office.get('id')} value={office.get('id')}>
-                      {office.get('name')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  الدور
-                </label>
-                <input
-                  type="text"
-                  value={formData.get('role')}
-                  onChange={(e) => {
-                    const newData = new BaseModel(formData.getData());
-                    newData.put('role', e.target.value);
-                    setFormData(newData);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  placeholder="مثل: مدير، موظف، إلخ"
-                />
-              </div>
+              <Select
+                label="المكتب"
+                value={formData.get('office_id')}
+                onChange={(e) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('office_id', e.target.value);
+                  setFormData(newData);
+                }}
+                options={offices.map((office) => ({
+                  value: office.get('id'),
+                  label: office.get('name'),
+                }))}
+              />
+              <Input
+                label="الدور"
+                type="text"
+                value={formData.get('role')}
+                onChange={(e) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('role', e.target.value);
+                  setFormData(newData);
+                }}
+                placeholder="مثل: مدير، موظف، إلخ"
+              />
             </div>
+
+            <Checkbox
+              label="نشط"
+              checked={formData.getValue<boolean>('is_active') === true || formData.getValue<number>('is_active') === 1}
+              onChange={(e) => {
+                const newData = new BaseModel(formData.getData());
+                newData.put('is_active', e.target.checked);
+                setFormData(newData);
+              }}
+            />
+
             <div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.getValue<boolean>('is_active') === true || formData.getValue<number>('is_active') === 1}
-                  onChange={(e) => {
-                    const newData = new BaseModel(formData.getData());
-                    newData.put('is_active', e.target.checked);
-                    setFormData(newData);
-                  }}
-                  className="ml-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <span className="text-sm text-gray-700">نشط</span>
-              </label>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
                 الملاحظات
               </label>
               <textarea
@@ -395,23 +381,27 @@ function UsersPageContent() {
                   setFormData(newData);
                 }}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="أدخل أي ملاحظات إضافية"
+                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
-            <div className="flex justify-end space-x-2 space-x-reverse pt-4">
-              <button
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-200">
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                size="md"
               >
                 إلغاء
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+                variant="primary"
+                size="md"
               >
-                حفظ
-              </button>
+                {editingUser ? "تحديث" : "حفظ"}
+              </Button>
             </div>
           </form>
         </Modal>

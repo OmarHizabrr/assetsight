@@ -1,8 +1,12 @@
 'use client';
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { PlusIcon } from "@/components/icons";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/Button";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/DataTable";
+import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
@@ -100,28 +104,38 @@ function AssetTypesPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">أنواع الأصول</h1>
-          <button
-            onClick={() => {
-              setEditingAssetType(null);
-              setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
-              setIsModalOpen(true);
-            }}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-          >
-            إضافة نوع جديد
-          </button>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card variant="flat" className="mb-6">
+          <CardHeader
+            title="أنواع الأصول"
+            subtitle="إدارة وإضافة أنواع الأصول في النظام"
+            action={
+              <Button
+                onClick={() => {
+                  setEditingAssetType(null);
+                  setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
+                  setIsModalOpen(true);
+                }}
+                leftIcon={<PlusIcon className="w-5 h-5" />}
+                size="md"
+              >
+                إضافة نوع جديد
+              </Button>
+            }
+          />
+        </Card>
 
-        <DataTable
-          data={assetTypes}
-          columns={columns}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          loading={loading}
-        />
+        <Card>
+          <CardBody padding="none">
+            <DataTable
+              data={assetTypes}
+              columns={columns}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              loading={loading}
+            />
+          </CardBody>
+        </Card>
 
         <Modal
           isOpen={isModalOpen}
@@ -131,41 +145,36 @@ function AssetTypesPageContent() {
             setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
           }}
           title={editingAssetType ? "تعديل نوع الأصل" : "إضافة نوع جديد"}
+          size="md"
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <Input
+              label="اسم نوع الأصل"
+              type="text"
+              required
+              value={formData.get('name')}
+              onChange={(e) => {
+                const newData = new BaseModel(formData.getData());
+                newData.put('name', e.target.value);
+                setFormData(newData);
+              }}
+              placeholder="أدخل اسم نوع الأصل"
+            />
+
+            <Input
+              label="الفئة"
+              type="text"
+              value={formData.get('category')}
+              onChange={(e) => {
+                const newData = new BaseModel(formData.getData());
+                newData.put('category', e.target.value);
+                setFormData(newData);
+              }}
+              placeholder="أدخل الفئة"
+            />
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                اسم نوع الأصل <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.get('name')}
-                onChange={(e) => {
-                  const newData = new BaseModel(formData.getData());
-                  newData.put('name', e.target.value);
-                  setFormData(newData);
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                الفئة
-              </label>
-              <input
-                type="text"
-                value={formData.get('category')}
-                onChange={(e) => {
-                  const newData = new BaseModel(formData.getData());
-                  newData.put('category', e.target.value);
-                  setFormData(newData);
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
                 الوصف
               </label>
               <textarea
@@ -176,11 +185,13 @@ function AssetTypesPageContent() {
                   setFormData(newData);
                 }}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="أدخل وصف نوع الأصل"
+                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
                 الملاحظات
               </label>
               <textarea
@@ -191,23 +202,27 @@ function AssetTypesPageContent() {
                   setFormData(newData);
                 }}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="أدخل أي ملاحظات إضافية"
+                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
-            <div className="flex justify-end space-x-2 space-x-reverse pt-4">
-              <button
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-200">
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                size="md"
               >
                 إلغاء
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+                variant="primary"
+                size="md"
               >
-                حفظ
-              </button>
+                {editingAssetType ? "تحديث" : "حفظ"}
+              </Button>
             </div>
           </form>
         </Modal>
