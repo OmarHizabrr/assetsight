@@ -57,12 +57,12 @@ function convertTimestampToString(value: unknown): string {
  * أمثلة المسارات:
  * - departments/departmentId/
  * - departments/departmentId/departments/departmentId/departments/officeId/
- * - departments/departmentId/departments/officeId/departments/officeId/departments/users/userId/
  * - departments/departmentId/departments/departmentId/departments/cycleId/
  * - departments/departmentId/departments/cycleId/departments/cycleId/departments/inventoryItems/itemId/
  * - assets/assetId/
  * - assets/assetId/assets/assetId/assets/assetAttachments/attachmentId/
  * - assets/assetId/assets/assetId/assets/assetHistory/historyId/
+ * - users/userId/ (جدول مستقل)
  */
 export class FirestoreApi {
   // === Singleton ===
@@ -152,7 +152,6 @@ export class FirestoreApi {
    * إرجاع مرجع لحلقة فرعية متعددة المستويات
    * collectionName/documentId/subCollectionName/subDocumentId/subCollectionName/subDocumentId/nestedSubCollectionName/
    * 
-   * مثال: departments/departmentId/departments/officeId/departments/officeId/departments/users/
    * مثال: departments/departmentId/departments/cycleId/departments/cycleId/departments/inventoryItems/
    */
   getNestedSubCollection(
@@ -178,7 +177,7 @@ export class FirestoreApi {
    * إرجاع مرجع لمستند داخل حلقة فرعية متعددة المستويات
    * collectionName/documentId/subCollectionName/subDocumentId/subCollectionName/subDocumentId/nestedSubCollectionName/nestedDocumentId
    * 
-   * مثال: departments/departmentId/departments/officeId/departments/officeId/departments/users/userId
+   * مثال: departments/departmentId/departments/cycleId/departments/cycleId/departments/inventoryItems/itemId
    */
   getNestedSubDocument(
     collectionName: string,
