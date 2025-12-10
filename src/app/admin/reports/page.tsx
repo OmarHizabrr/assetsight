@@ -1,0 +1,238 @@
+'use client';
+
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { BaseModel } from "@/lib/BaseModel";
+import { firestoreApi } from "@/lib/FirestoreApi";
+import { useEffect, useState } from "react";
+
+function ReportsPageContent() {
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalAssets: 0,
+    totalValue: 0,
+    activeAssets: 0,
+    departments: 0,
+    offices: 0,
+  });
+  const [assetsByStatus, setAssetsByStatus] = useState<{ status: string; count: number }[]>([]);
+  const [assetsByDepartment, setAssetsByDepartment] = useState<{ department: string; count: number }[]>([]);
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const loadReports = async () => {
+    try {
+      setLoading(true);
+      // جلب البيانات الأساسية
+      const [assetDocs, deptDocs, statusDocs] = await Promise.all([
+        firestoreApi.getDocuments(firestoreApi.getCollection("assets")),
+        firestoreApi.getDocuments(firestoreApi.getCollection("departments")),
+        firestoreApi.getDocuments(firestoreApi.getCollection("assetStatuses")),
+      ]);
+
+      const assets = BaseModel.fromFirestoreArray(assetDocs);
+      const departments = BaseModel.fromFirestoreArray(deptDocs);
+      const statuses = BaseModel.fromFirestoreArray(statusDocs);
+
+      // جلب جميع المكاتب من جميع الإدارات
+      const allOffices: BaseModel[] = [];
+      for (const dept of departments) {
+        const deptId = dept.get('id');
+        if (deptId) {
+          const subCollectionRef = firestoreApi.getSubCollection("departments", deptId, "departments");
+          const officeDocs = await firestoreApi.getDocuments(subCollectionRef);
+          const offices = BaseModel.fromFirestoreArray(officeDocs);
+          offices.forEach(office => {
+            office.put('department_id', deptId);
+            allOffices.push(office);
+          });
+        }
+      }
+
+      // حساب الإحصائيات الأساسية
+      const totalAssets = assets.length;
+      const totalValue = assets.reduce((sum, asset) => {
+        const currentValue = asset.getValue<number>('current_value') || 0;
+        const purchaseValue = asset.getValue<number>('purchase_value') || 0;
+        return sum + (currentValue || purchaseValue);
+      }, 0);
+      const activeAssets = assets.filter(a => {
+        const isActive = a.getValue<number>('is_active') === 1 || a.getValue<boolean>('is_active') === true;
+        return isActive;
+      }).length;
+
+      // الأصول حسب الحالة
+      const statusCounts: { [key: string]: number } = {};
+      assets.forEach(asset => {
+        const statusId = asset.get('status_id');
+        if (statusId) {
+          statusCounts[statusId] = (statusCounts[statusId] || 0) + 1;
+        }
+      });
+      const assetsByStatusData = statuses
+        .map(status => ({
+          status: status.get('name') || 'غير محدد',
+          count: statusCounts[status.get('id') || ''] || 0,
+        }))
+        .filter(item => item.count > 0)
+        .sort((a, b) => b.count - a.count);
+
+      // الأصول حسب الإدارة (من خلال المكاتب)
+      const officeToDept: { [key: string]: string } = {};
+      allOffices.forEach(office => {
+        const deptId = office.get('department_id');
+        const officeId = office.get('id');
+        if (deptId && officeId) {
+          officeToDept[officeId] = deptId;
+        }
+      });
+
+      const deptCounts: { [key: string]: number } = {};
+      assets.forEach(asset => {
+        const officeId = asset.get('location_office_id');
+        if (officeId && officeToDept[officeId]) {
+          const deptId = officeToDept[officeId];
+          deptCounts[deptId] = (deptCounts[deptId] || 0) + 1;
+        }
+      });
+      const assetsByDepartmentData = departments
+        .map(dept => ({
+          department: dept.get('name') || 'غير محدد',
+          count: deptCounts[dept.get('id') || ''] || 0,
+        }))
+        .filter(item => item.count > 0)
+        .sort((a, b) => b.count - a.count);
+
+      setStats({
+        totalAssets,
+        totalValue,
+        activeAssets,
+        departments: departments.length,
+        offices: allOffices.length,
+      });
+      setAssetsByStatus(assetsByStatusData);
+      setAssetsByDepartment(assetsByDepartmentData);
+    } catch (error) {
+      console.error("Error loading reports:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">التقارير والإحصائيات</h1>
+
+        {/* إحصائيات عامة */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">إجمالي الأصول</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.totalAssets}</p>
+              </div>
+              <div className="text-4xl">💼</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">القيمة الإجمالية</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {stats.totalValue.toLocaleString('ar-SA')}
+                </p>
+              </div>
+              <div className="text-4xl">💰</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">أصول نشطة</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.activeAssets}</p>
+              </div>
+              <div className="text-4xl">✅</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">الإدارات</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.departments}</p>
+              </div>
+              <div className="text-4xl">🏢</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">المكاتب</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.offices}</p>
+              </div>
+              <div className="text-4xl">🚪</div>
+            </div>
+          </div>
+        </div>
+
+        {/* الأصول حسب الحالة */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">الأصول حسب الحالة</h2>
+          {assetsByStatus.length === 0 ? (
+            <p className="text-gray-500">لا توجد بيانات</p>
+          ) : (
+            <div className="space-y-3">
+              {assetsByStatus.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="font-medium text-gray-700">{item.status}</span>
+                  <span className="text-lg font-bold text-primary-600">{item.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* الأصول حسب الإدارة */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">الأصول حسب الإدارة</h2>
+          {assetsByDepartment.length === 0 ? (
+            <p className="text-gray-500">لا توجد بيانات</p>
+          ) : (
+            <div className="space-y-3">
+              {assetsByDepartment.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="font-medium text-gray-700">{item.department}</span>
+                  <span className="text-lg font-bold text-primary-600">{item.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
+
+export default function ReportsPage() {
+  return (
+    <ProtectedRoute>
+      <ReportsPageContent />
+    </ProtectedRoute>
+  );
+}
