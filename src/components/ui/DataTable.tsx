@@ -2,6 +2,9 @@
 
 import { BaseModel } from "@/lib/BaseModel";
 import { useState } from "react";
+import { DeleteIcon, EditIcon, SearchIcon } from "../icons";
+import { Button } from "./Button";
+import { Input } from "./Input";
 
 interface Column {
   key: string;
@@ -36,78 +39,103 @@ export function DataTable({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center h-64 animate-fade-in">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600"></div>
+          <p className="text-secondary-600 text-sm">جاري التحميل...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="p-4 border-b border-gray-200">
-        <input
+    <div className="bg-white rounded-xl shadow-soft border border-secondary-100 overflow-hidden animate-fade-in">
+      <div className="p-4 border-b border-secondary-200 bg-secondary-50">
+        <Input
           type="text"
-          placeholder="بحث..."
+          placeholder="بحث في الجدول..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          leftIcon={<SearchIcon className="w-4 h-4" />}
+          className="bg-white"
         />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-secondary-50 border-b border-secondary-200">
             <tr>
               {columns.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-4 text-right text-xs font-semibold text-secondary-700 uppercase tracking-wider"
                 >
                   {col.label}
                 </th>
               ))}
               {(onEdit || onDelete) && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-right text-xs font-semibold text-secondary-700 uppercase tracking-wider">
                   الإجراءات
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-secondary-100">
             {filteredData.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
-                  className="px-6 py-4 text-center text-gray-500"
+                  className="px-6 py-12 text-center"
                 >
-                  لا توجد بيانات
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-16 h-16 rounded-full bg-secondary-100 flex items-center justify-center">
+                      <SearchIcon className="w-8 h-8 text-secondary-400" />
+                    </div>
+                    <p className="text-secondary-500 font-medium">لا توجد بيانات</p>
+                    {searchTerm && (
+                      <p className="text-secondary-400 text-sm">جرب البحث بكلمات مختلفة</p>
+                    )}
+                  </div>
                 </td>
               </tr>
             ) : (
-              filteredData.map((item) => (
-                <tr key={item.get('id')} className="hover:bg-gray-50">
+              filteredData.map((item, index) => (
+                <tr
+                  key={item.get('id')}
+                  className="hover:bg-primary-50/50 transition-colors duration-150 animate-fade-in"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
                   {columns.map((col) => (
-                    <td key={col.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td
+                      key={col.key}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-secondary-900"
+                    >
                       {col.render ? col.render(item) : String(item.get(col.key) || "-")}
                     </td>
                   ))}
                   {(onEdit || onDelete) && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2 space-x-reverse">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 justify-end">
                         {onEdit && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => onEdit(item)}
-                            className="text-primary-600 hover:text-primary-900"
+                            leftIcon={<EditIcon className="w-4 h-4" />}
+                            className="text-primary-600 hover:text-primary-700"
                           >
                             تعديل
-                          </button>
+                          </Button>
                         )}
                         {onDelete && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => onDelete(item)}
-                            className="text-red-600 hover:text-red-900"
+                            leftIcon={<DeleteIcon className="w-4 h-4" />}
+                            className="text-error-600 hover:text-error-700"
                           >
                             حذف
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -118,6 +146,13 @@ export function DataTable({
           </tbody>
         </table>
       </div>
+      {filteredData.length > 0 && (
+        <div className="px-6 py-3 bg-secondary-50 border-t border-secondary-200">
+          <p className="text-xs text-secondary-500 text-right">
+            عرض {filteredData.length} من {data.length} عنصر
+          </p>
+        </div>
+      )}
     </div>
   );
 }
