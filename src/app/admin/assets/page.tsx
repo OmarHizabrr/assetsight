@@ -1,9 +1,15 @@
 'use client';
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { PlusIcon } from "@/components/icons";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/Button";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable } from "@/components/ui/DataTable";
+import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
+import { Select } from "@/components/ui/Select";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { useEffect, useState } from "react";
@@ -280,28 +286,38 @@ function AssetsPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">الأصول</h1>
-          <button
-            onClick={() => {
-              setEditingAsset(null);
-              resetForm();
-              setIsModalOpen(true);
-            }}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-          >
-            إضافة أصل جديد
-          </button>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card variant="flat" className="mb-6">
+          <CardHeader
+            title="الأصول"
+            subtitle="إدارة وإضافة الأصول في النظام"
+            action={
+              <Button
+                onClick={() => {
+                  setEditingAsset(null);
+                  resetForm();
+                  setIsModalOpen(true);
+                }}
+                leftIcon={<PlusIcon className="w-5 h-5" />}
+                size="md"
+              >
+                إضافة أصل جديد
+              </Button>
+            }
+          />
+        </Card>
 
-        <DataTable
-          data={assets}
-          columns={columns}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          loading={loading}
-        />
+        <Card>
+          <CardBody padding="none">
+            <DataTable
+              data={assets}
+              columns={columns}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              loading={loading}
+            />
+          </CardBody>
+        </Card>
 
         <Modal
           isOpen={isModalOpen}
@@ -311,259 +327,224 @@ function AssetsPageContent() {
             resetForm();
           }}
           title={editingAsset ? "تعديل أصل" : "إضافة أصل جديد"}
+          size="xl"
         >
-          <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-5 max-h-[80vh] overflow-y-auto pr-2">
             <div className="grid grid-cols-2 gap-4">
+              <Select
+                label="اسم الأصل"
+                required
+                value={formData.get('asset_name_id')}
+                onChange={(e) => updateField('asset_name_id', e.target.value)}
+                options={assetNames.map((name) => ({
+                  value: name.get('id'),
+                  label: name.get('name'),
+                }))}
+              />
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  اسم الأصل <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={formData.get('asset_name_id')}
-                  onChange={(e) => updateField('asset_name_id', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">اختر اسم الأصل</option>
-                  {assetNames.map((name) => (
-                    <option key={name.get('id')} value={name.get('id')}>
-                      {name.get('name')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  كود الأصل <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-secondary-700 mb-1.5">
+                  كود الأصل <span className="text-error-500">*</span>
                 </label>
                 <div className="flex gap-2">
-                  <input
+                  <Input
                     type="text"
                     required
                     value={formData.get('asset_tag')}
                     onChange={(e) => updateField('asset_tag', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                     placeholder="سيتم توليده تلقائياً"
+                    className="flex-1"
                   />
                   {!editingAsset && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="md"
                       onClick={() => updateField('asset_tag', generateAssetTag())}
-                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
                     >
                       توليد
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  نوع الأصل <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={formData.get('type_id')}
-                  onChange={(e) => updateField('type_id', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">اختر نوع الأصل</option>
-                  {assetTypes.map((type) => (
-                    <option key={type.get('id')} value={type.get('id')}>
-                      {type.get('name')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  حالة الأصل <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={formData.get('status_id')}
-                  onChange={(e) => updateField('status_id', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">اختر الحالة</option>
-                  {assetStatuses.map((status) => (
-                    <option key={status.get('id')} value={status.get('id')}>
-                      {status.get('name')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  المكتب الحالي <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={formData.get('location_office_id')}
-                  onChange={(e) => updateField('location_office_id', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">اختر المكتب</option>
-                  {offices.map((office) => (
-                    <option key={office.get('id')} value={office.get('id')}>
-                      {office.get('name')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  حامل الأصل
-                </label>
-                <select
-                  value={formData.get('custodian_user_id')}
-                  onChange={(e) => updateField('custodian_user_id', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">اختر المستخدم</option>
-                  {users.map((user) => (
-                    <option key={user.get('id')} value={user.get('id')}>
-                      {user.get('full_name')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                الرقم التسلسلي
-              </label>
-              <input
-                type="text"
-                value={formData.get('serial_number')}
-                onChange={(e) => updateField('serial_number', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              <Select
+                label="نوع الأصل"
+                required
+                value={formData.get('type_id')}
+                onChange={(e) => updateField('type_id', e.target.value)}
+                options={assetTypes.map((type) => ({
+                  value: type.get('id'),
+                  label: type.get('name'),
+                }))}
+              />
+              <Select
+                label="حالة الأصل"
+                required
+                value={formData.get('status_id')}
+                onChange={(e) => updateField('status_id', e.target.value)}
+                options={assetStatuses.map((status) => ({
+                  value: status.get('id'),
+                  label: status.get('name'),
+                }))}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  تاريخ الشراء
-                </label>
-                <input
-                  type="date"
-                  value={formData.get('purchase_date')}
-                  onChange={(e) => updateField('purchase_date', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  نهاية الضمان
-                </label>
-                <input
-                  type="date"
-                  value={formData.get('warranty_end')}
-                  onChange={(e) => updateField('warranty_end', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
+              <Select
+                label="المكتب الحالي"
+                required
+                value={formData.get('location_office_id')}
+                onChange={(e) => updateField('location_office_id', e.target.value)}
+                options={offices.map((office) => ({
+                  value: office.get('id'),
+                  label: office.get('name'),
+                }))}
+              />
+              <Select
+                label="حامل الأصل"
+                value={formData.get('custodian_user_id')}
+                onChange={(e) => updateField('custodian_user_id', e.target.value)}
+                options={users.map((user) => ({
+                  value: user.get('id'),
+                  label: user.get('full_name'),
+                }))}
+              />
+            </div>
+            <Input
+              label="الرقم التسلسلي"
+              type="text"
+              value={formData.get('serial_number')}
+              onChange={(e) => updateField('serial_number', e.target.value)}
+              placeholder="أدخل الرقم التسلسلي"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="تاريخ الشراء"
+                type="date"
+                value={formData.get('purchase_date')}
+                onChange={(e) => updateField('purchase_date', e.target.value)}
+              />
+              <Input
+                label="نهاية الضمان"
+                type="date"
+                value={formData.get('warranty_end')}
+                onChange={(e) => updateField('warranty_end', e.target.value)}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  قيمة الشراء
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.getValue<number>('purchase_value') || 0}
-                  onChange={(e) => updateField('purchase_value', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  القيمة الحالية
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.getValue<number>('current_value') || 0}
-                  onChange={(e) => updateField('current_value', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
+              <Input
+                label="قيمة الشراء"
+                type="number"
+                step="0.01"
+                value={formData.getValue<number>('purchase_value') || 0}
+                onChange={(e) => updateField('purchase_value', parseFloat(e.target.value) || 0)}
+              />
+              <Input
+                label="القيمة الحالية"
+                type="number"
+                step="0.01"
+                value={formData.getValue<number>('current_value') || 0}
+                onChange={(e) => updateField('current_value', parseFloat(e.target.value) || 0)}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  المورد
-                </label>
-                <input
-                  type="text"
-                  value={formData.get('supplier')}
-                  onChange={(e) => updateField('supplier', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  رقم الفاتورة
-                </label>
-                <input
-                  type="text"
-                  value={formData.get('invoice_number')}
-                  onChange={(e) => updateField('invoice_number', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
+              <Input
+                label="الفئة"
+                type="text"
+                value={formData.get('category')}
+                onChange={(e) => updateField('category', e.target.value)}
+                placeholder="أدخل الفئة"
+              />
+              <Input
+                label="المورد"
+                type="text"
+                value={formData.get('supplier')}
+                onChange={(e) => updateField('supplier', e.target.value)}
+                placeholder="أدخل اسم المورد"
+              />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="رقم الفاتورة"
+                type="text"
+                value={formData.get('invoice_number')}
+                onChange={(e) => updateField('invoice_number', e.target.value)}
+                placeholder="أدخل رقم الفاتورة"
+              />
+              <Input
+                label="تاريخ آخر صيانة"
+                type="date"
+                value={formData.get('last_maintenance_date')}
+                onChange={(e) => updateField('last_maintenance_date', e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="طريقة الإهلاك"
+                type="text"
+                value={formData.get('depreciation_method')}
+                onChange={(e) => updateField('depreciation_method', e.target.value)}
+                placeholder="مثل: خطي، متسارع، إلخ"
+              />
+              <Input
+                label="عمر الخدمة المتوقع (بالسنوات)"
+                type="number"
+                value={formData.getValue<number>('expected_lifetime_years') || 0}
+                onChange={(e) => updateField('expected_lifetime_years', parseFloat(e.target.value) || 0)}
+              />
+            </div>
+            <Input
+              label="القيمة المتبقية"
+              type="number"
+              step="0.01"
+              value={formData.getValue<number>('residual_value') || 0}
+              onChange={(e) => updateField('residual_value', parseFloat(e.target.value) || 0)}
+            />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
                 الوصف
               </label>
               <textarea
                 value={formData.get('description')}
                 onChange={(e) => updateField('description', e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="أدخل وصف الأصل"
+                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
+            <Checkbox
+              label="نشط"
+              checked={formData.getValue<boolean>('is_active') === true || formData.getValue<number>('is_active') === 1}
+              onChange={(e) => updateField('is_active', e.target.checked)}
+            />
             <div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.getValue<boolean>('is_active') === true || formData.getValue<number>('is_active') === 1}
-                  onChange={(e) => updateField('is_active', e.target.checked)}
-                  className="ml-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <span className="text-sm text-gray-700">نشط</span>
-              </label>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
                 الملاحظات
               </label>
               <textarea
                 value={formData.get('notes')}
                 onChange={(e) => updateField('notes', e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="أدخل أي ملاحظات إضافية"
+                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
-            <div className="flex justify-end space-x-2 space-x-reverse pt-4 border-t">
-              <button
+            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-200">
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                size="md"
               >
                 إلغاء
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+                variant="primary"
+                size="md"
               >
-                حفظ
-              </button>
+                {editingAsset ? "تحديث" : "حفظ"}
+              </Button>
             </div>
           </form>
         </Modal>

@@ -1,9 +1,16 @@
 'use client';
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { PlusIcon } from "@/components/icons";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/Button";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable } from "@/components/ui/DataTable";
+import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
+import { Select } from "@/components/ui/Select";
+import { Tabs } from "@/components/ui/Tabs";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { useEffect, useState } from "react";
@@ -340,107 +347,99 @@ function InventoryPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">الجرد</h1>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card variant="flat" className="mb-6">
+          <CardHeader title="الجرد" subtitle="إدارة دورات الجرد وعناصر الجرد" />
+        </Card>
 
-        <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 space-x-reverse">
-              <button
-                onClick={() => setActiveTab('cycles')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'cycles'
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                دورات الجرد
-              </button>
-              <button
-                onClick={() => setActiveTab('items')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'items'
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                عناصر الجرد
-              </button>
-            </nav>
-          </div>
-        </div>
+        <Card className="mb-6">
+          <CardBody padding="md">
+            <Tabs
+              tabs={[
+                { id: 'cycles', label: 'دورات الجرد' },
+                { id: 'items', label: 'عناصر الجرد' },
+              ]}
+              activeTab={activeTab}
+              onTabChange={(tabId) => setActiveTab(tabId as 'cycles' | 'items')}
+            />
+          </CardBody>
+        </Card>
 
         {activeTab === 'cycles' && (
-          <>
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={() => {
-                  setEditingCycle(null);
-                  setCycleFormData(new BaseModel({ name: '', start_date: '', end_date: '', department_id: '', notes: '' }));
+          <Card>
+            <CardBody padding="md">
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={() => {
+                    setEditingCycle(null);
+                    setCycleFormData(new BaseModel({ name: '', start_date: '', end_date: '', department_id: '', notes: '' }));
+                    setIsCycleModalOpen(true);
+                  }}
+                  leftIcon={<PlusIcon className="w-5 h-5" />}
+                  size="md"
+                >
+                  إضافة دورة جديدة
+                </Button>
+              </div>
+              <DataTable
+                data={cycles}
+                columns={cycleColumns}
+                onEdit={(cycle) => {
+                  setEditingCycle(cycle);
+                  setCycleFormData(new BaseModel(cycle.getData()));
                   setIsCycleModalOpen(true);
                 }}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-              >
-                إضافة دورة جديدة
-              </button>
-            </div>
-            <DataTable
-              data={cycles}
-              columns={cycleColumns}
-              onEdit={(cycle) => {
-                setEditingCycle(cycle);
-                setCycleFormData(new BaseModel(cycle.getData()));
-                setIsCycleModalOpen(true);
-              }}
-              onDelete={handleDeleteCycle}
-              loading={loading}
-            />
-          </>
+                onDelete={handleDeleteCycle}
+                loading={loading}
+              />
+            </CardBody>
+          </Card>
         )}
 
         {activeTab === 'items' && (
-          <>
-            <div className="mb-4 flex justify-between items-center">
-              <select
-                value={selectedCycleId}
-                onChange={(e) => setSelectedCycleId(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">جميع الدورات</option>
-                {cycles.map((cycle) => (
-                  <option key={cycle.get('id')} value={cycle.get('id')}>
-                    {cycle.get('name')}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={() => {
-                  setEditingItem(null);
-                  const newData = new BaseModel({ cycle_id: selectedCycleId || '', asset_id: '', scanned_tag: '', scanned_office_id: '', found: true, note: '' });
-                  setItemFormData(newData);
+          <Card>
+            <CardBody padding="md">
+              <div className="mb-4 flex justify-between items-center gap-4">
+                <Select
+                  value={selectedCycleId}
+                  onChange={(e) => setSelectedCycleId(e.target.value)}
+                  options={[
+                    { value: '', label: 'جميع الدورات' },
+                    ...cycles.map((cycle) => ({
+                      value: cycle.get('id'),
+                      label: cycle.get('name'),
+                    })),
+                  ]}
+                  className="flex-1 max-w-xs"
+                />
+                <Button
+                  onClick={() => {
+                    setEditingItem(null);
+                    const newData = new BaseModel({ cycle_id: selectedCycleId || '', asset_id: '', scanned_tag: '', scanned_office_id: '', found: true, note: '' });
+                    setItemFormData(newData);
+                    setIsItemModalOpen(true);
+                  }}
+                  leftIcon={<PlusIcon className="w-5 h-5" />}
+                  size="md"
+                >
+                  إضافة عنصر جديد
+                </Button>
+              </div>
+              <DataTable
+                data={filteredItems}
+                columns={itemColumns}
+                onEdit={(item) => {
+                  setEditingItem(item);
+                  const itemData = item.getData();
+                  itemData.found = item.getValue<number>('found') === 1 || item.getValue<boolean>('found') === true;
+                  setItemFormData(new BaseModel(itemData));
                   setIsItemModalOpen(true);
                 }}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-              >
-                إضافة عنصر جديد
-              </button>
-            </div>
-            <DataTable
-              data={filteredItems}
-              columns={itemColumns}
-              onEdit={(item) => {
-                setEditingItem(item);
-                const itemData = item.getData();
-                itemData.found = item.getValue<number>('found') === 1 || item.getValue<boolean>('found') === true;
-                setItemFormData(new BaseModel(itemData));
-                setIsItemModalOpen(true);
-              }}
-              onDelete={handleDeleteItem}
-              loading={loading}
-            />
-          </>
+                onDelete={handleDeleteItem}
+                loading={loading}
+              />
+            </CardBody>
+          </Card>
         )}
 
         {/* Cycle Modal */}
@@ -452,86 +451,68 @@ function InventoryPageContent() {
             setCycleFormData(new BaseModel({ name: '', start_date: '', end_date: '', department_id: '', notes: '' }));
           }}
           title={editingCycle ? "تعديل دورة جرد" : "إضافة دورة جرد جديدة"}
+          size="md"
         >
-          <form onSubmit={handleCycleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                اسم الجولة <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={cycleFormData.get('name')}
-                onChange={(e) => updateCycleField('name', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+          <form onSubmit={handleCycleSubmit} className="space-y-5">
+            <Input
+              label="اسم الجولة"
+              type="text"
+              required
+              value={cycleFormData.get('name')}
+              onChange={(e) => updateCycleField('name', e.target.value)}
+              placeholder="أدخل اسم الجولة"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="تاريخ البداية"
+                type="date"
+                value={cycleFormData.get('start_date')}
+                onChange={(e) => updateCycleField('start_date', e.target.value)}
+              />
+              <Input
+                label="تاريخ النهاية"
+                type="date"
+                value={cycleFormData.get('end_date')}
+                onChange={(e) => updateCycleField('end_date', e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  تاريخ البداية
-                </label>
-                <input
-                  type="date"
-                  value={cycleFormData.get('start_date')}
-                  onChange={(e) => updateCycleField('start_date', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  تاريخ النهاية
-                </label>
-                <input
-                  type="date"
-                  value={cycleFormData.get('end_date')}
-                  onChange={(e) => updateCycleField('end_date', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            </div>
+            <Select
+              label="الإدارة"
+              value={cycleFormData.get('department_id')}
+              onChange={(e) => updateCycleField('department_id', e.target.value)}
+              options={departments.map((dept) => ({
+                value: dept.get('id'),
+                label: dept.get('name'),
+              }))}
+            />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                الإدارة
-              </label>
-              <select
-                value={cycleFormData.get('department_id')}
-                onChange={(e) => updateCycleField('department_id', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">اختر الإدارة</option>
-                {departments.map((dept) => (
-                  <option key={dept.get('id')} value={dept.get('id')}>
-                    {dept.get('name')}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
                 الملاحظات
               </label>
               <textarea
                 value={cycleFormData.get('notes')}
                 onChange={(e) => updateCycleField('notes', e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="أدخل أي ملاحظات إضافية"
+                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
-            <div className="flex justify-end space-x-2 space-x-reverse pt-4">
-              <button
+            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-200">
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setIsCycleModalOpen(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                size="md"
               >
                 إلغاء
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+                variant="primary"
+                size="md"
               >
-                حفظ
-              </button>
+                {editingCycle ? "تحديث" : "حفظ"}
+              </Button>
             </div>
           </form>
         </Modal>
@@ -545,91 +526,68 @@ function InventoryPageContent() {
             setItemFormData(new BaseModel({ cycle_id: '', asset_id: '', scanned_tag: '', scanned_office_id: '', found: true, note: '' }));
           }}
           title={editingItem ? "تعديل عنصر جرد" : "إضافة عنصر جرد جديد"}
+          size="md"
         >
-          <form onSubmit={handleItemSubmit} className="space-y-4">
+          <form onSubmit={handleItemSubmit} className="space-y-5">
+            <Select
+              label="الجولة"
+              required
+              value={itemFormData.get('cycle_id')}
+              onChange={(e) => updateItemField('cycle_id', e.target.value)}
+              options={cycles.map((cycle) => ({
+                value: cycle.get('id'),
+                label: cycle.get('name'),
+              }))}
+            />
+            <Input
+              label="التاج الممسوح"
+              type="text"
+              value={itemFormData.get('scanned_tag')}
+              onChange={(e) => updateItemField('scanned_tag', e.target.value)}
+              placeholder="كود الأصل الممسوح ضوئياً"
+            />
+            <Select
+              label="مكتب المسح"
+              value={itemFormData.get('scanned_office_id')}
+              onChange={(e) => updateItemField('scanned_office_id', e.target.value)}
+              options={offices.map((office) => ({
+                value: office.get('id'),
+                label: office.get('name'),
+              }))}
+            />
+            <Checkbox
+              label="موجود"
+              checked={itemFormData.getValue<boolean>('found') === true || itemFormData.getValue<number>('found') === 1}
+              onChange={(e) => updateItemField('found', e.target.checked)}
+            />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                الجولة <span className="text-red-500">*</span>
-              </label>
-              <select
-                required
-                value={itemFormData.get('cycle_id')}
-                onChange={(e) => updateItemField('cycle_id', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">اختر الجولة</option>
-                {cycles.map((cycle) => (
-                  <option key={cycle.get('id')} value={cycle.get('id')}>
-                    {cycle.get('name')}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                التاج الممسوح
-              </label>
-              <input
-                type="text"
-                value={itemFormData.get('scanned_tag')}
-                onChange={(e) => updateItemField('scanned_tag', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                placeholder="كود الأصل الممسوح ضوئياً"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                مكتب المسح
-              </label>
-              <select
-                value={itemFormData.get('scanned_office_id')}
-                onChange={(e) => updateItemField('scanned_office_id', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">اختر المكتب</option>
-                {offices.map((office) => (
-                  <option key={office.get('id')} value={office.get('id')}>
-                    {office.get('name')}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={itemFormData.getValue<boolean>('found') === true || itemFormData.getValue<number>('found') === 1}
-                  onChange={(e) => updateItemField('found', e.target.checked)}
-                  className="ml-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <span className="text-sm text-gray-700">موجود</span>
-              </label>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
                 ملاحظة
               </label>
               <textarea
                 value={itemFormData.get('note')}
                 onChange={(e) => updateItemField('note', e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="أدخل أي ملاحظات"
+                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
-            <div className="flex justify-end space-x-2 space-x-reverse pt-4">
-              <button
+            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-200">
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setIsItemModalOpen(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                size="md"
               >
                 إلغاء
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+                variant="primary"
+                size="md"
               >
-                حفظ
-              </button>
+                {editingItem ? "تحديث" : "حفظ"}
+              </Button>
             </div>
           </form>
         </Modal>
