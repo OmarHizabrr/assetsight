@@ -27,16 +27,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md material-transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-sm ripple';
+    const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-xl material-transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-sm ripple';
     
     const variants = {
-      primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
-      secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
-      success: 'bg-success-600 text-white hover:bg-success-700 focus:ring-success-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
-      warning: 'bg-warning-600 text-white hover:bg-warning-700 focus:ring-warning-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
-      error: 'bg-error-600 text-white hover:bg-error-700 focus:ring-error-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
-      outline: 'border border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500 shadow-elevation-0 hover:shadow-elevation-2',
-      ghost: 'text-primary-600 hover:bg-primary-50 focus:ring-primary-500 shadow-elevation-0',
+      primary: 'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 focus:ring-primary-500 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 active:scale-95',
+      secondary: 'bg-gradient-to-r from-slate-600 to-slate-700 text-white hover:from-slate-700 hover:to-slate-800 focus:ring-slate-500 shadow-lg shadow-slate-500/30 hover:shadow-xl hover:shadow-slate-500/40 active:scale-95',
+      success: 'bg-gradient-to-r from-success-600 to-success-700 text-white hover:from-success-700 hover:to-success-800 focus:ring-success-500 shadow-lg shadow-success-500/30 hover:shadow-xl hover:shadow-success-500/40 active:scale-95',
+      warning: 'bg-gradient-to-r from-warning-600 to-warning-700 text-white hover:from-warning-700 hover:to-warning-800 focus:ring-warning-500 shadow-lg shadow-warning-500/30 hover:shadow-xl hover:shadow-warning-500/40 active:scale-95',
+      error: 'bg-gradient-to-r from-error-600 to-error-700 text-white hover:from-error-700 hover:to-error-800 focus:ring-error-500 shadow-lg shadow-error-500/30 hover:shadow-xl hover:shadow-error-500/40 active:scale-95',
+      outline: 'border-2 border-primary-600 text-primary-600 hover:bg-gradient-to-r hover:from-primary-50 hover:to-blue-50 focus:ring-primary-500 shadow-md hover:shadow-lg',
+      ghost: 'text-primary-600 hover:bg-gradient-to-r hover:from-primary-50 hover:to-blue-50 focus:ring-primary-500',
     };
 
     const sizes = {

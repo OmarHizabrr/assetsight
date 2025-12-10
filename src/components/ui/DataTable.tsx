@@ -49,17 +49,19 @@ export function DataTable({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-elevation-4 overflow-hidden animate-fade-in border-0">
-      <div className="p-5 lg:p-6 border-b border-secondary-100 bg-gradient-to-r from-secondary-50 to-white">
+    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in border border-slate-100">
+      <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 via-blue-50/50 to-slate-50">
         <div className="max-w-md">
-          <Input
-            type="text"
-            placeholder="بحث في الجدول..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            leftIcon={<SearchIcon className="w-4 h-4" />}
-            className="bg-white shadow-elevation-1"
-          />
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="بحث في الجدول..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon={<SearchIcon className="w-5 h-5" />}
+              className="bg-white shadow-lg border-slate-200 focus:border-primary-500 focus:shadow-xl focus:shadow-primary-500/20"
+            />
+          </div>
         </div>
       </div>
       <div className="overflow-x-auto -mx-4 sm:mx-0">
@@ -67,38 +69,40 @@ export function DataTable({
           <div className="overflow-hidden">
             {/* Desktop Table */}
             <table className="hidden md:table min-w-full">
-              <thead className="bg-gradient-to-r from-secondary-50 to-white border-b-2 border-secondary-200">
+              <thead className="bg-gradient-to-r from-slate-100 via-blue-50/30 to-slate-100 border-b-2 border-slate-200">
                 <tr>
                   {columns.map((col) => (
                     <th
                       key={String(col.key)}
-                      className="px-6 py-4 text-right text-xs font-bold text-secondary-800 uppercase tracking-wider"
+                      className="px-8 py-5 text-right text-xs font-bold text-slate-700 uppercase tracking-wider"
                     >
                       {col.label}
                     </th>
                   ))}
                   {(onEdit || onDelete) && (
-                    <th className="px-6 py-4 text-right text-xs font-bold text-secondary-800 uppercase tracking-wider w-40">
+                    <th className="px-8 py-5 text-right text-xs font-bold text-slate-700 uppercase tracking-wider w-48">
                       الإجراءات
                     </th>
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-secondary-100">
+              <tbody className="bg-white divide-y divide-slate-100">
                 {filteredData.length === 0 ? (
                   <tr>
                     <td
                       colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
-                      className="px-6 py-16 text-center"
+                      className="px-8 py-20 text-center"
                     >
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-full bg-secondary-100 flex items-center justify-center">
-                          <SearchIcon className="w-8 h-8 text-secondary-400" />
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center shadow-lg">
+                          <SearchIcon className="w-10 h-10 text-slate-400" />
                         </div>
-                        <p className="text-secondary-700 font-medium text-base">لا توجد بيانات</p>
-                        {searchTerm && (
-                          <p className="text-secondary-500 text-sm">جرب البحث بكلمات مختلفة</p>
-                        )}
+                        <div className="space-y-1">
+                          <p className="text-slate-700 font-bold text-lg">لا توجد بيانات</p>
+                          {searchTerm && (
+                            <p className="text-slate-500 text-sm">جرب البحث بكلمات مختلفة</p>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -112,7 +116,7 @@ export function DataTable({
                       {columns.map((col) => (
                         <td
                           key={col.key}
-                          className="px-6 py-4 text-sm text-secondary-900 font-medium"
+                          className="px-8 py-5 text-sm text-slate-900 font-semibold"
                         >
                           <div className="truncate max-w-xs">
                             {col.render ? col.render(item) : String(item.get(col.key) || "-")}
@@ -120,15 +124,15 @@ export function DataTable({
                         </td>
                       ))}
                       {(onEdit || onDelete) && (
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-3 justify-end">
+                        <td className="px-8 py-5 whitespace-nowrap">
+                          <div className="flex items-center gap-2 justify-end">
                             {onEdit && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onEdit(item)}
                                 leftIcon={<EditIcon className="w-4 h-4" />}
-                                className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
+                                className="text-primary-600 hover:text-white hover:bg-primary-600 shadow-md hover:shadow-lg material-transition rounded-lg"
                               >
                                 <span className="hidden lg:inline">تعديل</span>
                                 <span className="lg:hidden">تعديل</span>
@@ -140,7 +144,7 @@ export function DataTable({
                                 size="sm"
                                 onClick={() => onDelete(item)}
                                 leftIcon={<DeleteIcon className="w-4 h-4" />}
-                                className="text-error-600 hover:text-error-700 hover:bg-error-50"
+                                className="text-error-600 hover:text-white hover:bg-error-600 shadow-md hover:shadow-lg material-transition rounded-lg"
                               >
                                 <span className="hidden lg:inline">حذف</span>
                                 <span className="lg:hidden">حذف</span>
@@ -222,9 +226,9 @@ export function DataTable({
         </div>
       </div>
       {filteredData.length > 0 && (
-        <div className="px-6 py-4 bg-gradient-to-r from-secondary-50 to-white border-t border-secondary-200">
-          <p className="text-sm text-secondary-700 text-right font-semibold">
-            عرض <span className="text-primary-600 font-bold">{filteredData.length}</span> من <span className="text-primary-600 font-bold">{data.length}</span> عنصر
+        <div className="px-8 py-5 bg-gradient-to-r from-slate-50 via-blue-50/30 to-slate-50 border-t border-slate-200">
+          <p className="text-sm text-slate-700 text-right font-bold">
+            عرض <span className="text-primary-600 font-extrabold text-base">{filteredData.length}</span> من <span className="text-primary-600 font-extrabold text-base">{data.length}</span> عنصر
           </p>
         </div>
       )}

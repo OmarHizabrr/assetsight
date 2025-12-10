@@ -278,10 +278,17 @@ function AssetsPageContent() {
     <MainLayout>
       {/* Page Header */}
       <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
-          <div>
-            <h1 className="text-3xl font-bold text-secondary-900 mb-2">الأصول</h1>
-            <p className="text-secondary-600 text-base">إدارة وإضافة الأصول في النظام</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
+                <span className="text-2xl">💼</span>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">الأصول</h1>
+                <p className="text-slate-600 text-base mt-1 font-medium">إدارة وإضافة الأصول في النظام</p>
+              </div>
+            </div>
           </div>
           <Button
             onClick={() => {
@@ -291,6 +298,7 @@ function AssetsPageContent() {
             }}
             leftIcon={<PlusIcon className="w-5 h-5" />}
             size="lg"
+            className="shadow-xl shadow-primary-500/30 hover:shadow-2xl hover:shadow-primary-500/40 hover:scale-105 material-transition"
           >
             إضافة أصل جديد
           </Button>
@@ -298,7 +306,7 @@ function AssetsPageContent() {
       </div>
 
       {/* Data Table Card */}
-      <Card variant="elevated" className="shadow-elevation-4 border-0">
+      <Card variant="elevated" className="shadow-2xl border-0 bg-white/80 backdrop-blur-xl overflow-hidden">
         <CardBody padding="none">
           <DataTable
             data={assets}
@@ -489,16 +497,16 @@ function AssetsPageContent() {
               value={formData.getValue<number>('residual_value') || 0}
               onChange={(e) => updateField('residual_value', parseFloat(e.target.value) || 0)}
             />
-            <div className="relative pt-6">
-              <label className="block text-xs font-medium text-secondary-600 absolute top-0 right-0 pointer-events-none">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 الوصف
               </label>
               <textarea
                 value={formData.get('description')}
                 onChange={(e) => updateField('description', e.target.value)}
-                rows={3}
+                rows={4}
                 placeholder="أدخل وصف الأصل"
-                className="block w-full rounded-md border-b-2 border-t-0 border-l-0 border-r-0 border-secondary-300 bg-transparent px-0 py-2 text-sm text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-0 focus:border-primary-500 material-transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="block w-full rounded-xl border-2 border-slate-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white shadow-sm focus:shadow-md disabled:opacity-50 disabled:cursor-not-allowed resize-none"
               />
             </div>
             <Checkbox
@@ -506,16 +514,16 @@ function AssetsPageContent() {
               checked={formData.getValue<boolean>('is_active') === true || formData.getValue<number>('is_active') === 1}
               onChange={(e) => updateField('is_active', e.target.checked)}
             />
-            <div className="relative pt-6">
-              <label className="block text-xs font-medium text-secondary-600 absolute top-0 right-0 pointer-events-none">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 الملاحظات
               </label>
               <textarea
                 value={formData.get('notes')}
                 onChange={(e) => updateField('notes', e.target.value)}
-                rows={2}
+                rows={3}
                 placeholder="أدخل أي ملاحظات إضافية"
-                className="block w-full rounded-md border-b-2 border-t-0 border-l-0 border-r-0 border-secondary-300 bg-transparent px-0 py-2 text-sm text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-0 focus:border-primary-500 material-transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="block w-full rounded-xl border-2 border-slate-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white shadow-sm focus:shadow-md disabled:opacity-50 disabled:cursor-not-allowed resize-none"
               />
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t border-secondary-300">

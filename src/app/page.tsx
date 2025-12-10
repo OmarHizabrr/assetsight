@@ -1,5 +1,6 @@
 'use client';
 
+import { HomeIcon } from "@/components/icons";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -81,9 +82,16 @@ export default function HomePage() {
     <MainLayout>
       {/* Page Header */}
       <div className="mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">لوحة التحكم</h1>
-          <p className="text-secondary-600 text-base">نظرة شاملة على النظام</p>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
+              <HomeIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">لوحة التحكم</h1>
+              <p className="text-slate-600 text-base mt-1 font-medium">نظرة شاملة على النظام</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -107,50 +115,50 @@ export default function HomePage() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8">
+          <Card hover variant="elevated" className="material-transition border-0 shadow-2xl hover:shadow-3xl bg-gradient-to-br from-white to-blue-50/30 overflow-hidden group">
             <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-secondary-600 mb-2">الإدارات</p>
-                  <p className="text-3xl font-bold text-secondary-900 truncate">{stats.departments}</p>
+                  <p className="text-sm font-semibold text-slate-600 mb-3">الإدارات</p>
+                  <p className="text-4xl font-extrabold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent truncate">{stats.departments}</p>
                 </div>
-                <div className="text-4xl flex-shrink-0">🏢</div>
+                <div className="text-5xl flex-shrink-0 opacity-20 group-hover:opacity-30 material-transition">🏢</div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8">
+          <Card hover variant="elevated" className="material-transition border-0 shadow-2xl hover:shadow-3xl bg-gradient-to-br from-white to-blue-50/30 overflow-hidden group">
             <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-secondary-600 mb-2">المكاتب</p>
-                  <p className="text-3xl font-bold text-secondary-900 truncate">{stats.offices}</p>
+                  <p className="text-sm font-semibold text-slate-600 mb-3">المكاتب</p>
+                  <p className="text-4xl font-extrabold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent truncate">{stats.offices}</p>
                 </div>
-                <div className="text-4xl flex-shrink-0">🚪</div>
+                <div className="text-5xl flex-shrink-0 opacity-20 group-hover:opacity-30 material-transition">🚪</div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8">
+          <Card hover variant="elevated" className="material-transition border-0 shadow-2xl hover:shadow-3xl bg-gradient-to-br from-white to-blue-50/30 overflow-hidden group">
             <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-secondary-600 mb-2">الأصول</p>
-                  <p className="text-3xl font-bold text-secondary-900 truncate">{stats.assets}</p>
+                  <p className="text-sm font-semibold text-slate-600 mb-3">الأصول</p>
+                  <p className="text-4xl font-extrabold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent truncate">{stats.assets}</p>
                 </div>
-                <div className="text-4xl flex-shrink-0">💼</div>
+                <div className="text-5xl flex-shrink-0 opacity-20 group-hover:opacity-30 material-transition">💼</div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8">
+          <Card hover variant="elevated" className="material-transition border-0 shadow-2xl hover:shadow-3xl bg-gradient-to-br from-white to-blue-50/30 overflow-hidden group">
             <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-secondary-600 mb-2">المستخدمون</p>
-                  <p className="text-3xl font-bold text-secondary-900 truncate">{stats.users}</p>
+                  <p className="text-sm font-semibold text-slate-600 mb-3">المستخدمون</p>
+                  <p className="text-4xl font-extrabold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent truncate">{stats.users}</p>
                 </div>
-                <div className="text-4xl flex-shrink-0">👥</div>
+                <div className="text-5xl flex-shrink-0 opacity-20 group-hover:opacity-30 material-transition">👥</div>
               </div>
             </CardBody>
           </Card>

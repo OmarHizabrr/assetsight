@@ -140,9 +140,16 @@ function ReportsPageContent() {
     <MainLayout>
       {/* Page Header */}
       <div className="mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">التقارير والإحصائيات</h1>
-          <p className="text-secondary-600 text-base">نظرة شاملة على بيانات الأصول</p>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
+              <span className="text-2xl">📈</span>
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">التقارير والإحصائيات</h1>
+              <p className="text-slate-600 text-base mt-1 font-medium">نظرة شاملة على بيانات الأصول</p>
+            </div>
+          </div>
         </div>
       </div>
 

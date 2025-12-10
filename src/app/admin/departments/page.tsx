@@ -100,10 +100,17 @@ function DepartmentsPageContent() {
     <MainLayout>
       {/* Page Header */}
       <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
-          <div>
-            <h1 className="text-3xl font-bold text-secondary-900 mb-2">الإدارات</h1>
-            <p className="text-secondary-600 text-base">إدارة وإضافة الإدارات في النظام</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
+                <span className="text-2xl">🏢</span>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">الإدارات</h1>
+                <p className="text-slate-600 text-base mt-1 font-medium">إدارة وإضافة الإدارات في النظام</p>
+              </div>
+            </div>
           </div>
           <Button
             onClick={() => {
@@ -113,6 +120,7 @@ function DepartmentsPageContent() {
             }}
             leftIcon={<PlusIcon className="w-5 h-5" />}
             size="lg"
+            className="shadow-xl shadow-primary-500/30 hover:shadow-2xl hover:shadow-primary-500/40 hover:scale-105 material-transition"
           >
             إضافة إدارة جديدة
           </Button>
@@ -120,7 +128,7 @@ function DepartmentsPageContent() {
       </div>
 
       {/* Data Table Card */}
-      <Card variant="elevated" className="shadow-elevation-4 border-0">
+      <Card variant="elevated" className="shadow-2xl border-0 bg-white/80 backdrop-blur-xl overflow-hidden">
           <CardBody padding="none">
             <DataTable
               data={departments}
@@ -156,8 +164,8 @@ function DepartmentsPageContent() {
               placeholder="أدخل اسم الإدارة"
             />
 
-            <div className="relative pt-6">
-              <label className="block text-xs font-medium text-secondary-600 absolute top-0 right-0 pointer-events-none">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 الوصف
               </label>
               <textarea
@@ -167,14 +175,14 @@ function DepartmentsPageContent() {
                   newData.put('description', e.target.value);
                   setFormData(newData);
                 }}
-                rows={3}
+                rows={4}
                 placeholder="أدخل وصف الإدارة"
-                className="block w-full rounded-md border-b-2 border-t-0 border-l-0 border-r-0 border-secondary-300 bg-transparent px-0 py-2 text-sm text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-0 focus:border-primary-500 material-transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="block w-full rounded-xl border-2 border-slate-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white shadow-sm focus:shadow-md disabled:opacity-50 disabled:cursor-not-allowed resize-none"
               />
             </div>
 
-            <div className="relative pt-6">
-              <label className="block text-xs font-medium text-secondary-600 absolute top-0 right-0 pointer-events-none">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 الملاحظات
               </label>
               <textarea
@@ -184,9 +192,9 @@ function DepartmentsPageContent() {
                   newData.put('notes', e.target.value);
                   setFormData(newData);
                 }}
-                rows={2}
+                rows={3}
                 placeholder="أدخل أي ملاحظات إضافية"
-                className="block w-full rounded-md border-b-2 border-t-0 border-l-0 border-r-0 border-secondary-300 bg-transparent px-0 py-2 text-sm text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-0 focus:border-primary-500 material-transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="block w-full rounded-xl border-2 border-slate-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white shadow-sm focus:shadow-md disabled:opacity-50 disabled:cursor-not-allowed resize-none"
               />
             </div>
 

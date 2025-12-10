@@ -16,13 +16,13 @@ export function Card({
   className = '',
   ...props
 }: CardProps) {
-  const baseStyles = 'rounded-xl material-transition';
+  const baseStyles = 'rounded-2xl material-transition';
   
   const variants = {
-    default: 'bg-white shadow-elevation-2 border border-secondary-100',
-    elevated: 'bg-white shadow-elevation-4 border border-secondary-100',
-    outlined: 'bg-white border-2 border-secondary-300 shadow-elevation-0',
-    flat: 'bg-white shadow-elevation-0 border border-secondary-100',
+    default: 'bg-white/90 backdrop-blur-xl shadow-xl border border-slate-200/60',
+    elevated: 'bg-white/90 backdrop-blur-xl shadow-2xl border border-slate-200/60',
+    outlined: 'bg-white border-2 border-slate-300 shadow-lg',
+    flat: 'bg-white/80 backdrop-blur-lg shadow-lg border border-slate-200/60',
   };
 
   const paddings = {
