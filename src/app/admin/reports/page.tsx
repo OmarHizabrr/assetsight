@@ -43,7 +43,7 @@ function ReportsPageContent() {
       for (const dept of departments) {
         const deptId = dept.get('id');
         if (deptId) {
-          const subCollectionRef = firestoreApi.getSubCollection("departments", deptId, "departments");
+          const subCollectionRef = firestoreApi.getSubCollection("departments", deptId, "offices");
           const officeDocs = await firestoreApi.getDocuments(subCollectionRef);
           const offices = BaseModel.fromFirestoreArray(officeDocs);
           offices.forEach(office => {
