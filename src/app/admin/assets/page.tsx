@@ -263,34 +263,45 @@ function AssetsPageContent() {
     { 
       key: 'purchase_value', 
       label: 'قيمة الشراء',
-      render: (item: BaseModel) => item.getValue<number>('purchase_value')?.toLocaleString('ar-SA') || '0',
+      render: (item: BaseModel) => {
+        const value = item.getValue<number>('purchase_value') || 0;
+        return (
+          <span className="font-semibold text-secondary-900">
+            {value.toLocaleString('ar-SA')} <span className="text-xs text-secondary-500 font-normal">ر.س</span>
+          </span>
+        );
+      },
     },
   ];
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <Card variant="flat" className="mb-6">
-          <CardHeader
-            title="الأصول"
-            subtitle="إدارة وإضافة الأصول في النظام"
-            action={
-              <Button
-                onClick={() => {
-                  setEditingAsset(null);
-                  resetForm();
-                  setIsModalOpen(true);
-                }}
-                leftIcon={<PlusIcon className="w-5 h-5" />}
-                size="md"
-              >
-                إضافة أصل جديد
-              </Button>
-            }
-          />
-        </Card>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Page Header */}
+        <div className="mb-6">
+          <Card variant="flat" className="shadow-elevation-0 bg-white border-0">
+            <CardHeader
+              title="الأصول"
+              subtitle="إدارة وإضافة الأصول في النظام"
+              action={
+                <Button
+                  onClick={() => {
+                    setEditingAsset(null);
+                    resetForm();
+                    setIsModalOpen(true);
+                  }}
+                  leftIcon={<PlusIcon className="w-5 h-5" />}
+                  size="md"
+                >
+                  إضافة أصل جديد
+                </Button>
+              }
+            />
+          </Card>
+        </div>
 
-        <Card>
+        {/* Data Table Card */}
+        <Card variant="elevated" className="shadow-elevation-2">
           <CardBody padding="none">
             <DataTable
               data={assets}
@@ -325,29 +336,27 @@ function AssetsPageContent() {
                 }))}
               />
               <div>
-                <label className="block text-sm font-medium text-secondary-700 mb-1.5">
-                  كود الأصل <span className="text-error-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    required
-                    value={formData.get('asset_tag')}
-                    onChange={(e) => updateField('asset_tag', e.target.value)}
-                    placeholder="سيتم توليده تلقائياً"
-                    className="flex-1"
-                  />
-                  {!editingAsset && (
+                <Input
+                  type="text"
+                  label="كود الأصل"
+                  required
+                  value={formData.get('asset_tag')}
+                  onChange={(e) => updateField('asset_tag', e.target.value)}
+                  placeholder="سيتم توليده تلقائياً"
+                  className="flex-1"
+                />
+                {!editingAsset && (
+                  <div className="mt-2">
                     <Button
                       type="button"
                       variant="outline"
-                      size="md"
+                      size="sm"
                       onClick={() => updateField('asset_tag', generateAssetTag())}
                     >
                       توليد
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -483,8 +492,8 @@ function AssetsPageContent() {
               value={formData.getValue<number>('residual_value') || 0}
               onChange={(e) => updateField('residual_value', parseFloat(e.target.value) || 0)}
             />
-            <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
+            <div className="relative pt-6">
+              <label className="block text-xs font-medium text-secondary-600 absolute top-0 right-0 pointer-events-none">
                 الوصف
               </label>
               <textarea
@@ -492,7 +501,7 @@ function AssetsPageContent() {
                 onChange={(e) => updateField('description', e.target.value)}
                 rows={3}
                 placeholder="أدخل وصف الأصل"
-                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="block w-full rounded-md border-b-2 border-t-0 border-l-0 border-r-0 border-secondary-300 bg-transparent px-0 py-2 text-sm text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-0 focus:border-primary-500 material-transition disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
             <Checkbox
@@ -500,8 +509,8 @@ function AssetsPageContent() {
               checked={formData.getValue<boolean>('is_active') === true || formData.getValue<number>('is_active') === 1}
               onChange={(e) => updateField('is_active', e.target.checked)}
             />
-            <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
+            <div className="relative pt-6">
+              <label className="block text-xs font-medium text-secondary-600 absolute top-0 right-0 pointer-events-none">
                 الملاحظات
               </label>
               <textarea
@@ -509,10 +518,10 @@ function AssetsPageContent() {
                 onChange={(e) => updateField('notes', e.target.value)}
                 rows={2}
                 placeholder="أدخل أي ملاحظات إضافية"
-                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="block w-full rounded-md border-b-2 border-t-0 border-l-0 border-r-0 border-secondary-300 bg-transparent px-0 py-2 text-sm text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-0 focus:border-primary-500 material-transition disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-200">
+            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-300">
               <Button
                 type="button"
                 variant="outline"

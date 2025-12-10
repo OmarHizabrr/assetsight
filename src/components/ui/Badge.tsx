@@ -16,21 +16,21 @@ export function Badge({
   className = '',
   ...props
 }: BadgeProps) {
-  const baseStyles = 'inline-flex items-center font-medium rounded-full';
+  const baseStyles = 'inline-flex items-center font-medium rounded-md';
   
   const variants = {
-    primary: 'bg-primary-100 text-primary-800',
-    secondary: 'bg-secondary-100 text-secondary-800',
-    success: 'bg-success-100 text-success-800',
-    warning: 'bg-warning-100 text-warning-800',
-    error: 'bg-error-100 text-error-800',
-    accent: 'bg-accent-100 text-accent-800',
+    primary: 'bg-primary-50 text-primary-700 border border-primary-200',
+    secondary: 'bg-secondary-50 text-secondary-700 border border-secondary-200',
+    success: 'bg-success-50 text-success-700 border border-success-200',
+    warning: 'bg-warning-50 text-warning-700 border border-warning-200',
+    error: 'bg-error-50 text-error-700 border border-error-200',
+    accent: 'bg-accent-50 text-accent-700 border border-accent-200',
   };
 
   const sizes = {
     sm: 'px-2 py-0.5 text-xs gap-1',
-    md: 'px-2.5 py-1 text-sm gap-1.5',
-    lg: 'px-3 py-1.5 text-base gap-2',
+    md: 'px-3 py-1 text-sm gap-1.5',
+    lg: 'px-4 py-1.5 text-base gap-2',
   };
 
   const dotSizes = {

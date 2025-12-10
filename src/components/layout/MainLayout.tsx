@@ -1,8 +1,7 @@
 'use client';
 
-import { LogoutIcon, HomeIcon, UserIcon } from "@/components/icons";
+import { HomeIcon, LogoutIcon, UserIcon } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -30,28 +29,28 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-secondary-50">
       {/* Header */}
-      <header className="bg-white shadow-soft border-b border-secondary-200 sticky top-0 z-40">
+      <header className="bg-white shadow-elevation-2 border-b border-secondary-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-lg text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 transition-colors duration-200"
+                className="lg:hidden p-2 rounded-md text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 material-transition ripple"
                 aria-label="فتح القائمة"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-primary-600">AssetSight</h1>
+              <Link href="/" className="flex items-center gap-2 hover:opacity-80 material-transition">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-medium text-primary-600">AssetSight</h1>
               </Link>
             </div>
             {user && (
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="hidden sm:flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-secondary-50">
-                  <UserIcon className="w-4 h-4 text-secondary-600" />
-                  <span className="text-xs sm:text-sm font-medium text-secondary-700 truncate max-w-[120px] sm:max-w-none">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-secondary-100">
+                  <UserIcon className="w-4 h-4 text-secondary-700" />
+                  <span className="text-xs sm:text-sm font-medium text-secondary-800 truncate max-w-[120px] sm:max-w-none">
                     {user.get('full_name') || user.get('username')}
                   </span>
                 </div>
@@ -76,7 +75,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <aside
           className={`${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 sm:w-72 bg-white shadow-medium border-r border-secondary-200 transform transition-transform duration-300 ease-in-out lg:transition-none`}
+          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 sm:w-72 bg-white shadow-elevation-4 border-r border-secondary-200 transform material-transition lg:transition-none`}
         >
           <nav className="h-full overflow-y-auto py-4">
             <ul className="space-y-1 px-2 sm:px-3">
@@ -84,10 +83,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 text-sm sm:text-base ${
+                    className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-md material-transition text-sm sm:text-base ripple ${
                       pathname === item.href
-                        ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm'
-                        : 'text-secondary-700 hover:bg-secondary-50 hover:text-secondary-900'
+                        ? 'bg-primary-100 text-primary-700 font-medium border-r-4 border-primary-600'
+                        : 'text-secondary-700 hover:bg-secondary-100 hover:text-secondary-900'
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >
@@ -109,14 +108,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         {/* Overlay for mobile */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-secondary-900/50 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
+            className="fixed inset-0 bg-secondary-900/60 z-40 lg:hidden animate-fade-in"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* Main Content */}
-        <main className="flex-1 lg:mr-64 xl:mr-72 min-h-[calc(100vh-4rem)] w-full">
-          <div className="h-full w-full">
+        <main className="flex-1 lg:mr-64 xl:mr-72 min-h-[calc(100vh-4rem)] w-full bg-secondary-50">
+          <div className="h-full w-full py-6 lg:py-8">
             {children}
           </div>
         </main>

@@ -79,17 +79,19 @@ export default function HomePage() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <Card variant="flat" className="mb-4 sm:mb-6">
-          <CardHeader 
-            title="لوحة التحكم" 
-            subtitle="نظرة شاملة على النظام"
-            className="px-2 sm:px-0"
-          />
-        </Card>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Page Header */}
+        <div className="mb-6">
+          <Card variant="flat" className="shadow-elevation-0 bg-white border-0">
+            <CardHeader 
+              title="لوحة التحكم" 
+              subtitle="نظرة شاملة على النظام"
+            />
+          </Card>
+        </div>
 
         {!user && (
-          <Card variant="outlined" className="mb-4 sm:mb-6 border-warning-200 bg-warning-50">
+          <Card variant="outlined" className="mb-4 sm:mb-6 border-warning-500 bg-warning-50 shadow-elevation-1">
             <CardBody padding="md">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                 <p className="text-warning-800 font-medium text-sm sm:text-base">يرجى تسجيل الدخول للوصول إلى النظام</p>
@@ -108,7 +110,7 @@ export default function HomePage() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-          <Card hover className="transition-all duration-200">
+          <Card hover variant="elevated" className="material-transition">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
@@ -120,7 +122,7 @@ export default function HomePage() {
             </CardBody>
           </Card>
 
-          <Card hover className="transition-all duration-200">
+          <Card hover variant="elevated" className="material-transition">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
@@ -132,7 +134,7 @@ export default function HomePage() {
             </CardBody>
           </Card>
 
-          <Card hover className="transition-all duration-200">
+          <Card hover variant="elevated" className="material-transition">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
@@ -144,7 +146,7 @@ export default function HomePage() {
             </CardBody>
           </Card>
 
-          <Card hover className="transition-all duration-200">
+          <Card hover variant="elevated" className="material-transition">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">

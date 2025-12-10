@@ -347,12 +347,16 @@ function InventoryPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <Card variant="flat" className="mb-6">
-          <CardHeader title="الجرد" subtitle="إدارة دورات الجرد وعناصر الجرد" />
-        </Card>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Page Header */}
+        <div className="mb-6">
+          <Card variant="flat" className="shadow-elevation-0 bg-white border-0">
+            <CardHeader title="الجرد" subtitle="إدارة دورات الجرد وعناصر الجرد" />
+          </Card>
+        </div>
 
-        <Card className="mb-6">
+        {/* Content Card */}
+        <Card variant="elevated" className="mb-6 shadow-elevation-2">
           <CardBody padding="md">
             <Tabs
               tabs={[
@@ -485,8 +489,8 @@ function InventoryPageContent() {
                 label: dept.get('name'),
               }))}
             />
-            <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
+            <div className="relative pt-6">
+              <label className="block text-xs font-medium text-secondary-600 absolute top-0 right-0 pointer-events-none">
                 الملاحظات
               </label>
               <textarea
@@ -494,10 +498,10 @@ function InventoryPageContent() {
                 onChange={(e) => updateCycleField('notes', e.target.value)}
                 rows={2}
                 placeholder="أدخل أي ملاحظات إضافية"
-                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="block w-full rounded-md border-b-2 border-t-0 border-l-0 border-r-0 border-secondary-300 bg-transparent px-0 py-2 text-sm text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-0 focus:border-primary-500 material-transition disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-200">
+            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-300">
               <Button
                 type="button"
                 variant="outline"
@@ -560,8 +564,8 @@ function InventoryPageContent() {
               checked={itemFormData.getValue<boolean>('found') === true || itemFormData.getValue<number>('found') === 1}
               onChange={(e) => updateItemField('found', e.target.checked)}
             />
-            <div>
-              <label className="block text-sm font-medium text-secondary-700 mb-1.5">
+            <div className="relative pt-6">
+              <label className="block text-xs font-medium text-secondary-600 absolute top-0 right-0 pointer-events-none">
                 ملاحظة
               </label>
               <textarea
@@ -569,10 +573,10 @@ function InventoryPageContent() {
                 onChange={(e) => updateItemField('note', e.target.value)}
                 rows={2}
                 placeholder="أدخل أي ملاحظات"
-                className="block w-full rounded-lg border border-secondary-300 px-4 py-2.5 text-sm text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="block w-full rounded-md border-b-2 border-t-0 border-l-0 border-r-0 border-secondary-300 bg-transparent px-0 py-2 text-sm text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-0 focus:border-primary-500 material-transition disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-200">
+            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-300">
               <Button
                 type="button"
                 variant="outline"

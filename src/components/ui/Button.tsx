@@ -27,24 +27,24 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md material-transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide text-sm ripple';
     
     const variants = {
-      primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-sm hover:shadow-md active:scale-95',
-      secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500 shadow-sm hover:shadow-md active:scale-95',
-      success: 'bg-success-600 text-white hover:bg-success-700 focus:ring-success-500 shadow-sm hover:shadow-md active:scale-95',
-      warning: 'bg-warning-600 text-white hover:bg-warning-700 focus:ring-warning-500 shadow-sm hover:shadow-md active:scale-95',
-      error: 'bg-error-600 text-white hover:bg-error-700 focus:ring-error-500 shadow-sm hover:shadow-md active:scale-95',
-      outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500 active:scale-95',
-      ghost: 'text-primary-600 hover:bg-primary-50 focus:ring-primary-500 active:scale-95',
+      primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
+      secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
+      success: 'bg-success-600 text-white hover:bg-success-700 focus:ring-success-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
+      warning: 'bg-warning-600 text-white hover:bg-warning-700 focus:ring-warning-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
+      error: 'bg-error-600 text-white hover:bg-error-700 focus:ring-error-500 shadow-elevation-2 hover:shadow-elevation-4 active:shadow-elevation-1',
+      outline: 'border border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500 shadow-elevation-0 hover:shadow-elevation-2',
+      ghost: 'text-primary-600 hover:bg-primary-50 focus:ring-primary-500 shadow-elevation-0',
     };
 
     const sizes = {
-      xs: 'px-2.5 py-1.5 text-xs gap-1.5',
-      sm: 'px-3 py-2 text-sm gap-2',
-      md: 'px-4 py-2.5 text-sm gap-2',
-      lg: 'px-5 py-3 text-base gap-2.5',
-      xl: 'px-6 py-3.5 text-lg gap-3',
+      xs: 'px-3 py-1.5 text-xs gap-1.5 min-h-[28px]',
+      sm: 'px-4 py-2 text-sm gap-2 min-h-[32px]',
+      md: 'px-5 py-2.5 text-sm gap-2 min-h-[36px]',
+      lg: 'px-6 py-3 text-base gap-2.5 min-h-[40px]',
+      xl: 'px-7 py-3.5 text-base gap-3 min-h-[48px]',
     };
 
     const iconSizes = {

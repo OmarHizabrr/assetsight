@@ -27,33 +27,30 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
     const hasError = !!error;
 
-    const baseStyles = 'block w-full rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed appearance-none bg-no-repeat bg-right pr-10';
+    const baseStyles = 'block w-full rounded-md border-b-2 border-t-0 border-l-0 border-r-0 border-secondary-300 bg-transparent px-0 py-2 text-sm material-transition focus:outline-none focus:ring-0 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed appearance-none bg-no-repeat bg-right pr-10';
     
     const selectStyles = hasError
-      ? 'border-error-300 text-error-900 focus:border-error-500 focus:ring-error-500 bg-error-50'
-      : 'border-secondary-300 text-secondary-900 focus:border-primary-500 focus:ring-primary-500 bg-white';
-
-    const sizeStyles = 'px-4 py-2.5 text-sm';
+      ? 'border-error-500 text-error-900 focus:border-error-600'
+      : 'text-secondary-900';
 
     const combinedSelectClassName = `
       ${baseStyles}
       ${selectStyles}
-      ${sizeStyles}
       ${className}
     `.trim().replace(/\s+/g, ' ');
 
     return (
       <div className={fullWidth ? 'w-full' : ''}>
-        {label && (
-          <label
-            htmlFor={selectId}
-            className="block text-sm font-medium text-secondary-700 mb-1.5"
-          >
-            {label}
-            {props.required && <span className="text-error-500 mr-1">*</span>}
-          </label>
-        )}
-        <div className="relative">
+        <div className="relative pt-6">
+          {label && (
+            <label
+              htmlFor={selectId}
+              className="block text-xs font-medium text-secondary-600 absolute top-0 right-0 pointer-events-none material-transition"
+            >
+              {label}
+              {props.required && <span className="text-error-500 mr-1">*</span>}
+            </label>
+          )}
           <select
             ref={ref}
             id={selectId}
@@ -74,10 +71,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
         </div>
         {error && (
-          <p className="mt-1.5 text-sm text-error-600 animate-fade-in">{error}</p>
+          <p className="mt-1 text-xs text-error-600 animate-fade-in">{error}</p>
         )}
         {helperText && !error && (
-          <p className="mt-1.5 text-sm text-secondary-500">{helperText}</p>
+          <p className="mt-1 text-xs text-secondary-500">{helperText}</p>
         )}
       </div>
     );

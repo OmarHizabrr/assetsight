@@ -138,14 +138,17 @@ function ReportsPageContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <Card variant="flat" className="mb-6">
-          <CardHeader title="التقارير والإحصائيات" subtitle="نظرة شاملة على بيانات الأصول" />
-        </Card>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Page Header */}
+        <div className="mb-6">
+          <Card variant="flat" className="shadow-elevation-0 bg-white border-0">
+            <CardHeader title="التقارير والإحصائيات" subtitle="نظرة شاملة على بيانات الأصول" />
+          </Card>
+        </div>
 
         {/* إحصائيات عامة */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <Card hover>
+          <Card hover variant="elevated">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
                 <div>
@@ -157,7 +160,7 @@ function ReportsPageContent() {
             </CardBody>
           </Card>
 
-          <Card hover>
+          <Card hover variant="elevated">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
                 <div>
@@ -171,7 +174,7 @@ function ReportsPageContent() {
             </CardBody>
           </Card>
 
-          <Card hover>
+          <Card hover variant="elevated">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
                 <div>
@@ -183,7 +186,7 @@ function ReportsPageContent() {
             </CardBody>
           </Card>
 
-          <Card hover>
+          <Card hover variant="elevated">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
                 <div>
@@ -195,7 +198,7 @@ function ReportsPageContent() {
             </CardBody>
           </Card>
 
-          <Card hover>
+          <Card hover variant="elevated">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
                 <div>

@@ -16,13 +16,13 @@ export function Card({
   className = '',
   ...props
 }: CardProps) {
-  const baseStyles = 'rounded-xl transition-all duration-200';
+  const baseStyles = 'rounded-lg material-transition';
   
   const variants = {
-    default: 'bg-white shadow-soft border border-secondary-100',
-    elevated: 'bg-white shadow-medium border border-secondary-100',
-    outlined: 'bg-white border-2 border-secondary-200',
-    flat: 'bg-secondary-50',
+    default: 'bg-white shadow-elevation-2',
+    elevated: 'bg-white shadow-elevation-4',
+    outlined: 'bg-white border border-secondary-300 shadow-elevation-0',
+    flat: 'bg-white shadow-elevation-0',
   };
 
   const paddings = {
@@ -33,7 +33,7 @@ export function Card({
   };
 
   const hoverStyles = hover
-    ? 'hover:shadow-medium hover:-translate-y-0.5 cursor-pointer'
+    ? 'hover:shadow-elevation-8 hover:-translate-y-1 cursor-pointer material-transition'
     : '';
 
   const combinedClassName = `
@@ -66,20 +66,20 @@ export function CardHeader({
   ...props
 }: CardHeaderProps) {
   return (
-    <div className={`mb-4 ${className}`} {...props}>
+    <div className={`px-6 py-5 ${className}`} {...props}>
       {(title || subtitle || action) && (
-        <div className="flex items-start justify-between mb-2">
-          <div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
             {title && (
-              <h3 className="text-lg font-semibold text-secondary-900 mb-1">
+              <h3 className="text-2xl font-medium text-secondary-900 mb-1.5">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-sm text-secondary-500">{subtitle}</p>
+              <p className="text-sm text-secondary-600 font-normal leading-relaxed">{subtitle}</p>
             )}
           </div>
-          {action && <div>{action}</div>}
+          {action && <div className="flex-shrink-0">{action}</div>}
         </div>
       )}
       {children}
@@ -112,7 +112,7 @@ interface CardFooterProps extends HTMLAttributes<HTMLDivElement> {}
 
 export function CardFooter({ children, className = '', ...props }: CardFooterProps) {
   return (
-    <div className={`mt-4 pt-4 border-t border-secondary-200 ${className}`} {...props}>
+    <div className={`mt-4 pt-4 border-t border-secondary-300 ${className}`} {...props}>
       {children}
     </div>
   );
