@@ -87,11 +87,22 @@ export function CardHeader({
   );
 }
 
-interface CardBodyProps extends HTMLAttributes<HTMLDivElement> {}
+interface CardBodyProps extends HTMLAttributes<HTMLDivElement> {
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+}
 
-export function CardBody({ children, className = '', ...props }: CardBodyProps) {
+export function CardBody({ children, className = '', padding, ...props }: CardBodyProps) {
+  const paddings = {
+    none: '',
+    sm: 'p-4',
+    md: 'p-6',
+    lg: 'p-8',
+  };
+
+  const paddingClass = padding ? paddings[padding] : '';
+
   return (
-    <div className={className} {...props}>
+    <div className={`${paddingClass} ${className}`} {...props}>
       {children}
     </div>
   );

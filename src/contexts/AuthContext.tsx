@@ -72,8 +72,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const username = credentials.username.trim();
       const userDocs = await firestoreApi.getDocuments(
         firestoreApi.getCollection("users"),
-        "username",
-        username
+        {
+          whereField: "username",
+          isEqualTo: username
+        }
       );
       
       const foundUser = userDocs.find(doc => {
