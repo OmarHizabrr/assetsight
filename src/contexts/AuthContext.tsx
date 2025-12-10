@@ -68,55 +68,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
 
-      // جلب جميع الإدارات
-      const deptDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("departments"));
-      const departments = BaseModel.fromFirestoreArray(deptDocs);
-      
-      // البحث عن المستخدم في جميع المكاتب
+      // البحث عن المستخدم في الجدول المستقل users/userId/
       const username = credentials.username.trim();
-      let matchingUser: BaseModel | null = null;
+      const userDocs = await firestoreApi.getDocuments(
+        firestoreApi.getCollection("users"),
+        "username",
+        username
+      );
       
-      for (const dept of departments) {
-        const deptId = dept.get('id');
-        if (deptId) {
-          const subCollectionRef = firestoreApi.getSubCollection("departments", deptId, "departments");
-          const officeDocs = await firestoreApi.getDocuments(subCollectionRef);
-          
-          for (const officeDoc of officeDocs) {
-            const officeId = officeDoc.id;
-            if (officeId) {
-              const nestedSubCollectionRef = firestoreApi.getNestedSubCollection(
-                "departments",
-                deptId,
-                "departments",
-                officeId,
-                "users"
-              );
-              const userDocs = await firestoreApi.getDocuments(nestedSubCollectionRef);
-              
-              const foundUser = userDocs.find(doc => {
-                const userData = doc.data();
-                return userData.username === username && (userData.is_active === 1 || userData.is_active === true);
-              });
-              
-              if (foundUser) {
-                matchingUser = BaseModel.fromFirestore(foundUser);
-                break;
-              }
-            }
-          }
-          
-          if (matchingUser) break;
-        }
-      }
+      const foundUser = userDocs.find(doc => {
+        const userData = doc.data();
+        return (userData.is_active === 1 || userData.is_active === true);
+      });
 
-      if (!matchingUser) {
+      if (!foundUser) {
         throw new Error("اسم المستخدم أو كلمة المرور غير صحيحة");
       }
 
+      const matchingUser = BaseModel.fromFirestore(foundUser);
       setUser(matchingUser as AuthUser);
       if (typeof window !== "undefined") {
         window.localStorage.setItem("user", JSON.stringify(matchingUser.getData()));
+        window.localStorage.setItem("userData", JSON.stringify(matchingUser.getData()));
       }
     } catch (error) {
       console.error("Login error:", error);

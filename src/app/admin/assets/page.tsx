@@ -77,7 +77,6 @@ function AssetsPageContent() {
       
       // جلب جميع المكاتب من جميع الإدارات
       const allOffices: BaseModel[] = [];
-      const allUsers: BaseModel[] = [];
       
       for (const dept of BaseModel.fromFirestoreArray(deptDocs)) {
         const deptId = dept.get('id');
@@ -90,31 +89,15 @@ function AssetsPageContent() {
             office.put('department_id', deptId);
             allOffices.push(office);
           });
-          
-          // جلب المستخدمين من المكاتب
-          for (const office of offices) {
-            const officeId = office.get('id');
-            if (officeId) {
-              const nestedSubCollectionRef = firestoreApi.getNestedSubCollection(
-                "departments",
-                deptId,
-                "departments",
-                officeId,
-                "users"
-              );
-              const userDocs = await firestoreApi.getDocuments(nestedSubCollectionRef);
-              const users = BaseModel.fromFirestoreArray(userDocs);
-              users.forEach(user => {
-                user.put('office_id', officeId);
-                allUsers.push(user);
-              });
-            }
-          }
         }
       }
       
       setOffices(allOffices);
-      setUsers(allUsers);
+      
+      // جلب جميع المستخدمين من الجدول المستقل users/userId/
+      const userDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("users"));
+      const usersData = BaseModel.fromFirestoreArray(userDocs);
+      setUsers(usersData);
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {

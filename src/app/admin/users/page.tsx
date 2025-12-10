@@ -60,28 +60,10 @@ function UsersPageContent() {
       }
       setOffices(allOffices);
       
-      // جلب جميع المستخدمين من جميع المكاتب
-      const allUsers: BaseModel[] = [];
-      for (const office of allOffices) {
-        const officeId = office.get('id');
-        const deptId = office.get('department_id');
-        if (officeId && deptId) {
-          const nestedSubCollectionRef = firestoreApi.getNestedSubCollection(
-            "departments",
-            deptId,
-            "departments",
-            officeId,
-            "users"
-          );
-          const userDocs = await firestoreApi.getDocuments(nestedSubCollectionRef);
-          const users = BaseModel.fromFirestoreArray(userDocs);
-          users.forEach(user => {
-            user.put('office_id', officeId);
-            allUsers.push(user);
-          });
-        }
-      }
-      setUsers(allUsers);
+      // جلب جميع المستخدمين من الجدول المستقل users/userId/
+      const userDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("users"));
+      const usersData = BaseModel.fromFirestoreArray(userDocs);
+      setUsers(usersData);
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -91,55 +73,20 @@ function UsersPageContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const officeId = formData.get('office_id');
-    if (!officeId) {
-      alert("يرجى اختيار المكتب");
-      return;
-    }
-    
-    const office = offices.find(o => o.get('id') === officeId);
-    if (!office) {
-      alert("معلومات المكتب غير صحيحة");
-      return;
-    }
-    
-    const deptId = office.get('department_id');
-    if (!deptId) {
-      alert("معلومات المكتب غير صحيحة");
-      return;
-    }
-    
     try {
       const submitData = formData.getData();
       submitData.is_active = formData.getValue<boolean>('is_active') ? 1 : 0;
       
       const userId = editingUser?.get('id');
-      const editingOfficeId = editingUser?.get('office_id');
       
-      if (userId && editingOfficeId) {
-        const userOffice = offices.find(o => o.get('id') === editingOfficeId);
-        const userDeptId = userOffice?.get('department_id');
-        if (userDeptId) {
-          const docRef = firestoreApi.getNestedSubDocument(
-            "departments",
-            userDeptId,
-            "departments",
-            editingOfficeId,
-            "users",
-            userId
-          );
-          await firestoreApi.updateData(docRef, submitData);
-        }
+      if (userId) {
+        // تحديث مستخدم موجود
+        const docRef = firestoreApi.getDocument("users", userId);
+        await firestoreApi.updateData(docRef, submitData);
       } else {
+        // إضافة مستخدم جديد
         const newId = firestoreApi.getNewId("users");
-        const docRef = firestoreApi.getNestedSubDocument(
-          "departments",
-          deptId,
-          "departments",
-          officeId,
-          "users",
-          newId
-        );
+        const docRef = firestoreApi.getDocument("users", newId);
         await firestoreApi.setData(docRef, submitData);
       }
       setIsModalOpen(false);
@@ -162,24 +109,12 @@ function UsersPageContent() {
 
   const handleDelete = async (user: BaseModel) => {
     const id = user.get('id');
-    const officeId = user.get('office_id');
-    if (!id || !officeId) return;
+    if (!id) return;
     if (!confirm(`هل أنت متأكد من حذف ${user.get('full_name')}؟`)) return;
     
     try {
-      const office = offices.find(o => o.get('id') === officeId);
-      const deptId = office?.get('department_id');
-      if (deptId) {
-        const docRef = firestoreApi.getNestedSubDocument(
-          "departments",
-          deptId,
-          "departments",
-          officeId,
-          "users",
-          id
-        );
-        await firestoreApi.deleteData(docRef);
-      }
+      const docRef = firestoreApi.getDocument("users", id);
+      await firestoreApi.deleteData(docRef);
       loadData();
     } catch (error) {
       console.error("Error deleting user:", error);
