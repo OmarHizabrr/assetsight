@@ -29,6 +29,20 @@ body {
   background: #f8fafc;
   color: #1e293b;
   line-height: 1.6;
+  font-size: 16px;
+}
+
+/* Responsive Typography */
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 16px;
+  }
 }
 
 a {

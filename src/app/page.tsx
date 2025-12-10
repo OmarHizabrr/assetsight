@@ -79,20 +79,25 @@ export default function HomePage() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card variant="flat" className="mb-6">
-          <CardHeader title="لوحة التحكم" subtitle="نظرة شاملة على النظام" />
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <Card variant="flat" className="mb-4 sm:mb-6">
+          <CardHeader 
+            title="لوحة التحكم" 
+            subtitle="نظرة شاملة على النظام"
+            className="px-2 sm:px-0"
+          />
         </Card>
 
         {!user && (
-          <Card variant="outlined" className="mb-6 border-warning-200 bg-warning-50">
+          <Card variant="outlined" className="mb-4 sm:mb-6 border-warning-200 bg-warning-50">
             <CardBody padding="md">
-              <div className="flex items-center justify-between">
-                <p className="text-warning-800 font-medium">يرجى تسجيل الدخول للوصول إلى النظام</p>
-                <a href="/login">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <p className="text-warning-800 font-medium text-sm sm:text-base">يرجى تسجيل الدخول للوصول إلى النظام</p>
+                <a href="/login" className="w-full sm:w-auto">
                   <Button
                     variant="primary"
                     size="md"
+                    className="w-full sm:w-auto"
                   >
                     تسجيل الدخول
                   </Button>
@@ -102,51 +107,51 @@ export default function HomePage() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card hover>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+          <Card hover className="transition-all duration-200">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-secondary-600 mb-1">الإدارات</p>
-                  <p className="text-3xl font-bold text-secondary-900">{stats.departments}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-secondary-600 mb-1 sm:mb-2">الإدارات</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-secondary-900 truncate">{stats.departments}</p>
                 </div>
-                <div className="text-4xl">🏢</div>
+                <div className="text-3xl sm:text-4xl flex-shrink-0 mr-2 sm:mr-0">🏢</div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover>
+          <Card hover className="transition-all duration-200">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-secondary-600 mb-1">المكاتب</p>
-                  <p className="text-3xl font-bold text-secondary-900">{stats.offices}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-secondary-600 mb-1 sm:mb-2">المكاتب</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-secondary-900 truncate">{stats.offices}</p>
                 </div>
-                <div className="text-4xl">🚪</div>
+                <div className="text-3xl sm:text-4xl flex-shrink-0 mr-2 sm:mr-0">🚪</div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover>
+          <Card hover className="transition-all duration-200">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-secondary-600 mb-1">الأصول</p>
-                  <p className="text-3xl font-bold text-secondary-900">{stats.assets}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-secondary-600 mb-1 sm:mb-2">الأصول</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-secondary-900 truncate">{stats.assets}</p>
                 </div>
-                <div className="text-4xl">💼</div>
+                <div className="text-3xl sm:text-4xl flex-shrink-0 mr-2 sm:mr-0">💼</div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover>
+          <Card hover className="transition-all duration-200">
             <CardBody padding="md">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-secondary-600 mb-1">المستخدمون</p>
-                  <p className="text-3xl font-bold text-secondary-900">{stats.users}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-secondary-600 mb-1 sm:mb-2">المستخدمون</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-secondary-900 truncate">{stats.users}</p>
                 </div>
-                <div className="text-4xl">👥</div>
+                <div className="text-3xl sm:text-4xl flex-shrink-0 mr-2 sm:mr-0">👥</div>
               </div>
             </CardBody>
           </Card>

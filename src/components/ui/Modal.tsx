@@ -59,7 +59,7 @@ export function Modal({
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <div className="flex items-center justify-center min-h-screen px-3 sm:px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         {/* Backdrop */}
         <div
           className="fixed inset-0 transition-opacity bg-secondary-900/60 backdrop-blur-sm animate-fade-in"
@@ -68,13 +68,13 @@ export function Modal({
         />
 
         {/* Modal Panel */}
-        <div className={`inline-block align-bottom bg-white rounded-2xl text-right overflow-hidden shadow-large transform transition-all animate-scale-in sm:my-8 sm:align-middle sm:w-full ${sizes[size]}`}>
-          <div className="bg-white px-6 pt-6 pb-4 sm:p-8">
+        <div className={`inline-block align-bottom bg-white rounded-xl sm:rounded-2xl text-right overflow-hidden shadow-large transform transition-all animate-scale-in sm:my-8 sm:align-middle w-full ${sizes[size]}`}>
+          <div className="bg-white px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-4 lg:p-8 max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white pb-2 -mx-4 sm:-mx-6 px-4 sm:px-6 z-10">
               <h3
                 id="modal-title"
-                className="text-xl font-semibold text-secondary-900"
+                className="text-lg sm:text-xl font-semibold text-secondary-900 pr-2"
               >
                 {title}
               </h3>
@@ -83,7 +83,7 @@ export function Modal({
                   variant="ghost"
                   size="sm"
                   onClick={onClose}
-                  className="text-secondary-400 hover:text-secondary-600 -mr-2"
+                  className="text-secondary-400 hover:text-secondary-600 -mr-2 flex-shrink-0"
                   aria-label="إغلاق"
                 >
                   <CloseIcon className="w-5 h-5" />
@@ -92,7 +92,7 @@ export function Modal({
             </div>
 
             {/* Content */}
-            <div className="text-secondary-700">{children}</div>
+            <div className="text-secondary-700 text-sm sm:text-base">{children}</div>
           </div>
         </div>
       </div>

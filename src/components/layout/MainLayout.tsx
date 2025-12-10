@@ -44,22 +44,26 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 </svg>
               </button>
               <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <h1 className="text-2xl font-bold text-primary-600">AssetSight</h1>
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-primary-600">AssetSight</h1>
               </Link>
             </div>
             {user && (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary-50">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="hidden sm:flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-secondary-50">
                   <UserIcon className="w-4 h-4 text-secondary-600" />
-                  <span className="text-sm font-medium text-secondary-700">{user.get('full_name') || user.get('username')}</span>
+                  <span className="text-xs sm:text-sm font-medium text-secondary-700 truncate max-w-[120px] sm:max-w-none">
+                    {user.get('full_name') || user.get('username')}
+                  </span>
                 </div>
                 <Button
                   onClick={logout}
                   variant="error"
                   size="sm"
                   leftIcon={<LogoutIcon className="w-4 h-4" />}
+                  className="text-xs sm:text-sm"
                 >
-                  تسجيل الخروج
+                  <span className="hidden sm:inline">تسجيل الخروج</span>
+                  <span className="sm:hidden">خروج</span>
                 </Button>
               </div>
             )}
@@ -72,15 +76,15 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <aside
           className={`${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-medium border-r border-secondary-200 transform transition-transform duration-300 ease-in-out lg:transition-none`}
+          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 sm:w-72 bg-white shadow-medium border-r border-secondary-200 transform transition-transform duration-300 ease-in-out lg:transition-none`}
         >
           <nav className="h-full overflow-y-auto py-4">
-            <ul className="space-y-1 px-3">
+            <ul className="space-y-1 px-2 sm:px-3">
               {menuItems.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 text-sm sm:text-base ${
                       pathname === item.href
                         ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm'
                         : 'text-secondary-700 hover:bg-secondary-50 hover:text-secondary-900'
@@ -89,12 +93,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   >
                     <span className="flex-shrink-0">
                       {typeof item.icon === 'string' ? (
-                        <span className="text-lg">{item.icon}</span>
+                        <span className="text-base sm:text-lg">{item.icon}</span>
                       ) : (
-                        item.icon
+                        <span className="w-5 h-5">{item.icon}</span>
                       )}
                     </span>
-                    <span>{item.label}</span>
+                    <span className="truncate">{item.label}</span>
                   </Link>
                 </li>
               ))}
@@ -111,8 +115,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 lg:mr-64 min-h-[calc(100vh-4rem)]">
-          <div className="h-full">
+        <main className="flex-1 lg:mr-64 xl:mr-72 min-h-[calc(100vh-4rem)] w-full">
+          <div className="h-full w-full">
             {children}
           </div>
         </main>
