@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --font-noto-sans-arabic: 'Noto Sans Arabic', sans-serif;
