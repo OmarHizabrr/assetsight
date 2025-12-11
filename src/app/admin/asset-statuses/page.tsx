@@ -217,7 +217,6 @@ function AssetStatusesPageContent() {
             </div>
           </form>
         </Modal>
-      </div>
     </MainLayout>
   );
 }

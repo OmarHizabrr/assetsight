@@ -235,7 +235,6 @@ function AssetTypesPageContent() {
             </div>
           </form>
         </Modal>
-      </div>
     </MainLayout>
   );
 }

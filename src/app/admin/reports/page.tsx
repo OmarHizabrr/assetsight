@@ -269,7 +269,6 @@ function ReportsPageContent() {
             </CardBody>
           </Card>
         </div>
-      </div>
     </MainLayout>
   );
 }

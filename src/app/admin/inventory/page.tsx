@@ -602,7 +602,6 @@ function InventoryPageContent() {
             </div>
           </form>
         </Modal>
-      </div>
     </MainLayout>
   );
 }

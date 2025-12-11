@@ -163,7 +163,6 @@ export default function HomePage() {
             </CardBody>
           </Card>
         </div>
-      </div>
     </MainLayout>
   );
 }

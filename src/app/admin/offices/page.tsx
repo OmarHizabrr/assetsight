@@ -307,7 +307,6 @@ function OfficesPageContent() {
             </div>
           </form>
         </Modal>
-      </div>
     </MainLayout>
   );
 }

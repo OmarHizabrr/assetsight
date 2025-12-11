@@ -354,7 +354,6 @@ function UsersPageContent() {
             </div>
           </form>
         </Modal>
-      </div>
     </MainLayout>
   );
 }

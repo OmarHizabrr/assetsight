@@ -217,7 +217,6 @@ function CategoriesPageContent() {
             </div>
           </form>
         </Modal>
-      </div>
     </MainLayout>
   );
 }
