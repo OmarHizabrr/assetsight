@@ -470,13 +470,17 @@
 .h-14 { height: 3.5rem; }
 .h-16 { height: 4rem; }
 .h-20 { height: 5rem; }
+.h-16 { height: 4rem; }
 .h-64 { height: 16rem; }
+.h-\[calc\(100vh-4rem\)\] { height: calc(100vh - 4rem); }
 .min-h-\[28px\] { min-height: 28px; }
 .min-h-\[32px\] { min-height: 32px; }
 .min-h-\[36px\] { min-height: 36px; }
 .min-h-\[40px\] { min-height: 40px; }
 .min-h-\[48px\] { min-height: 48px; }
 .min-h-\[calc\(100vh-5rem\)\] { min-height: calc(100vh - 5rem); }
+.min-h-full { min-height: 100%; }
+.max-w-7xl { max-width: 80rem; }
 
 /* Space */
 .space-y-1 > * + * { margin-top: var(--spacing-1); }
@@ -546,10 +550,13 @@
 
 @media (min-width: 1024px) {
   .lg\:px-8 { padding-left: var(--spacing-8); padding-right: var(--spacing-8); }
+  .lg\:py-8 { padding-top: var(--spacing-8); padding-bottom: var(--spacing-8); }
   .lg\:py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
   .lg\:mr-72 { margin-right: 18rem; }
   .lg\:translate-x-0 { transform: translateX(0); }
   .lg\:static { position: static; }
+  .lg\:top-0 { top: 0; }
+  .lg\:h-screen { height: 100vh; }
   .lg\:transition-none { transition: none; }
   .lg\:hidden { display: none; }
   .lg\:inline { display: inline; }
@@ -931,6 +938,18 @@
   .sm\:pb-4 { padding-bottom: var(--spacing-4); }
 }
 
+/* Layout Utilities */
+.flex-shrink-0 { flex-shrink: 0; }
+.flex-1 { flex: 1 1 0%; }
+.mt-auto { margin-top: auto; }
+.overflow-hidden { overflow: hidden; }
+.overflow-y-auto { overflow-y: auto; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.top-16 { top: 4rem; }
+.z-30 { z-index: 30; }
+.z-40 { z-index: 40; }
+.z-50 { z-index: 50; }
+
 @media (min-width: 768px) {
   .md\:table { display: table; }
   .md\:hidden { display: none; }
@@ -938,10 +957,13 @@
 
 @media (min-width: 1024px) {
   .lg\:px-8 { padding-left: var(--spacing-8); padding-right: var(--spacing-8); }
+  .lg\:py-8 { padding-top: var(--spacing-8); padding-bottom: var(--spacing-8); }
   .lg\:py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
   .lg\:mr-72 { margin-right: 18rem; }
   .lg\:translate-x-0 { transform: translateX(0); }
   .lg\:static { position: static; }
+  .lg\:top-0 { top: 0; }
+  .lg\:h-screen { height: 100vh; }
   .lg\:transition-none { transition: none; }
   .lg\:hidden { display: none; }
   .lg\:inline { display: inline; }

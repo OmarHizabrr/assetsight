@@ -27,30 +27,30 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header - Vuetify Style */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50 flex-shrink-0">
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-64">
+          <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-full text-gray-600 hover:bg-gray-100 material-transition"
+                className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 material-transition"
                 aria-label="فتح القائمة"
               >
-                <MaterialIcon name="menu" size="2xl" />
+                <MaterialIcon name="menu" size="xl" />
               </button>
               <Link href="/" className="flex items-center gap-3 hover:opacity-90 material-transition">
-                <div className="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center shadow-elevation-2">
                   <span className="text-white font-bold text-lg">A</span>
                 </div>
-                <h1 className="text-xl sm:text-2xl font-medium text-gray-900">AssetSight</h1>
+                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">AssetSight</h1>
               </Link>
             </div>
             {user && (
               <div className="flex items-center gap-3">
-                <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-lg bg-gray-100">
-                  <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
+                <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
+                  <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center shadow-sm">
                     <MaterialIcon name="person" className="text-white" size="sm" />
                   </div>
                   <span className="text-sm font-medium text-gray-700 truncate max-w-[140px]">
@@ -73,14 +73,15 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar - Vuetify Navigation Drawer Style */}
+      {/* Main Layout Container */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
         <aside
           className={`${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg border-r border-gray-200 transform material-transition lg:transition-none`}
+          } lg:translate-x-0 fixed lg:static top-16 lg:top-0 left-0 z-40 w-64 bg-white shadow-lg border-r border-gray-200 transform material-transition lg:transition-none h-[calc(100vh-4rem)] lg:h-screen overflow-y-auto`}
         >
-          <nav className="h-full overflow-y-auto py-4">
+          <nav className="h-full py-4">
             <ul className="space-y-1 px-2">
               {menuItems.map((item) => (
                 <li key={item.href}>
@@ -88,8 +89,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg material-transition text-sm font-medium relative ${
                       pathname === item.href
-                        ? 'bg-primary-50 text-primary-600'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-primary-50 text-primary-600 shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-50'
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >
@@ -112,20 +113,38 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         {/* Overlay for mobile */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/40 z-40 lg:hidden animate-fade-in"
+            className="fixed inset-0 bg-black/40 z-30 lg:hidden animate-fade-in"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* Main Content */}
-        <main className="flex-1 lg:mr-72 min-h-[calc(100vh-5rem)] w-full">
-          <div className="h-full w-full">
-            <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-10">
-            {children}
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="min-h-full">
+            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 lg:py-8">
+              {children}
             </div>
           </div>
         </main>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 mt-auto flex-shrink-0">
+        <div className="px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <MaterialIcon name="dashboard" className="text-primary-600" size="sm" />
+              <span className="font-medium">AssetSight</span>
+              <span className="text-gray-400">© {new Date().getFullYear()}</span>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <span>نظام إدارة الأصول</span>
+              <span className="hidden sm:inline">•</span>
+              <span className="hidden sm:inline">جميع الحقوق محفوظة</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
