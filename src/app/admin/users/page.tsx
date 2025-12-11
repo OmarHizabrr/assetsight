@@ -1,7 +1,7 @@
 'use client';
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { PlusIcon } from "@/components/icons";
+import { PlusIcon, UserIcon } from "@/components/icons";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
