@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
+import { Textarea } from "@/components/ui/Textarea";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { useEffect, useState } from "react";
@@ -224,7 +225,7 @@ function UsersPageContent() {
           title={editingUser ? "تعديل مستخدم" : "إضافة مستخدم جديد"}
           size="lg"
         >
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="اسم المستخدم"
@@ -314,36 +315,35 @@ function UsersPageContent() {
               }}
             />
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                الملاحظات
-              </label>
-              <textarea
-                value={formData.get('notes')}
-                onChange={(e) => {
-                  const newData = new BaseModel(formData.getData());
-                  newData.put('notes', e.target.value);
-                  setFormData(newData);
-                }}
-                rows={3}
-                placeholder="أدخل أي ملاحظات إضافية"
-                className="block w-full rounded-xl border-2 border-slate-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white shadow-sm focus:shadow-md disabled:opacity-50 disabled:cursor-not-allowed resize-none"
-              />
-            </div>
+            <Textarea
+              label="الملاحظات"
+              value={formData.get('notes')}
+              onChange={(e) => {
+                const newData = new BaseModel(formData.getData());
+                newData.put('notes', e.target.value);
+                setFormData(newData);
+              }}
+              rows={3}
+              placeholder="أدخل أي ملاحظات إضافية"
+            />
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-300">
+            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsModalOpen(false)}
-                size="md"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingUser(null);
+                  setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', is_active: true, notes: '' }));
+                }}
+                size="lg"
               >
                 إلغاء
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                size="md"
+                size="lg"
               >
                 {editingUser ? "تحديث" : "حفظ"}
               </Button>

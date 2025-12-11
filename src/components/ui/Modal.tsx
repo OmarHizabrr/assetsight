@@ -2,7 +2,6 @@
 
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { useEffect } from "react";
-import { Button } from "./Button";
 
 interface ModalProps {
   isOpen: boolean;
@@ -45,10 +44,10 @@ export function Modal({
   if (!isOpen) return null;
 
   const sizes = {
-    sm: 'sm:max-w-md',
-    md: 'sm:max-w-lg',
-    lg: 'sm:max-w-2xl',
-    xl: 'sm:max-w-4xl',
+    sm: 'sm:max-w-lg',
+    md: 'sm:max-w-2xl',
+    lg: 'sm:max-w-4xl',
+    xl: 'sm:max-w-6xl',
     full: 'sm:max-w-full sm:mx-4',
   };
 
@@ -68,31 +67,29 @@ export function Modal({
         />
 
         {/* Modal Panel */}
-        <div className={`inline-block align-bottom bg-white rounded-2xl text-right overflow-hidden shadow-elevation-24 transform material-transition animate-scale-in sm:my-8 sm:align-middle w-full border border-slate-200/60 ${sizes[size]}`}>
-          <div className="bg-gradient-to-br from-white via-slate-50/30 to-white px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-4 lg:p-8 max-h-[90vh] overflow-y-auto">
+        <div className={`inline-block align-bottom bg-white rounded-2xl text-right overflow-hidden shadow-elevation-24 transform material-transition animate-scale-in sm:my-8 sm:align-middle w-full border border-gray-200 ${sizes[size]}`}>
+          <div className="bg-white px-6 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8 max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-gradient-to-r from-white to-slate-50/50 backdrop-blur-sm pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 z-10 border-b-2 border-slate-200/60">
+            <div className="flex items-center justify-between mb-8 pb-5 border-b border-gray-200">
               <h3
                 id="modal-title"
-                className="text-xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent pr-2"
+                className="text-2xl sm:text-3xl font-semibold text-gray-900"
               >
                 {title}
               </h3>
               {showCloseButton && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={onClose}
-                  className="text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 -mr-2 flex-shrink-0"
+                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 material-transition flex-shrink-0"
                   aria-label="إغلاق"
                 >
                   <MaterialIcon name="close" size="lg" />
-                </Button>
+                </button>
               )}
             </div>
 
             {/* Content */}
-            <div className="text-secondary-800 text-sm sm:text-base">{children}</div>
+            <div className="text-gray-700 text-sm sm:text-base">{children}</div>
           </div>
         </div>
       </div>

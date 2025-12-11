@@ -8,6 +8,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { Tabs } from "@/components/ui/Tabs";
@@ -461,7 +462,7 @@ function InventoryPageContent() {
           title={editingCycle ? "تعديل دورة جرد" : "إضافة دورة جرد جديدة"}
           size="md"
         >
-          <form onSubmit={handleCycleSubmit} className="space-y-5">
+          <form onSubmit={handleCycleSubmit} className="space-y-6">
             <Input
               label="اسم الجولة"
               type="text"
@@ -493,31 +494,26 @@ function InventoryPageContent() {
                 label: dept.get('name'),
               }))}
             />
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                الملاحظات
-              </label>
-              <textarea
-                value={cycleFormData.get('notes')}
-                onChange={(e) => updateCycleField('notes', e.target.value)}
-                rows={3}
-                placeholder="أدخل أي ملاحظات إضافية"
-                className="block w-full rounded-xl border-2 border-slate-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white shadow-sm focus:shadow-md disabled:opacity-50 disabled:cursor-not-allowed resize-none"
-              />
-            </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-300">
+            <Textarea
+              label="الملاحظات"
+              value={cycleFormData.get('notes')}
+              onChange={(e) => updateCycleField('notes', e.target.value)}
+              rows={3}
+              placeholder="أدخل أي ملاحظات إضافية"
+            />
+            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsCycleModalOpen(false)}
-                size="md"
+                size="lg"
               >
                 إلغاء
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                size="md"
+                size="lg"
               >
                 {editingCycle ? "تحديث" : "حفظ"}
               </Button>
@@ -536,7 +532,7 @@ function InventoryPageContent() {
           title={editingItem ? "تعديل عنصر جرد" : "إضافة عنصر جرد جديد"}
           size="md"
         >
-          <form onSubmit={handleItemSubmit} className="space-y-5">
+          <form onSubmit={handleItemSubmit} className="space-y-6">
             <Select
               label="الجولة"
               required
@@ -568,31 +564,26 @@ function InventoryPageContent() {
               checked={itemFormData.getValue<boolean>('found') === true || itemFormData.getValue<number>('found') === 1}
               onChange={(e) => updateItemField('found', e.target.checked)}
             />
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                ملاحظة
-              </label>
-              <textarea
-                value={itemFormData.get('note')}
-                onChange={(e) => updateItemField('note', e.target.value)}
-                rows={3}
-                placeholder="أدخل أي ملاحظات"
-                className="block w-full rounded-xl border-2 border-slate-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white shadow-sm focus:shadow-md disabled:opacity-50 disabled:cursor-not-allowed resize-none"
-              />
-            </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-300">
+            <Textarea
+              label="ملاحظة"
+              value={itemFormData.get('note')}
+              onChange={(e) => updateItemField('note', e.target.value)}
+              rows={3}
+              placeholder="أدخل أي ملاحظات"
+            />
+            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsItemModalOpen(false)}
-                size="md"
+                size="lg"
               >
                 إلغاء
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                size="md"
+                size="lg"
               >
                 {editingItem ? "تحديث" : "حفظ"}
               </Button>
