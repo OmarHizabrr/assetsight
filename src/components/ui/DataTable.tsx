@@ -1,8 +1,8 @@
 'use client';
 
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { BaseModel } from "@/lib/BaseModel";
 import { useState } from "react";
-import { DeleteIcon, EditIcon, SearchIcon } from "../icons";
 import { Button } from "./Button";
 import { Input } from "./Input";
 
@@ -49,8 +49,8 @@ export function DataTable({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in border border-slate-100 w-full">
-      <div className="p-6 border-b-2 border-slate-200/60 bg-gradient-to-r from-slate-50 via-primary-50/40 to-slate-50">
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden animate-fade-in border border-gray-200 w-full">
+      <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="max-w-lg">
           <div className="relative">
         <Input
@@ -58,8 +58,8 @@ export function DataTable({
           placeholder="بحث في الجدول..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-              leftIcon={<SearchIcon className="w-5 h-5" />}
-              className="bg-white shadow-lg border-slate-200 focus:border-primary-500 focus:shadow-xl focus:shadow-primary-500/20"
+              leftIcon={<MaterialIcon name="search" className="text-gray-400" size="lg" />}
+              className="bg-white border-gray-300 focus:border-primary-500"
         />
           </div>
         </div>
@@ -69,12 +69,12 @@ export function DataTable({
           <div className="overflow-hidden w-full">
             {/* Desktop Table */}
             <table className="hidden md:table w-full">
-              <thead className="bg-gradient-to-r from-slate-100 via-primary-50/40 to-slate-100 border-b-2 border-primary-200/60">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   {columns.map((col) => (
                     <th
                       key={String(col.key)}
-                      className="px-8 py-6 text-right text-xs font-black text-slate-800 uppercase tracking-wider"
+                      className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider"
                     >
                       {col.label}
                     </th>
@@ -94,8 +94,8 @@ export function DataTable({
                       className="px-8 py-20 text-center"
                     >
                       <div className="flex flex-col items-center gap-4">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center shadow-lg">
-                          <SearchIcon className="w-10 h-10 text-slate-400" />
+                        <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center">
+                          <MaterialIcon name="search" className="text-gray-400" size="5xl" />
                         </div>
                         <div className="space-y-1">
                           <p className="text-slate-700 font-bold text-lg">لا توجد بيانات</p>
@@ -110,13 +110,13 @@ export function DataTable({
                   filteredData.map((item, index) => (
                     <tr
                       key={item.get('id')}
-                      className="hover:bg-gradient-to-r hover:from-primary-50 hover:via-blue-50/30 hover:to-primary-50 material-transition animate-fade-in border-b border-slate-100/60"
+                      className="hover:bg-gray-50 material-transition animate-fade-in border-b border-gray-100"
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       {columns.map((col) => (
                         <td
                           key={col.key}
-                          className="px-8 py-6 text-sm text-slate-900 font-bold"
+                          className="px-6 py-4 text-sm text-gray-900 font-normal"
                         >
                           <div className="truncate max-w-xs">
                           {col.render ? col.render(item) : String(item.get(col.key) || "-")}
@@ -131,9 +131,9 @@ export function DataTable({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onEdit(item)}
-                                leftIcon={<EditIcon className="w-4 h-4" />}
-                                className="text-primary-600 hover:text-white hover:bg-primary-600 shadow-md hover:shadow-lg material-transition rounded-lg"
+                                className="text-primary-600 hover:bg-primary-50 normal-case"
                               >
+                                <MaterialIcon name="edit" className="text-lg mr-1" size="lg" />
                                 <span className="hidden lg:inline">تعديل</span>
                                 <span className="lg:hidden">تعديل</span>
                               </Button>
@@ -143,9 +143,9 @@ export function DataTable({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onDelete(item)}
-                                leftIcon={<DeleteIcon className="w-4 h-4" />}
-                                className="text-error-600 hover:text-white hover:bg-error-600 shadow-md hover:shadow-lg material-transition rounded-lg"
+                                className="text-error-600 hover:bg-error-50 normal-case"
                               >
+                                <MaterialIcon name="delete" className="text-lg mr-1" size="lg" />
                                 <span className="hidden lg:inline">حذف</span>
                                 <span className="lg:hidden">حذف</span>
                               </Button>
@@ -164,8 +164,8 @@ export function DataTable({
               {filteredData.length === 0 ? (
                 <div className="px-6 py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-secondary-100 flex items-center justify-center">
-                      <SearchIcon className="w-8 h-8 text-secondary-400" />
+                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                      <MaterialIcon name="search" className="text-gray-400" size="4xl" />
                     </div>
                     <p className="text-secondary-700 font-medium text-base">لا توجد بيانات</p>
                     {searchTerm && (
@@ -198,9 +198,9 @@ export function DataTable({
                               variant="ghost"
                               size="sm"
                               onClick={() => onEdit(item)}
-                              leftIcon={<EditIcon className="w-4 h-4" />}
-                              className="text-primary-600 hover:text-primary-700"
+                              className="text-primary-600 hover:bg-primary-50 normal-case"
                             >
+                              <MaterialIcon name="edit" className="text-lg mr-1" size="lg" />
                               تعديل
                             </Button>
                           )}
@@ -209,9 +209,9 @@ export function DataTable({
                               variant="ghost"
                               size="sm"
                               onClick={() => onDelete(item)}
-                              leftIcon={<DeleteIcon className="w-4 h-4" />}
-                              className="text-error-600 hover:text-error-700"
+                              className="text-error-600 hover:bg-error-50 normal-case"
                             >
+                              <MaterialIcon name="delete" className="text-lg mr-1" size="lg" />
                               حذف
                             </Button>
                           )}
@@ -226,9 +226,9 @@ export function DataTable({
         </div>
       </div>
       {filteredData.length > 0 && (
-        <div className="px-8 py-5 bg-gradient-to-r from-slate-50 via-primary-50/40 to-slate-50 border-t-2 border-slate-200/60">
-          <p className="text-sm text-slate-800 text-right font-black">
-            عرض <span className="text-primary-700 font-extrabold text-base">{filteredData.length}</span> من <span className="text-primary-700 font-extrabold text-base">{data.length}</span> عنصر
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <p className="text-sm text-gray-600 text-right font-medium">
+            عرض <span className="text-primary-600 font-semibold">{filteredData.length}</span> من <span className="text-primary-600 font-semibold">{data.length}</span> عنصر
           </p>
         </div>
       )}

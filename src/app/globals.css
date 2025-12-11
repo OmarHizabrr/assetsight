@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import '../styles/custom.css';
 
 :root {
   --font-noto-sans-arabic: 'Noto Sans Arabic', sans-serif;
@@ -26,7 +24,7 @@ body {
 }
 
 body {
-  background: linear-gradient(to bottom right, #fafafa, #f5f7fa);
+  background: #fafafa;
   color: #212121;
   line-height: 1.5;
   font-size: 14px;

@@ -1,7 +1,7 @@
 'use client';
 
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { useEffect } from "react";
-import { CloseIcon } from "../icons";
 import { Button } from "./Button";
 
 interface ModalProps {
@@ -86,7 +86,7 @@ export function Modal({
                   className="text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 -mr-2 flex-shrink-0"
                   aria-label="إغلاق"
                 >
-                  <CloseIcon className="w-5 h-5" />
+                  <MaterialIcon name="close" size="lg" />
                 </Button>
               )}
             </div>

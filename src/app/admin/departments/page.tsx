@@ -1,7 +1,7 @@
 'use client';
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { PlusIcon } from "@/components/icons";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
@@ -102,13 +102,12 @@ function DepartmentsPageContent() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <span className="text-3xl relative z-10">🏢</span>
+              <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+                <MaterialIcon name="business" className="text-primary-600" size="3xl" />
               </div>
               <div className="flex-1">
-                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent mb-2">الإدارات</h1>
-                <p className="text-slate-600 text-lg font-semibold">إدارة وإضافة الإدارات في النظام</p>
+                <h1 className="text-3xl font-medium text-gray-900 mb-1">الإدارات</h1>
+                <p className="text-gray-600 text-sm">إدارة وإضافة الإدارات في النظام</p>
               </div>
             </div>
           </div>
@@ -118,10 +117,10 @@ function DepartmentsPageContent() {
               setFormData(new BaseModel({ name: '', description: '', notes: '' }));
               setIsModalOpen(true);
             }}
-            leftIcon={<PlusIcon className="w-5 h-5" />}
             size="lg"
-            className="shadow-xl shadow-primary-500/30 hover:shadow-2xl hover:shadow-primary-500/40 hover:scale-105 material-transition"
+            className="normal-case"
           >
+            <MaterialIcon name="add" className="text-lg mr-1" size="lg" />
             إضافة إدارة جديدة
           </Button>
         </div>

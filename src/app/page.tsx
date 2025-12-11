@@ -1,9 +1,9 @@
 'use client';
 
-import { HomeIcon } from "@/components/icons";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card, CardBody } from "@/components/ui/Card";
 import { useAuth } from "@/contexts/AuthContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
@@ -84,13 +84,12 @@ export default function HomePage() {
       <div className="mb-10">
         <div className="space-y-3">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-              <HomeIcon className="w-7 h-7 text-white relative z-10" />
+            <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+              <MaterialIcon name="dashboard" className="text-primary-600" size="3xl" />
             </div>
             <div className="flex-1">
-              <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent mb-2">لوحة التحكم</h1>
-              <p className="text-slate-600 text-lg font-semibold">نظرة شاملة على النظام وإحصائياته</p>
+              <h1 className="text-3xl font-medium text-gray-900 mb-1">لوحة التحكم</h1>
+              <p className="text-gray-600 text-sm">نظرة شاملة على النظام وإحصائياته</p>
             </div>
           </div>
         </div>
@@ -115,75 +114,71 @@ export default function HomePage() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Departments Card */}
-          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8 bg-gradient-to-br from-white via-primary-50/40 to-primary-100/30 overflow-hidden group relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary-400/20 to-transparent rounded-full blur-2xl"></div>
-            <CardBody padding="lg" className="relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Departments Card - Vuetify Style */}
+          <Card hover variant="elevated" className="bg-white shadow-sm hover:shadow-md material-transition">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">الإدارات</p>
-                  <p className="text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 bg-clip-text text-transparent truncate mb-1">{stats.departments}</p>
-                  <p className="text-xs text-slate-500 font-medium">إدارة نشطة</p>
+                  <p className="text-xs font-medium text-gray-500 mb-2 uppercase">الإدارات</p>
+                  <p className="text-4xl font-medium text-gray-900 mb-1">{stats.departments}</p>
+                  <p className="text-xs text-gray-500">إدارة نشطة</p>
                 </div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/40 group-hover:scale-110 material-transition">
-                  <span className="text-3xl">🏢</span>
+                <div className="w-14 h-14 rounded-lg bg-primary-100 flex items-center justify-center">
+                  <MaterialIcon name="business" className="text-primary-600" size="3xl" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Offices Card */}
-          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8 bg-gradient-to-br from-white via-accent-50/40 to-accent-100/30 overflow-hidden group relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-accent-400/20 to-transparent rounded-full blur-2xl"></div>
-            <CardBody padding="lg" className="relative z-10">
+          <Card hover variant="elevated" className="bg-white shadow-sm hover:shadow-md material-transition">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">المكاتب</p>
-                  <p className="text-5xl font-black bg-gradient-to-r from-accent-600 via-accent-700 to-accent-800 bg-clip-text text-transparent truncate mb-1">{stats.offices}</p>
-                  <p className="text-xs text-slate-500 font-medium">مكتب متاح</p>
+                  <p className="text-xs font-medium text-gray-500 mb-2 uppercase">المكاتب</p>
+                  <p className="text-4xl font-medium text-gray-900 mb-1">{stats.offices}</p>
+                  <p className="text-xs text-gray-500">مكتب متاح</p>
                 </div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-lg shadow-accent-500/40 group-hover:scale-110 material-transition">
-                  <span className="text-3xl">🚪</span>
+                <div className="w-14 h-14 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <MaterialIcon name="meeting_room" className="text-purple-600" size="3xl" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Assets Card */}
-          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8 bg-gradient-to-br from-white via-success-50/40 to-success-100/30 overflow-hidden group relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-success-400/20 to-transparent rounded-full blur-2xl"></div>
-            <CardBody padding="lg" className="relative z-10">
+          <Card hover variant="elevated" className="bg-white shadow-sm hover:shadow-md material-transition">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">الأصول</p>
-                  <p className="text-5xl font-black bg-gradient-to-r from-success-600 via-success-700 to-success-800 bg-clip-text text-transparent truncate mb-1">{stats.assets}</p>
-                  <p className="text-xs text-slate-500 font-medium">أصل مسجل</p>
+                  <p className="text-xs font-medium text-gray-500 mb-2 uppercase">الأصول</p>
+                  <p className="text-4xl font-medium text-gray-900 mb-1">{stats.assets}</p>
+                  <p className="text-xs text-gray-500">أصل مسجل</p>
                 </div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-success-500 to-success-600 flex items-center justify-center shadow-lg shadow-success-500/40 group-hover:scale-110 material-transition">
-                  <span className="text-3xl">💼</span>
+                <div className="w-14 h-14 rounded-lg bg-green-100 flex items-center justify-center">
+                  <MaterialIcon name="inventory" className="text-green-600" size="3xl" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Users Card */}
-          <Card hover variant="elevated" className="material-transition border-0 shadow-elevation-4 hover:shadow-elevation-8 bg-gradient-to-br from-white via-warning-50/40 to-warning-100/30 overflow-hidden group relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-warning-400/20 to-transparent rounded-full blur-2xl"></div>
-            <CardBody padding="lg" className="relative z-10">
+          <Card hover variant="elevated" className="bg-white shadow-sm hover:shadow-md material-transition">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">المستخدمون</p>
-                  <p className="text-5xl font-black bg-gradient-to-r from-warning-600 via-warning-700 to-warning-800 bg-clip-text text-transparent truncate mb-1">{stats.users}</p>
-                  <p className="text-xs text-slate-500 font-medium">مستخدم نشط</p>
+                  <p className="text-xs font-medium text-gray-500 mb-2 uppercase">المستخدمون</p>
+                  <p className="text-4xl font-medium text-gray-900 mb-1">{stats.users}</p>
+                  <p className="text-xs text-gray-500">مستخدم نشط</p>
                 </div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-warning-500 to-warning-600 flex items-center justify-center shadow-lg shadow-warning-500/40 group-hover:scale-110 material-transition">
-                  <span className="text-3xl">👥</span>
+                <div className="w-14 h-14 rounded-lg bg-orange-100 flex items-center justify-center">
+                  <MaterialIcon name="people" className="text-orange-600" size="3xl" />
                 </div>
               </div>
             </CardBody>
           </Card>
-      </div>
+        </div>
     </MainLayout>
   );
 }
