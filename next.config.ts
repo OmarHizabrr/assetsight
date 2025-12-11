@@ -24,7 +24,6 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["firebase"],
-    optimizeCss: true,
   },
   compress: true,
   poweredByHeader: false,

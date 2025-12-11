@@ -27,7 +27,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-slate-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-xl shadow-lg border-b border-slate-200/60 sticky top-0 z-40">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
@@ -88,18 +88,18 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-4 px-4 py-3.5 rounded-xl material-transition text-sm font-semibold ripple relative overflow-hidden group ${
+                    className={`flex items-center gap-4 px-4 py-3.5 rounded-xl material-transition text-sm font-bold ripple relative overflow-hidden group ${
                       pathname === item.href
-                        ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-xl shadow-primary-500/40 scale-[1.02]'
-                        : 'text-slate-700 hover:bg-gradient-to-r hover:from-primary-50 hover:to-blue-50 hover:text-primary-700 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white shadow-xl shadow-primary-500/50 scale-[1.02]'
+                        : 'text-slate-700 hover:bg-gradient-to-r hover:from-primary-50 hover:via-blue-50/50 hover:to-primary-50 hover:text-primary-700 hover:shadow-lg hover:shadow-primary-500/20'
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >
                     {pathname === item.href && (
                       <div className="absolute right-0 top-0 bottom-0 w-1 bg-white rounded-l-full"></div>
                     )}
-                    <span className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
-                      pathname === item.href ? 'bg-white/20' : 'bg-slate-100 group-hover:bg-primary-100'
+                    <span className={`flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-xl ${
+                      pathname === item.href ? 'bg-white/30 shadow-lg' : 'bg-slate-100 group-hover:bg-primary-100 group-hover:shadow-md'
                     } material-transition`}>
                       {typeof item.icon === 'string' ? (
                         <span className="text-xl">{item.icon}</span>
@@ -126,7 +126,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         {/* Main Content */}
         <main className="flex-1 lg:mr-72 min-h-[calc(100vh-5rem)] w-full">
           <div className="h-full w-full">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-10">
+            <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-10">
             {children}
             </div>
           </div>

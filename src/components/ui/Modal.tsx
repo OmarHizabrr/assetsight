@@ -68,13 +68,13 @@ export function Modal({
         />
 
         {/* Modal Panel */}
-        <div className={`inline-block align-bottom bg-white rounded-lg text-right overflow-hidden shadow-elevation-24 transform material-transition animate-scale-in sm:my-8 sm:align-middle w-full ${sizes[size]}`}>
-          <div className="bg-white px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-4 lg:p-8 max-h-[90vh] overflow-y-auto">
+        <div className={`inline-block align-bottom bg-white rounded-2xl text-right overflow-hidden shadow-elevation-24 transform material-transition animate-scale-in sm:my-8 sm:align-middle w-full border border-slate-200/60 ${sizes[size]}`}>
+          <div className="bg-gradient-to-br from-white via-slate-50/30 to-white px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-4 lg:p-8 max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white pb-2 -mx-4 sm:-mx-6 px-4 sm:px-6 z-10 border-b border-secondary-200">
+            <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-gradient-to-r from-white to-slate-50/50 backdrop-blur-sm pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 z-10 border-b-2 border-slate-200/60">
               <h3
                 id="modal-title"
-                className="text-lg sm:text-xl font-medium text-secondary-900 pr-2"
+                className="text-xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent pr-2"
               >
                 {title}
               </h3>

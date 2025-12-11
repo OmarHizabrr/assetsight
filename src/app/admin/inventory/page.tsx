@@ -348,15 +348,16 @@ function InventoryPageContent() {
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-8">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
-              <span className="text-2xl">📋</span>
+      <div className="mb-10">
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
+              <span className="text-3xl relative z-10">📋</span>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">الجرد</h1>
-              <p className="text-slate-600 text-base mt-1 font-medium">إدارة دورات الجرد وعناصر الجرد</p>
+            <div className="flex-1">
+              <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent mb-2">الجرد</h1>
+              <p className="text-slate-600 text-lg font-semibold">إدارة دورات الجرد وعناصر الجرد</p>
             </div>
           </div>
         </div>
@@ -377,68 +378,65 @@ function InventoryPageContent() {
         </Card>
 
         {activeTab === 'cycles' && (
-          <Card>
-            <CardBody padding="md">
-              <div className="flex justify-end mb-4">
-                <Button
-                  onClick={() => {
-                    setEditingCycle(null);
-                    setCycleFormData(new BaseModel({ name: '', start_date: '', end_date: '', department_id: '', notes: '' }));
-                    setIsCycleModalOpen(true);
-                  }}
-                  leftIcon={<PlusIcon className="w-5 h-5" />}
-                  size="md"
-                >
-                  إضافة دورة جديدة
-                </Button>
-              </div>
-              <DataTable
-                data={cycles}
-                columns={cycleColumns}
-                onEdit={(cycle) => {
-                  setEditingCycle(cycle);
-                  setCycleFormData(new BaseModel(cycle.getData()));
+          <div>
+            <div className="flex justify-end mb-4">
+              <Button
+                onClick={() => {
+                  setEditingCycle(null);
+                  setCycleFormData(new BaseModel({ name: '', start_date: '', end_date: '', department_id: '', notes: '' }));
                   setIsCycleModalOpen(true);
                 }}
-                onDelete={handleDeleteCycle}
-                loading={loading}
-              />
-            </CardBody>
-          </Card>
+                leftIcon={<PlusIcon className="w-5 h-5" />}
+                size="md"
+              >
+                إضافة دورة جديدة
+              </Button>
+            </div>
+            <DataTable
+              data={cycles}
+              columns={cycleColumns}
+              onEdit={(cycle) => {
+                setEditingCycle(cycle);
+                setCycleFormData(new BaseModel(cycle.getData()));
+                setIsCycleModalOpen(true);
+              }}
+              onDelete={handleDeleteCycle}
+              loading={loading}
+            />
+          </div>
         )}
 
         {activeTab === 'items' && (
-          <Card>
-            <CardBody padding="md">
-              <div className="mb-4 flex justify-between items-center gap-4">
-                <Select
-                  value={selectedCycleId}
-                  onChange={(e) => setSelectedCycleId(e.target.value)}
-                  options={[
-                    { value: '', label: 'جميع الدورات' },
-                    ...cycles.map((cycle) => ({
-                      value: cycle.get('id'),
-                      label: cycle.get('name'),
-                    })),
-                  ]}
-                  className="flex-1 max-w-xs"
-                />
-                <Button
-                  onClick={() => {
-                    setEditingItem(null);
-                    const newData = new BaseModel({ cycle_id: selectedCycleId || '', asset_id: '', scanned_tag: '', scanned_office_id: '', found: true, note: '' });
-                    setItemFormData(newData);
-                    setIsItemModalOpen(true);
-                  }}
-                  leftIcon={<PlusIcon className="w-5 h-5" />}
-                  size="md"
-                >
-                  إضافة عنصر جديد
-                </Button>
-              </div>
-              <DataTable
-                data={filteredItems}
-                columns={itemColumns}
+          <div>
+            <div className="mb-4 flex justify-between items-center gap-4">
+              <Select
+                value={selectedCycleId}
+                onChange={(e) => setSelectedCycleId(e.target.value)}
+                options={[
+                  { value: '', label: 'جميع الدورات' },
+                  ...cycles.map((cycle) => ({
+                    value: cycle.get('id'),
+                    label: cycle.get('name'),
+                  })),
+                ]}
+                className="flex-1 max-w-xs"
+              />
+              <Button
+                onClick={() => {
+                  setEditingItem(null);
+                  const newData = new BaseModel({ cycle_id: selectedCycleId || '', asset_id: '', scanned_tag: '', scanned_office_id: '', found: true, note: '' });
+                  setItemFormData(newData);
+                  setIsItemModalOpen(true);
+                }}
+                leftIcon={<PlusIcon className="w-5 h-5" />}
+                size="md"
+              >
+                إضافة عنصر جديد
+              </Button>
+            </div>
+            <DataTable
+              data={filteredItems}
+              columns={itemColumns}
                 onEdit={(item) => {
                   setEditingItem(item);
                   const itemData = item.getData();
@@ -449,8 +447,7 @@ function InventoryPageContent() {
                 onDelete={handleDeleteItem}
                 loading={loading}
               />
-            </CardBody>
-          </Card>
+          </div>
         )}
 
         {/* Cycle Modal */}

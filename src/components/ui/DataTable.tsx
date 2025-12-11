@@ -49,32 +49,32 @@ export function DataTable({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in border border-slate-100">
-      <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 via-blue-50/50 to-slate-50">
-        <div className="max-w-md">
+    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in border border-slate-100 w-full">
+      <div className="p-6 border-b-2 border-slate-200/60 bg-gradient-to-r from-slate-50 via-primary-50/40 to-slate-50">
+        <div className="max-w-lg">
           <div className="relative">
-            <Input
-              type="text"
-              placeholder="بحث في الجدول..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+        <Input
+          type="text"
+          placeholder="بحث في الجدول..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
               leftIcon={<SearchIcon className="w-5 h-5" />}
               className="bg-white shadow-lg border-slate-200 focus:border-primary-500 focus:shadow-xl focus:shadow-primary-500/20"
-            />
+        />
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <div className="inline-block min-w-full align-middle">
-          <div className="overflow-hidden">
+      <div className="overflow-x-auto w-full">
+        <div className="inline-block min-w-full align-middle w-full">
+          <div className="overflow-hidden w-full">
             {/* Desktop Table */}
-            <table className="hidden md:table min-w-full">
-              <thead className="bg-gradient-to-r from-slate-100 via-blue-50/30 to-slate-100 border-b-2 border-slate-200">
+            <table className="hidden md:table w-full">
+              <thead className="bg-gradient-to-r from-slate-100 via-primary-50/40 to-slate-100 border-b-2 border-primary-200/60">
                 <tr>
                   {columns.map((col) => (
                     <th
                       key={String(col.key)}
-                      className="px-8 py-5 text-right text-xs font-bold text-slate-700 uppercase tracking-wider"
+                      className="px-8 py-6 text-right text-xs font-black text-slate-800 uppercase tracking-wider"
                     >
                       {col.label}
                     </th>
@@ -99,9 +99,9 @@ export function DataTable({
                         </div>
                         <div className="space-y-1">
                           <p className="text-slate-700 font-bold text-lg">لا توجد بيانات</p>
-                          {searchTerm && (
+                        {searchTerm && (
                             <p className="text-slate-500 text-sm">جرب البحث بكلمات مختلفة</p>
-                          )}
+                        )}
                         </div>
                       </div>
                     </td>
@@ -110,16 +110,16 @@ export function DataTable({
                   filteredData.map((item, index) => (
                     <tr
                       key={item.get('id')}
-                      className="hover:bg-primary-50 material-transition animate-fade-in"
+                      className="hover:bg-gradient-to-r hover:from-primary-50 hover:via-blue-50/30 hover:to-primary-50 material-transition animate-fade-in border-b border-slate-100/60"
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       {columns.map((col) => (
                         <td
                           key={col.key}
-                          className="px-8 py-5 text-sm text-slate-900 font-semibold"
+                          className="px-8 py-6 text-sm text-slate-900 font-bold"
                         >
                           <div className="truncate max-w-xs">
-                            {col.render ? col.render(item) : String(item.get(col.key) || "-")}
+                          {col.render ? col.render(item) : String(item.get(col.key) || "-")}
                           </div>
                         </td>
                       ))}
@@ -226,9 +226,9 @@ export function DataTable({
         </div>
       </div>
       {filteredData.length > 0 && (
-        <div className="px-8 py-5 bg-gradient-to-r from-slate-50 via-blue-50/30 to-slate-50 border-t border-slate-200">
-          <p className="text-sm text-slate-700 text-right font-bold">
-            عرض <span className="text-primary-600 font-extrabold text-base">{filteredData.length}</span> من <span className="text-primary-600 font-extrabold text-base">{data.length}</span> عنصر
+        <div className="px-8 py-5 bg-gradient-to-r from-slate-50 via-primary-50/40 to-slate-50 border-t-2 border-slate-200/60">
+          <p className="text-sm text-slate-800 text-right font-black">
+            عرض <span className="text-primary-700 font-extrabold text-base">{filteredData.length}</span> من <span className="text-primary-700 font-extrabold text-base">{data.length}</span> عنصر
           </p>
         </div>
       )}
