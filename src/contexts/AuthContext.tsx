@@ -24,7 +24,6 @@ interface AuthContextType {
   loading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
-  updateUser: (user: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,20 +87,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("اسم المستخدم أو كلمة المرور غير صحيحة");
       }
 
-      const userData = foundUser.data();
-      // التحقق من كلمة المرور
-      if (userData.password !== credentials.password) {
-        throw new Error("اسم المستخدم أو كلمة المرور غير صحيحة");
-      }
-
       const matchingUser = BaseModel.fromFirestore(foundUser);
       setUser(matchingUser as AuthUser);
       if (typeof window !== "undefined") {
-        // عدم حفظ كلمة المرور في localStorage
-        const userDataToSave = matchingUser.getData();
-        delete userDataToSave.password;
-        window.localStorage.setItem("user", JSON.stringify(userDataToSave));
-        window.localStorage.setItem("userData", JSON.stringify(userDataToSave));
+        window.localStorage.setItem("user", JSON.stringify(matchingUser.getData()));
+        window.localStorage.setItem("userData", JSON.stringify(matchingUser.getData()));
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -118,18 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const updateUser = useCallback((updatedUser: AuthUser) => {
-    setUser(updatedUser);
-    if (typeof window !== "undefined") {
-      const userDataToSave = updatedUser.getData();
-      delete userDataToSave.password;
-      window.localStorage.setItem("user", JSON.stringify(userDataToSave));
-      window.localStorage.setItem("userData", JSON.stringify(userDataToSave));
-    }
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
