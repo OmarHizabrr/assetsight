@@ -1,21 +1,28 @@
 'use client';
 
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Textarea";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 function AssetStatusesPageContent() {
+  const pathname = usePathname();
+  const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/asset-statuses');
   const [assetStatuses, setAssetStatuses] = useState<BaseModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [deletingStatus, setDeletingStatus] = useState<BaseModel | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editingStatus, setEditingStatus] = useState<BaseModel | null>(null);
   const [formData, setFormData] = useState<BaseModel>(new BaseModel({
     name: '',
@@ -68,18 +75,28 @@ function AssetStatusesPageContent() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (status: BaseModel) => {
-    const id = status.get('id');
+  const handleDelete = (status: BaseModel) => {
+    setDeletingStatus(status);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingStatus) return;
+    const id = deletingStatus.get('id');
     if (!id) return;
-    if (!confirm(`هل أنت متأكد من حذف ${status.get('name')}؟`)) return;
     
     try {
+      setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("assetStatuses", id);
       await firestoreApi.deleteData(docRef);
       loadAssetStatuses();
+      setIsConfirmModalOpen(false);
+      setDeletingStatus(null);
     } catch (error) {
       console.error("Error deleting asset status:", error);
       alert("حدث خطأ أثناء الحذف");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -103,28 +120,31 @@ function AssetStatusesPageContent() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
                 <span className="text-3xl relative z-10">📊</span>
               </div>
               <div className="flex-1">
-                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent mb-2">حالات الأصول</h1>
+                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">حالات الأصول</h1>
                 <p className="text-slate-600 text-lg font-semibold">إدارة وإضافة حالات الأصول في النظام</p>
               </div>
             </div>
           </div>
-          <Button
-            onClick={() => {
-              setEditingStatus(null);
-              setFormData(new BaseModel({ name: '', description: '', notes: '' }));
-              setIsModalOpen(true);
-            }}
-            leftIcon={<PlusIcon className="w-5 h-5" />}
-            size="lg"
-            className="shadow-xl shadow-primary-500/30 hover:shadow-2xl hover:shadow-primary-500/40 hover:scale-105 material-transition"
-          >
-            إضافة حالة جديدة
-          </Button>
+          {canAdd && (
+            <Button
+              onClick={() => {
+                setEditingStatus(null);
+                setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+                setIsModalOpen(true);
+              }}
+              leftIcon={<PlusIcon className="w-5 h-5" />}
+              size="lg"
+              variant="primary"
+              className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+            >
+              إضافة حالة جديدة
+            </Button>
+          )}
         </div>
       </div>
 
@@ -132,8 +152,15 @@ function AssetStatusesPageContent() {
       <DataTable
         data={assetStatuses}
         columns={columns}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onEdit={canEdit ? handleEdit : undefined}
+        onDelete={canDelete ? handleDelete : undefined}
+        onAddNew={canAdd ? () => {
+          setEditingStatus(null);
+          setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+          setIsModalOpen(true);
+        } : undefined}
+        title="حالات الأصول"
+        exportFileName="asset-statuses"
         loading={loading}
       />
 
@@ -185,7 +212,7 @@ function AssetStatusesPageContent() {
               placeholder="أدخل أي ملاحظات إضافية"
             />
 
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
               <Button
                 type="button"
                 variant="outline"
@@ -208,6 +235,22 @@ function AssetStatusesPageContent() {
             </div>
           </form>
         </Modal>
+
+        {/* Confirm Delete Modal */}
+        <ConfirmModal
+          isOpen={isConfirmModalOpen}
+          onClose={() => {
+            setIsConfirmModalOpen(false);
+            setDeletingStatus(null);
+          }}
+          onConfirm={confirmDelete}
+          title="تأكيد الحذف"
+          message={`هل أنت متأكد من حذف ${deletingStatus?.get('name') || 'هذه الحالة'}؟ لا يمكن التراجع عن هذا الإجراء.`}
+          confirmText="حذف"
+          cancelText="إلغاء"
+          variant="danger"
+          loading={deleteLoading}
+        />
     </MainLayout>
   );
 }

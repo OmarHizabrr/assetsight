@@ -2,7 +2,8 @@
 
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { BaseModel } from "@/lib/BaseModel";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import * as XLSX from 'xlsx';
 import { Button } from "./Button";
 import { Input } from "./Input";
 
@@ -10,6 +11,7 @@ interface Column {
   key: string;
   label: string;
   render?: (item: BaseModel) => React.ReactNode;
+  sortable?: boolean; // إمكانية الترتيب على هذا العمود
 }
 
 interface DataTableProps {
@@ -17,7 +19,14 @@ interface DataTableProps {
   columns: Column[];
   onEdit?: (item: BaseModel) => void;
   onDelete?: (item: BaseModel) => void;
+  onView?: (item: BaseModel) => void;
+  onArchive?: (item: BaseModel) => void;
+  onAddNew?: () => void;
   loading?: boolean;
+  title?: string;
+  exportFileName?: string;
+  pageSize?: number; // عدد العناصر في الصفحة
+  pageSizeOptions?: number[]; // خيارات عدد العناصر
 }
 
 export function DataTable({
@@ -25,10 +34,77 @@ export function DataTable({
   columns,
   onEdit,
   onDelete,
+  onView,
+  onArchive,
+  onAddNew,
   loading = false,
+  title,
+  exportFileName = 'export',
+  pageSize = 10,
+  pageSizeOptions = [7, 10, 25, 50, 75, 100],
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [actionDropdownOpen, setActionDropdownOpen] = useState<{ [key: string]: boolean }>({});
+  const [actionDropdownPosition, setActionDropdownPosition] = useState<{ [key: string]: { top: number; left: number } }>({});
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(pageSize || 10);
+  const exportDropdownRef = useRef<HTMLDivElement>(null);
+  const actionDropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target as Node)) {
+        setExportDropdownOpen(false);
+      }
+      Object.keys(actionDropdownOpen).forEach((key) => {
+        const dropdownElement = document.querySelector(`[data-dropdown-id="${key}"]`);
+        if (actionDropdownRefs.current[key] && !actionDropdownRefs.current[key]?.contains(event.target as Node) && 
+            dropdownElement && !dropdownElement.contains(event.target as Node)) {
+          setActionDropdownOpen((prev) => ({ ...prev, [key]: false }));
+          setActionDropdownPosition((prevPos) => {
+            const newPos = { ...prevPos };
+            delete newPos[key];
+            return newPos;
+          });
+        }
+      });
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [actionDropdownOpen]);
+
+  // Update dropdown position on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      Object.keys(actionDropdownOpen).forEach((key) => {
+        if (actionDropdownOpen[key] && actionDropdownRefs.current[key]) {
+          const button = actionDropdownRefs.current[key]?.querySelector('button');
+          if (button) {
+            const rect = button.getBoundingClientRect();
+            setActionDropdownPosition((prevPos) => ({
+              ...prevPos,
+              [key]: {
+                top: rect.bottom + 4,
+                left: rect.left,
+              }
+            }));
+          }
+        }
+      });
+    };
+
+    if (Object.keys(actionDropdownOpen).length > 0) {
+      window.addEventListener('scroll', handleScroll, true);
+      return () => window.removeEventListener('scroll', handleScroll, true);
+    }
+  }, [actionDropdownOpen]);
+
+  // Filter data
   const filteredData = data.filter((item) => {
     if (!searchTerm) return true;
     return columns.some((col) => {
@@ -36,6 +112,195 @@ export function DataTable({
       return value?.toString().toLowerCase().includes(searchTerm.toLowerCase());
     });
   });
+
+  // Sort data
+  const sortedData = [...filteredData].sort((a, b) => {
+    if (!sortColumn) return 0;
+    
+    const column = columns.find(col => col.key === sortColumn);
+    if (!column) return 0;
+    
+    // Get values
+    let valueA: any = a.get(sortColumn);
+    let valueB: any = b.get(sortColumn);
+    
+    // If column has render function, we need to extract text value
+    if (column.render) {
+      // For rendered columns, try to get the raw value
+      valueA = a.get(sortColumn);
+      valueB = b.get(sortColumn);
+    }
+    
+    // Handle null/undefined
+    if (valueA == null) valueA = '';
+    if (valueB == null) valueB = '';
+    
+    // Convert to comparable types
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+    }
+    
+    // String comparison
+    const strA = String(valueA).toLowerCase();
+    const strB = String(valueB).toLowerCase();
+    
+    if (sortDirection === 'asc') {
+      return strA.localeCompare(strB, 'ar');
+    } else {
+      return strB.localeCompare(strA, 'ar');
+    }
+  });
+
+  // Handle column sort
+  const handleSort = (columnKey: string) => {
+    const column = columns.find(col => col.key === columnKey);
+    if (!column || column.sortable === false) return;
+    
+    if (sortColumn === columnKey) {
+      // Toggle direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New column, default to ascending
+      setSortColumn(columnKey);
+      setSortDirection('asc');
+    }
+    // Reset to first page when sorting
+    setCurrentPage(1);
+  };
+
+  // Pagination logic
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = sortedData.slice(startIndex, endIndex);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Reset to first page when items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      // Scroll to top of table
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Export functions
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(
+      sortedData.map((item) => {
+        const row: any = {};
+        columns.forEach((col) => {
+          const value = col.render ? col.render(item) : item.get(col.key);
+          row[col.label] = typeof value === 'string' || typeof value === 'number' ? value : String(value || '');
+        });
+        return row;
+      })
+    );
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    XLSX.writeFile(workbook, `${exportFileName}.xlsx`);
+    setExportDropdownOpen(false);
+  };
+
+  const exportToCSV = () => {
+    const csvData = sortedData.map((item) => {
+      return columns.map((col) => {
+        const value = col.render ? col.render(item) : item.get(col.key);
+        return typeof value === 'string' || typeof value === 'number' ? value : String(value || '');
+      });
+    });
+    
+    const headers = columns.map((col) => col.label);
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${exportFileName}.csv`;
+    link.click();
+    setExportDropdownOpen(false);
+  };
+
+  const exportToPDF = () => {
+    // Simple PDF export using window.print
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    const tableHTML = `
+      <html>
+        <head>
+          <title>${exportFileName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; direction: rtl; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+            th { background-color: #f8f7fa; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h2>${title || 'الجدول'}</h2>
+          <table>
+            <thead>
+              <tr>
+                ${columns.map((col) => `<th>${col.label}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${sortedData.map((item) => `
+                <tr>
+                  ${columns.map((col) => {
+                    const value = col.render ? col.render(item) : item.get(col.key);
+                    return `<td>${typeof value === 'string' || typeof value === 'number' ? value : String(value || '')}</td>`;
+                  }).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(tableHTML);
+    printWindow.document.close();
+    printWindow.print();
+    setExportDropdownOpen(false);
+  };
+
+  const printTable = () => {
+    exportToPDF();
+  };
+
+  const copyToClipboard = async () => {
+    const text = sortedData.map((item) => {
+      return columns.map((col) => {
+        const value = col.render ? col.render(item) : item.get(col.key);
+        return typeof value === 'string' || typeof value === 'number' ? value : String(value || '');
+      }).join('\t');
+    }).join('\n');
+    
+    const headers = columns.map((col) => col.label).join('\t');
+    const fullText = headers + '\n' + text;
+    
+    try {
+      await navigator.clipboard.writeText(fullText);
+      alert('تم نسخ البيانات إلى الحافظة');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+    setExportDropdownOpen(false);
+  };
 
   if (loading) {
     return (
@@ -49,187 +314,896 @@ export function DataTable({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden animate-fade-in border border-gray-200 w-full">
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <div className="max-w-lg">
-          <div className="relative">
-        <Input
-          type="text"
-          placeholder="بحث في الجدول..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-              leftIcon={<MaterialIcon name="search" className="text-gray-400" size="lg" />}
-              className="bg-white border-gray-300 focus:border-primary-500"
-        />
-          </div>
-        </div>
-      </div>
-      <div className="overflow-x-auto w-full">
-        <div className="inline-block min-w-full align-middle w-full">
-          <div className="overflow-hidden w-full">
-            {/* Desktop Table */}
-            <table className="hidden md:table w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  {columns.map((col) => (
-                    <th
-                      key={String(col.key)}
-                      className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider"
-                    >
-                      {col.label}
-                    </th>
-                  ))}
-                  {(onEdit || onDelete) && (
-                    <th className="px-8 py-5 text-right text-xs font-bold text-slate-700 uppercase tracking-wider w-48">
-                      الإجراءات
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
-                {filteredData.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
-                      className="px-8 py-20 text-center"
-                    >
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center">
-                          <MaterialIcon name="search" className="text-gray-400" size="5xl" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-slate-700 font-bold text-lg">لا توجد بيانات</p>
-                        {searchTerm && (
-                            <p className="text-slate-500 text-sm">جرب البحث بكلمات مختلفة</p>
-                        )}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredData.map((item, index) => (
-                    <tr
-                      key={item.get('id')}
-                      className="hover:bg-gray-50 material-transition animate-fade-in border-b border-gray-100"
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                      {columns.map((col) => (
-                        <td
-                          key={col.key}
-                          className="px-6 py-4 text-sm text-gray-900 font-normal"
-                        >
-                          <div className="truncate max-w-xs">
-                          {col.render ? col.render(item) : String(item.get(col.key) || "-")}
-                          </div>
-                        </td>
-                      ))}
-                      {(onEdit || onDelete) && (
-                        <td className="px-8 py-5 whitespace-nowrap">
-                          <div className="flex items-center gap-2 justify-end">
-                            {onEdit && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onEdit(item)}
-                                className="text-primary-600 hover:bg-primary-50 normal-case"
-                              >
-                                <MaterialIcon name="edit" className="text-lg mr-1" size="lg" />
-                                <span className="hidden lg:inline">تعديل</span>
-                                <span className="lg:hidden">تعديل</span>
-                              </Button>
-                            )}
-                            {onDelete && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onDelete(item)}
-                                className="text-error-600 hover:bg-error-50 normal-case"
-                              >
-                                <MaterialIcon name="delete" className="text-lg mr-1" size="lg" />
-                                <span className="hidden lg:inline">حذف</span>
-                                <span className="lg:hidden">حذف</span>
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-
-            {/* Mobile Cards */}
-            <div className="md:hidden divide-y divide-secondary-100">
-              {filteredData.length === 0 ? (
-                <div className="px-6 py-16 text-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                      <MaterialIcon name="search" className="text-gray-400" size="4xl" />
-                    </div>
-                    <p className="text-secondary-700 font-medium text-base">لا توجد بيانات</p>
-                    {searchTerm && (
-                      <p className="text-secondary-500 text-sm">جرب البحث بكلمات مختلفة</p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                filteredData.map((item, index) => (
-                  <div
-                    key={item.get('id')}
-                    className="p-5 bg-white hover:bg-primary-50 material-transition animate-fade-in"
-                    style={{ animationDelay: `${index * 0.05}s` }}
+    <div className="card" style={{ border: '1px solid #dbdade', borderRadius: '1.5rem', boxShadow: '0 0.25rem 1rem rgba(165, 163, 174, 0.45)', overflow: 'hidden' }}>
+      <div className="card-header" style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #dbdade', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          {title && (
+            <h5 style={{ margin: 0, color: '#5d596c', fontWeight: 500, fontSize: '1.125rem' }}>{title}</h5>
+          )}
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {/* Export Dropdown */}
+            <div className="relative" ref={exportDropdownRef}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                className="normal-case"
+                style={{ borderColor: '#7367f0', color: '#7367f0' }}
+              >
+                <MaterialIcon name="file_download" size="sm" />
+                <span className="hidden sm:inline mr-1">تصدير</span>
+                <MaterialIcon name="arrow_drop_down" size="sm" />
+              </Button>
+              {exportDropdownOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: '100%',
+                    marginTop: '0.5rem',
+                    backgroundColor: 'white',
+                    border: '1px solid #dbdade',
+                    borderRadius: '1.25rem',
+                    boxShadow: '0 0.25rem 1rem rgba(165, 163, 174, 0.45)',
+                    zIndex: 50,
+                    minWidth: '150px',
+                    padding: '0.5rem 0'
+                  }}
+                >
+                  <button
+                    onClick={exportToExcel}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 1rem',
+                      textAlign: 'right',
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#6f6b7d',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <div className="space-y-3">
-                      {columns.slice(0, 3).map((col) => (
-                        <div key={col.key} className="flex justify-between items-start gap-3 mb-3 last:mb-0">
-                          <span className="text-xs font-semibold text-secondary-600 uppercase min-w-[90px]">
-                            {col.label}:
-                          </span>
-                          <span className="text-sm text-secondary-900 text-right flex-1 font-medium">
-                            {col.render ? col.render(item) : String(item.get(col.key) || "-")}
-                          </span>
-                        </div>
-                      ))}
-                      {(onEdit || onDelete) && (
-                        <div className="flex items-center gap-2 justify-end pt-3 mt-3 border-t border-secondary-200">
-                          {onEdit && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onEdit(item)}
-                              className="text-primary-600 hover:bg-primary-50 normal-case"
-                            >
-                              <MaterialIcon name="edit" className="text-lg mr-1" size="lg" />
-                              تعديل
-                            </Button>
-                          )}
-                          {onDelete && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onDelete(item)}
-                              className="text-error-600 hover:bg-error-50 normal-case"
-                            >
-                              <MaterialIcon name="delete" className="text-lg mr-1" size="lg" />
-                              حذف
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
+                    <MaterialIcon name="table_chart" size="sm" />
+                    <span>Excel</span>
+                  </button>
+                  <button
+                    onClick={exportToCSV}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 1rem',
+                      textAlign: 'right',
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#6f6b7d',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <MaterialIcon name="description" size="sm" />
+                    <span>CSV</span>
+                  </button>
+                  <button
+                    onClick={exportToPDF}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 1rem',
+                      textAlign: 'right',
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#6f6b7d',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <MaterialIcon name="picture_as_pdf" size="sm" />
+                    <span>PDF</span>
+                  </button>
+                  <button
+                    onClick={printTable}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 1rem',
+                      textAlign: 'right',
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#6f6b7d',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <MaterialIcon name="print" size="sm" />
+                    <span>طباعة</span>
+                  </button>
+                  <div style={{ height: '1px', backgroundColor: '#dbdade', margin: '0.5rem 0' }}></div>
+                  <button
+                    onClick={copyToClipboard}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 1rem',
+                      textAlign: 'right',
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#6f6b7d',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <MaterialIcon name="content_copy" size="sm" />
+                    <span>نسخ</span>
+                  </button>
+                </div>
               )}
             </div>
+            {/* Add New Record Button */}
+            {onAddNew && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={onAddNew}
+                className="normal-case"
+              >
+                <MaterialIcon name="add" size="sm" />
+                <span className="hidden sm:inline mr-1">إضافة جديد</span>
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="max-w-lg">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="بحث في الجدول..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon={<MaterialIcon name="search" className="text-slate-400" size="lg" />}
+              className="bg-white"
+              style={{ borderColor: '#dbdade' }}
+            />
           </div>
         </div>
       </div>
-      {filteredData.length > 0 && (
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <p className="text-sm text-gray-600 text-right font-medium">
-            عرض <span className="text-primary-600 font-semibold">{filteredData.length}</span> من <span className="text-primary-600 font-semibold">{data.length}</span> عنصر
-          </p>
+      <div className="card-datatable table-responsive" style={{ paddingTop: 0, overflow: 'visible' }}>
+        {/* Desktop Table */}
+        <table className="table datatables-basic" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f8f7fa' }}>
+              {columns.map((col, colIndex) => {
+                const isSortable = col.sortable !== false;
+                const isSorted = sortColumn === col.key;
+                const isFirstColumn = colIndex === 0;
+                const isLastColumn = colIndex === columns.length - 1 && !(onEdit || onDelete || onView || onArchive);
+                return (
+                  <th
+                    key={String(col.key)}
+                    onClick={() => isSortable && handleSort(col.key)}
+                    style={{ 
+                      padding: '1rem 1.5rem',
+                      textAlign: 'right',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#5d596c',
+                      borderBottom: '2px solid #dbdade',
+                      backgroundColor: '#f8f7fa',
+                      cursor: isSortable ? 'pointer' : 'default',
+                      userSelect: 'none',
+                      position: 'relative',
+                      transition: 'all 0.2s ease-in-out',
+                      letterSpacing: '0.01em',
+                      borderTopRightRadius: isFirstColumn ? '1.5rem' : '0',
+                      borderTopLeftRadius: isLastColumn ? '1.5rem' : '0'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (isSortable) {
+                        e.currentTarget.style.backgroundColor = '#f0eff2';
+                        e.currentTarget.style.borderBottomColor = '#7367f0';
+                        e.currentTarget.style.color = '#7367f0';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f8f7fa';
+                      e.currentTarget.style.borderBottomColor = '#dbdade';
+                      e.currentTarget.style.color = '#5d596c';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                      <span>{col.label}</span>
+                      {isSortable && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '16px', height: '20px', lineHeight: '10px' }}>
+                          <span
+                            style={{
+                              color: isSorted && sortDirection === 'asc' ? '#7367f0' : '#a5a3ae',
+                              fontSize: '16px',
+                              lineHeight: '8px',
+                              marginTop: '-2px',
+                              opacity: isSorted && sortDirection === 'asc' ? 1 : 0.4,
+                              display: 'block'
+                            }}
+                          >
+                            <MaterialIcon
+                              name="arrow_drop_up"
+                              size="sm"
+                              className={isSorted && sortDirection === 'asc' ? 'text-primary-600' : 'text-slate-400'}
+                            />
+                          </span>
+                          <span
+                            style={{
+                              color: isSorted && sortDirection === 'desc' ? '#7367f0' : '#a5a3ae',
+                              fontSize: '16px',
+                              lineHeight: '8px',
+                              marginTop: '-2px',
+                              opacity: isSorted && sortDirection === 'desc' ? 1 : 0.4,
+                              display: 'block'
+                            }}
+                          >
+                            <MaterialIcon
+                              name="arrow_drop_down"
+                              size="sm"
+                              className={isSorted && sortDirection === 'desc' ? 'text-primary-600' : 'text-slate-400'}
+                            />
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </th>
+                );
+              })}
+              {(onEdit || onDelete || onView || onArchive) && (
+                <th
+                  style={{ 
+                    padding: '1rem 1.5rem',
+                    textAlign: 'right',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#5d596c',
+                    borderBottom: '2px solid #dbdade',
+                    backgroundColor: '#f8f7fa',
+                    width: '200px',
+                    letterSpacing: '0.01em',
+                    borderTopLeftRadius: '1.5rem'
+                  }}
+                >
+                  الإجراءات
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {sortedData.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length + (onEdit || onDelete || onView || onArchive ? 1 : 0)}
+                  style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
+                >
+                  <div className="flex flex-col items-center gap-4">
+                    <div style={{ width: '4rem', height: '4rem', borderRadius: '50%', backgroundColor: '#f8f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <MaterialIcon name="search" className="text-slate-400" size="4xl" />
+                    </div>
+                    <div className="space-y-1">
+                      <p style={{ color: '#4b465c', fontWeight: 500, fontSize: '1rem' }}>لا توجد بيانات</p>
+                      {searchTerm && (
+                        <p style={{ color: '#6f6b7d', fontSize: '0.875rem' }}>جرب البحث بكلمات مختلفة</p>
+                      )}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              paginatedData.map((item, index) => (
+                <tr
+                  key={item.get('id')}
+                  style={{
+                    borderBottom: '1px solid #f0eff2',
+                    transition: 'all 0.2s ease-in-out',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f7fa';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(115, 103, 240, 0.08)';
+                    Array.from(e.currentTarget.children).forEach((cell) => {
+                      (cell as HTMLElement).style.borderBottomColor = '#e8e6ea';
+                    });
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.boxShadow = 'none';
+                    Array.from(e.currentTarget.children).forEach((cell) => {
+                      (cell as HTMLElement).style.borderBottomColor = '#f0eff2';
+                    });
+                  }}
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      style={{
+                        padding: '1rem 1.5rem',
+                        fontSize: '0.9375rem',
+                        color: '#4b465c',
+                        verticalAlign: 'middle',
+                        borderBottom: '1px solid #f0eff2',
+                        transition: 'all 0.15s ease-in-out'
+                      }}
+                    >
+                      <div style={{ 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis', 
+                        whiteSpace: 'nowrap', 
+                        maxWidth: '300px',
+                        fontWeight: 400,
+                        lineHeight: '1.5'
+                      }}>
+                        {col.render ? col.render(item) : String(item.get(col.key) || "-")}
+                      </div>
+                    </td>
+                  ))}
+                  {(onEdit || onDelete || onView || onArchive) && (
+                    <td style={{ 
+                      padding: '1rem 1.5rem', 
+                      whiteSpace: 'nowrap',
+                      borderBottom: '1px solid #f0eff2',
+                      verticalAlign: 'middle',
+                      transition: 'all 0.15s ease-in-out'
+                    }}>
+                      <div className="flex items-center gap-2 justify-end">
+                        {/* Actions Dropdown */}
+                        <div className="relative" ref={(el) => { actionDropdownRefs.current[item.get('id')] = el; }}>
+                          <button
+                            onClick={(e) => {
+                              const button = e.currentTarget;
+                              const rect = button.getBoundingClientRect();
+                              const itemId = item.get('id');
+                              setActionDropdownOpen((prev) => {
+                                const newState = { ...prev, [itemId]: !prev[itemId] };
+                                if (newState[itemId]) {
+                                  // Store position for fixed positioning
+                                  setActionDropdownPosition((prevPos) => ({
+                                    ...prevPos,
+                                    [itemId]: {
+                                      top: rect.bottom + 4,
+                                      left: rect.left,
+                                    }
+                                  }));
+                                } else {
+                                  // Clear position when closing
+                                  setActionDropdownPosition((prevPos) => {
+                                    const newPos = { ...prevPos };
+                                    delete newPos[itemId];
+                                    return newPos;
+                                  });
+                                }
+                                return newState;
+                              });
+                            }}
+                            style={{
+                              padding: '0.375rem',
+                              border: 'none',
+                              background: 'transparent',
+                              color: '#7367f0',
+                              cursor: 'pointer',
+                              borderRadius: '1.25rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <MaterialIcon name="more_vert" size="md" />
+                          </button>
+                          {actionDropdownOpen[item.get('id')] && actionDropdownPosition[item.get('id')] && (
+                            <div
+                              data-dropdown-id={item.get('id')}
+                              style={{
+                                position: 'fixed',
+                                left: `${actionDropdownPosition[item.get('id')].left}px`,
+                                top: `${actionDropdownPosition[item.get('id')].top}px`,
+                                backgroundColor: 'white',
+                                border: '1px solid #dbdade',
+                                borderRadius: '1.25rem',
+                                boxShadow: '0 0.25rem 1rem rgba(165, 163, 174, 0.45)',
+                                zIndex: 9999,
+                                minWidth: '150px',
+                                padding: '0.5rem 0'
+                              }}
+                            >
+                              {onView && (
+                                <button
+                                  onClick={() => {
+                                    onView(item);
+                                    const itemId = item.get('id');
+                                    setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
+                                    setActionDropdownPosition((prevPos) => {
+                                      const newPos = { ...prevPos };
+                                      delete newPos[itemId];
+                                      return newPos;
+                                    });
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    padding: '0.5rem 1rem',
+                                    textAlign: 'right',
+                                    border: 'none',
+                                    background: 'transparent',
+                                    color: '#6f6b7d',
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  <MaterialIcon name="visibility" size="sm" />
+                                  <span>التفاصيل</span>
+                                </button>
+                              )}
+                              {onEdit && (
+                                <button
+                                  onClick={() => {
+                                    onEdit(item);
+                                    const itemId = item.get('id');
+                                    setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
+                                    setActionDropdownPosition((prevPos) => {
+                                      const newPos = { ...prevPos };
+                                      delete newPos[itemId];
+                                      return newPos;
+                                    });
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    padding: '0.5rem 1rem',
+                                    textAlign: 'right',
+                                    border: 'none',
+                                    background: 'transparent',
+                                    color: '#6f6b7d',
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  <MaterialIcon name="edit" size="sm" />
+                                  <span>تعديل</span>
+                                </button>
+                              )}
+                              {onArchive && (
+                                <button
+                                  onClick={() => {
+                                    onArchive(item);
+                                    const itemId = item.get('id');
+                                    setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
+                                    setActionDropdownPosition((prevPos) => {
+                                      const newPos = { ...prevPos };
+                                      delete newPos[itemId];
+                                      return newPos;
+                                    });
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    padding: '0.5rem 1rem',
+                                    textAlign: 'right',
+                                    border: 'none',
+                                    background: 'transparent',
+                                    color: '#6f6b7d',
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  <MaterialIcon name="archive" size="sm" />
+                                  <span>أرشفة</span>
+                                </button>
+                              )}
+                              {(onView || onEdit || onArchive) && onDelete && (
+                                <div style={{ height: '1px', backgroundColor: '#dbdade', margin: '0.5rem 0' }}></div>
+                              )}
+                              {onDelete && (
+                                <button
+                                  onClick={() => {
+                                    onDelete(item);
+                                    const itemId = item.get('id');
+                                    setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
+                                    setActionDropdownPosition((prevPos) => {
+                                      const newPos = { ...prevPos };
+                                      delete newPos[itemId];
+                                      return newPos;
+                                    });
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    padding: '0.5rem 1rem',
+                                    textAlign: 'right',
+                                    border: 'none',
+                                    background: 'transparent',
+                                    color: '#ea5455',
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ffebee'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  <MaterialIcon name="delete" size="sm" />
+                                  <span>حذف</span>
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {/* Quick Edit Button */}
+                        {onEdit && (
+                          <button
+                            onClick={() => onEdit(item)}
+                            style={{
+                              padding: '0.375rem',
+                              border: 'none',
+                              background: 'transparent',
+                              color: '#7367f0',
+                              cursor: 'pointer',
+                              borderRadius: '1.25rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            title="تعديل"
+                          >
+                            <MaterialIcon name="edit" size="md" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden" style={{ borderTop: '1px solid #dbdade' }}>
+          {filteredData.length === 0 ? (
+            <div style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
+              <div className="flex flex-col items-center gap-3">
+                <div style={{ width: '4rem', height: '4rem', borderRadius: '50%', backgroundColor: '#f8f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <MaterialIcon name="search" className="text-slate-400" size="4xl" />
+                </div>
+                <p style={{ color: '#4b465c', fontWeight: 500, fontSize: '1rem' }}>لا توجد بيانات</p>
+                {searchTerm && (
+                  <p style={{ color: '#6f6b7d', fontSize: '0.875rem' }}>جرب البحث بكلمات مختلفة</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            paginatedData.map((item, index) => (
+              <div
+                key={item.get('id')}
+                style={{
+                  padding: '1.25rem 1.5rem',
+                  borderBottom: '1px solid #dbdade',
+                  transition: 'background-color 0.15s ease-in-out'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f8f7fa';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <div className="space-y-3">
+                  {columns.slice(0, 3).map((col) => (
+                    <div key={col.key} className="flex justify-between items-start gap-3 mb-3 last:mb-0">
+                      <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#6f6b7d', minWidth: '90px' }}>
+                        {col.label}:
+                      </span>
+                      <span style={{ fontSize: '0.875rem', color: '#4b465c', textAlign: 'right', flex: 1, fontWeight: 400 }}>
+                        {col.render ? col.render(item) : String(item.get(col.key) || "-")}
+                      </span>
+                    </div>
+                  ))}
+                  {(onEdit || onDelete) && (
+                    <div className="flex items-center gap-2 justify-end pt-3 mt-3" style={{ borderTop: '1px solid #dbdade' }}>
+                      {onEdit && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEdit(item)}
+                          className="normal-case"
+                          style={{ color: '#7367f0' }}
+                        >
+                          <MaterialIcon name="edit" size="sm" />
+                          <span className="mr-1">تعديل</span>
+                        </Button>
+                      )}
+                      {onDelete && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDelete(item)}
+                          className="normal-case"
+                          style={{ color: '#ea5455' }}
+                        >
+                          <MaterialIcon name="delete" size="sm" />
+                          <span className="mr-1">حذف</span>
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      {/* Pagination Footer */}
+      {sortedData.length > 0 && (
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #dbdade', backgroundColor: '#f8f7fa', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Info and Page Size Selector */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.875rem', color: '#6f6b7d' }}>عرض</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              style={{
+                padding: '0.375rem 2rem 0.375rem 0.75rem',
+                border: '1px solid #dbdade',
+                borderRadius: '9999px',
+                backgroundColor: 'white',
+                color: '#5d596c',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                outline: 'none',
+                appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 0.5rem center',
+                backgroundSize: '16px 12px'
+              }}
+            >
+              {pageSizeOptions.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+            <span style={{ fontSize: '0.875rem', color: '#6f6b7d' }}>عنصر في الصفحة</span>
+          </div>
+          <div style={{ fontSize: '0.875rem', color: '#6f6b7d' }}>
+            عرض <span style={{ color: '#7367f0', fontWeight: 600 }}>{sortedData.length > 0 ? startIndex + 1 : 0}</span> إلى{' '}
+            <span style={{ color: '#7367f0', fontWeight: 600 }}>{Math.min(endIndex, sortedData.length)}</span> من{' '}
+            <span style={{ color: '#7367f0', fontWeight: 600 }}>{sortedData.length}</span> عنصر
+            {sortedData.length !== data.length && (
+              <span> (من أصل <span style={{ color: '#7367f0', fontWeight: 600 }}>{data.length}</span>)</span>
+            )}
+          </div>
+        </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {/* First Page */}
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              style={{
+                padding: '0.375rem 0.75rem',
+                border: '1px solid #dbdade',
+                borderRadius: '9999px',
+                backgroundColor: currentPage === 1 ? '#f8f7fa' : 'white',
+                color: currentPage === 1 ? '#a5a3ae' : '#5d596c',
+                fontSize: '0.875rem',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                transition: 'all 0.15s ease-in-out'
+              }}
+              onMouseEnter={(e) => {
+                if (currentPage !== 1) {
+                  e.currentTarget.style.backgroundColor = '#f8f7fa';
+                  e.currentTarget.style.borderColor = '#7367f0';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentPage !== 1) {
+                  e.currentTarget.style.backgroundColor = 'white';
+                  e.currentTarget.style.borderColor = '#dbdade';
+                }
+              }}
+            >
+              <MaterialIcon name="chevron_right" size="sm" />
+              <MaterialIcon name="chevron_right" size="sm" />
+            </button>
+
+            {/* Previous Page */}
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              style={{
+                padding: '0.375rem 0.75rem',
+                border: '1px solid #dbdade',
+                borderRadius: '9999px',
+                backgroundColor: currentPage === 1 ? '#f8f7fa' : 'white',
+                color: currentPage === 1 ? '#a5a3ae' : '#5d596c',
+                fontSize: '0.875rem',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                transition: 'all 0.15s ease-in-out'
+              }}
+              onMouseEnter={(e) => {
+                if (currentPage !== 1) {
+                  e.currentTarget.style.backgroundColor = '#f8f7fa';
+                  e.currentTarget.style.borderColor = '#7367f0';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentPage !== 1) {
+                  e.currentTarget.style.backgroundColor = 'white';
+                  e.currentTarget.style.borderColor = '#dbdade';
+                }
+              }}
+            >
+              <MaterialIcon name="chevron_right" size="sm" />
+              <span>السابق</span>
+            </button>
+
+            {/* Page Numbers */}
+            <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    style={{
+                      minWidth: '2.5rem',
+                      height: '2.5rem',
+                      padding: '0.375rem 0.75rem',
+                      border: '1px solid #dbdade',
+                      borderRadius: '9999px',
+                      backgroundColor: currentPage === pageNum ? '#7367f0' : 'white',
+                      color: currentPage === pageNum ? 'white' : '#5d596c',
+                      fontSize: '0.875rem',
+                      fontWeight: currentPage === pageNum ? 600 : 400,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease-in-out'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentPage !== pageNum) {
+                        e.currentTarget.style.backgroundColor = '#f8f7fa';
+                        e.currentTarget.style.borderColor = '#7367f0';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentPage !== pageNum) {
+                        e.currentTarget.style.backgroundColor = 'white';
+                        e.currentTarget.style.borderColor = '#dbdade';
+                      }
+                    }}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Next Page */}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: '0.375rem 0.75rem',
+                border: '1px solid #dbdade',
+                borderRadius: '9999px',
+                backgroundColor: currentPage === totalPages ? '#f8f7fa' : 'white',
+                color: currentPage === totalPages ? '#a5a3ae' : '#5d596c',
+                fontSize: '0.875rem',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                transition: 'all 0.15s ease-in-out'
+              }}
+              onMouseEnter={(e) => {
+                if (currentPage !== totalPages) {
+                  e.currentTarget.style.backgroundColor = '#f8f7fa';
+                  e.currentTarget.style.borderColor = '#7367f0';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentPage !== totalPages) {
+                  e.currentTarget.style.backgroundColor = 'white';
+                  e.currentTarget.style.borderColor = '#dbdade';
+                }
+              }}
+            >
+              <span>التالي</span>
+              <MaterialIcon name="chevron_left" size="sm" />
+            </button>
+
+            {/* Last Page */}
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: '0.375rem 0.75rem',
+                border: '1px solid #dbdade',
+                borderRadius: '9999px',
+                backgroundColor: currentPage === totalPages ? '#f8f7fa' : 'white',
+                color: currentPage === totalPages ? '#a5a3ae' : '#5d596c',
+                fontSize: '0.875rem',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                transition: 'all 0.15s ease-in-out'
+              }}
+              onMouseEnter={(e) => {
+                if (currentPage !== totalPages) {
+                  e.currentTarget.style.backgroundColor = '#f8f7fa';
+                  e.currentTarget.style.borderColor = '#7367f0';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (currentPage !== totalPages) {
+                  e.currentTarget.style.backgroundColor = 'white';
+                  e.currentTarget.style.borderColor = '#dbdade';
+                }
+              }}
+            >
+              <MaterialIcon name="chevron_left" size="sm" />
+              <MaterialIcon name="chevron_left" size="sm" />
+            </button>
+          </div>
+        )}
         </div>
       )}
     </div>

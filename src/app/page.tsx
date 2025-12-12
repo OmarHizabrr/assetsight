@@ -84,22 +84,23 @@ export default function HomePage() {
       <div className="mb-10">
         <div className="space-y-3">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center">
-              <MaterialIcon name="dashboard" className="text-primary-600" size="3xl" />
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
+              <MaterialIcon name="dashboard" className="text-white relative z-10" size="3xl" />
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-medium text-gray-900 mb-1">لوحة التحكم</h1>
-              <p className="text-gray-600 text-sm">نظرة شاملة على النظام وإحصائياته</p>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">لوحة التحكم</h1>
+              <p className="text-slate-600 text-base font-medium">نظرة شاملة على النظام وإحصائياته</p>
             </div>
           </div>
         </div>
       </div>
 
         {!user && (
-          <Card variant="outlined" className="mb-8 border-warning-500 bg-gradient-to-r from-warning-50 to-warning-100/50 shadow-elevation-2">
+          <Card variant="outlined" className="mb-8 border-warning-500/60 bg-gradient-to-r from-warning-50 to-warning-100/50 shadow-lg">
             <CardBody padding="lg">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <p className="text-warning-800 font-semibold text-base">يرجى تسجيل الدخول للوصول إلى النظام</p>
+                <p className="text-warning-800 font-semibold text-sm">يرجى تسجيل الدخول للوصول إلى النظام</p>
                 <a href="/login" className="w-full sm:w-auto">
                   <Button
                     variant="primary"
@@ -114,66 +115,66 @@ export default function HomePage() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Departments Card - Vuetify Style */}
-          <Card hover variant="elevated" className="bg-white shadow-sm hover:shadow-md material-transition">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Departments Card */}
+          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-primary-50/30 border-primary-200/40">
             <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-2 uppercase">الإدارات</p>
-                  <p className="text-4xl font-medium text-gray-900 mb-1">{stats.departments}</p>
-                  <p className="text-xs text-gray-500">إدارة نشطة</p>
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">الإدارات</p>
+                  <p className="text-4xl font-bold text-slate-900 mb-1">{stats.departments}</p>
+                  <p className="text-xs text-slate-500 font-medium">إدارة نشطة</p>
                 </div>
-                <div className="w-14 h-14 rounded-lg bg-primary-100 flex items-center justify-center">
-                  <MaterialIcon name="business" className="text-primary-600" size="3xl" />
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30">
+                  <MaterialIcon name="business" className="text-white" size="3xl" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Offices Card */}
-          <Card hover variant="elevated" className="bg-white shadow-sm hover:shadow-md material-transition">
+          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-accent-50/30 border-accent-200/40">
             <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-2 uppercase">المكاتب</p>
-                  <p className="text-4xl font-medium text-gray-900 mb-1">{stats.offices}</p>
-                  <p className="text-xs text-gray-500">مكتب متاح</p>
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">المكاتب</p>
+                  <p className="text-4xl font-bold text-slate-900 mb-1">{stats.offices}</p>
+                  <p className="text-xs text-slate-500 font-medium">مكتب متاح</p>
                 </div>
-                <div className="w-14 h-14 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <MaterialIcon name="meeting_room" className="text-purple-600" size="3xl" />
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-accent-500 to-accent-700 flex items-center justify-center shadow-lg shadow-accent-500/30">
+                  <MaterialIcon name="meeting_room" className="text-white" size="3xl" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Assets Card */}
-          <Card hover variant="elevated" className="bg-white shadow-sm hover:shadow-md material-transition">
+          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-success-50/30 border-success-200/40">
             <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-2 uppercase">الأصول</p>
-                  <p className="text-4xl font-medium text-gray-900 mb-1">{stats.assets}</p>
-                  <p className="text-xs text-gray-500">أصل مسجل</p>
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">الأصول</p>
+                  <p className="text-4xl font-bold text-slate-900 mb-1">{stats.assets}</p>
+                  <p className="text-xs text-slate-500 font-medium">أصل مسجل</p>
                 </div>
-                <div className="w-14 h-14 rounded-lg bg-green-100 flex items-center justify-center">
-                  <MaterialIcon name="inventory" className="text-green-600" size="3xl" />
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-success-500 to-success-700 flex items-center justify-center shadow-lg shadow-success-500/30">
+                  <MaterialIcon name="inventory" className="text-white" size="3xl" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Users Card */}
-          <Card hover variant="elevated" className="bg-white shadow-sm hover:shadow-md material-transition">
+          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-warning-50/30 border-warning-200/40">
             <CardBody padding="lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-500 mb-2 uppercase">المستخدمون</p>
-                  <p className="text-4xl font-medium text-gray-900 mb-1">{stats.users}</p>
-                  <p className="text-xs text-gray-500">مستخدم نشط</p>
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">المستخدمون</p>
+                  <p className="text-4xl font-bold text-slate-900 mb-1">{stats.users}</p>
+                  <p className="text-xs text-slate-500 font-medium">مستخدم نشط</p>
                 </div>
-                <div className="w-14 h-14 rounded-lg bg-orange-100 flex items-center justify-center">
-                  <MaterialIcon name="people" className="text-orange-600" size="3xl" />
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-warning-500 to-warning-700 flex items-center justify-center shadow-lg shadow-warning-500/30">
+                  <MaterialIcon name="people" className="text-white" size="3xl" />
                 </div>
               </div>
             </CardBody>

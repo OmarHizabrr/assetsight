@@ -26,8 +26,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-50 px-4 py-12">
-      <Card variant="elevated" className="w-full max-w-md animate-scale-in shadow-elevation-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f7fa] px-4 py-12">
+      <Card variant="elevated" className="w-full max-w-md animate-scale-in shadow-lg border border-slate-200/80">
         <CardHeader
           title="AssetSight"
           subtitle="تسجيل الدخول إلى النظام"
@@ -36,7 +36,7 @@ export default function LoginPage() {
         <CardBody>
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-error-50 border-r-4 border-error-500 text-error-700 px-4 py-3 rounded-md animate-fade-in shadow-elevation-1">
+              <div className="bg-error-50 border-r-4 border-error-500 text-error-700 px-4 py-3 rounded-xl animate-fade-in shadow-sm">
                 {error}
               </div>
             )}

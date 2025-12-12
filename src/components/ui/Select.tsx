@@ -27,11 +27,11 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
     const hasError = !!error;
 
-    const baseStyles = 'block w-full rounded-xl border-2 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed appearance-none bg-no-repeat bg-right pr-12';
+    const baseStyles = 'block w-full rounded-full border-2 bg-white px-4 py-3.5 pr-12 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer shadow-sm';
     
     const selectStyles = hasError
-      ? 'border-error-400 text-error-900 placeholder-error-400 focus:border-error-500 focus:ring-error-500/20 bg-error-50/50'
-      : 'border-slate-200 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:bg-white shadow-sm focus:shadow-md';
+      ? 'border-error-300 text-error-900 placeholder-error-400 focus:border-error-500 focus:ring-error-500/20 bg-gradient-to-r from-error-50 to-error-50/70 shadow-error-200/50'
+      : 'border-slate-200 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:bg-white focus:shadow-lg focus:shadow-primary-500/15 hover:border-slate-300';
 
     const combinedSelectClassName = `
       ${baseStyles}
@@ -44,7 +44,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="block text-sm font-semibold text-slate-700 mb-2"
+            className="block text-sm font-bold text-slate-800 mb-2.5"
           >
             {label}
             {props.required && <span className="text-error-500 mr-1">*</span>}
@@ -56,9 +56,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             className={combinedSelectClassName}
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-              backgroundPosition: 'right 0.5rem center',
-              backgroundSize: '1.5em 1.5em',
+              paddingRight: '2.75rem',
+              paddingLeft: '1rem',
             }}
             {...props}
           >
@@ -69,6 +68,17 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
+          {/* أيقونة السهم المخصصة */}
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+            <svg 
+              className={`w-5 h-5 transition-colors material-transition ${hasError ? 'text-error-500' : 'text-slate-500'}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
         {error && (
           <p className="mt-1 text-xs text-error-600 animate-fade-in">{error}</p>

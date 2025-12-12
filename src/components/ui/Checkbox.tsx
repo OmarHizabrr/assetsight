@@ -30,7 +30,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               ref={ref}
               id={checkboxId}
               type="checkbox"
-              className={`h-5 w-5 rounded border-secondary-400 text-primary-600 focus:ring-2 focus:ring-primary-500 material-transition cursor-pointer accent-primary-600 ${className}`}
+              className={`h-5 w-5 rounded-md border-2 border-slate-300 text-primary-600 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 material-transition cursor-pointer accent-primary-600 shadow-sm ${className}`}
               {...props}
             />
           </div>
@@ -38,7 +38,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             <div className="flex-1">
               <label
                 htmlFor={checkboxId}
-                className="text-sm font-normal text-secondary-900 cursor-pointer"
+                className="text-sm font-medium text-slate-700 cursor-pointer"
               >
                 {label}
                 {props.required && <span className="text-error-500 mr-1">*</span>}

@@ -10,19 +10,22 @@ interface TabsProps extends HTMLAttributes<HTMLDivElement> {
 
 export function Tabs({ tabs, activeTab, onTabChange, className = '', ...props }: TabsProps) {
   return (
-    <div className={`border-b border-secondary-200 ${className}`} {...props}>
+    <div className={`border-b border-slate-200/60 ${className}`} {...props}>
       <nav className="-mb-px flex space-x-8 space-x-reverse">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+            className={`py-4 px-4 border-b-2 font-semibold text-sm material-transition relative rounded-t-lg ${
               activeTab === tab.id
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
+                ? 'border-primary-600 text-primary-700 bg-primary-50/30'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50/50'
             }`}
           >
             {tab.label}
+            {activeTab === tab.id && (
+              <span className="absolute bottom-0 right-0 left-0 h-0.5 bg-gradient-to-r from-primary-500 to-primary-700 rounded-t-full"></span>
+            )}
           </button>
         ))}
       </nav>

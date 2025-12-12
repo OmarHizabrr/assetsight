@@ -16,12 +16,12 @@ export function Card({
   className = '',
   ...props
 }: CardProps) {
-  const baseStyles = 'rounded-lg material-transition';
+  const baseStyles = 'rounded-xl material-transition';
   
   const variants = {
-    default: 'bg-white shadow-sm border border-gray-200',
-    elevated: 'bg-white shadow-md border border-gray-200',
-    outlined: 'bg-white border border-gray-300',
+    default: 'bg-white shadow-sm border',
+    elevated: 'bg-white shadow-md border',
+    outlined: 'bg-white border-2',
     flat: 'bg-white',
   };
 
@@ -33,7 +33,7 @@ export function Card({
   };
 
   const hoverStyles = hover
-    ? 'hover:shadow-elevation-8 hover:-translate-y-1 cursor-pointer material-transition'
+    ? 'hover:shadow-md cursor-pointer material-transition'
     : '';
 
   const combinedClassName = `
@@ -44,8 +44,10 @@ export function Card({
     ${className}
   `.trim().replace(/\s+/g, ' ');
 
+  const borderColor = variant === 'outlined' ? '#dbdade' : '#dbdade';
+  
   return (
-    <div className={combinedClassName} {...props}>
+    <div className={combinedClassName} style={{ borderColor }} {...props}>
       {children}
     </div>
   );

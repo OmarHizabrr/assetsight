@@ -1,21 +1,28 @@
 'use client';
 
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Textarea";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 function DepartmentsPageContent() {
+  const pathname = usePathname();
+  const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/departments');
   const [departments, setDepartments] = useState<BaseModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [deletingDepartment, setDeletingDepartment] = useState<BaseModel | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<BaseModel | null>(null);
   const [formData, setFormData] = useState<BaseModel>(new BaseModel({
     name: '',
@@ -68,18 +75,28 @@ function DepartmentsPageContent() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (dept: BaseModel) => {
-    const id = dept.get('id');
+  const handleDelete = (dept: BaseModel) => {
+    setDeletingDepartment(dept);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingDepartment) return;
+    const id = deletingDepartment.get('id');
     if (!id) return;
-    if (!confirm(`هل أنت متأكد من حذف ${dept.get('name')}؟`)) return;
     
     try {
+      setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("departments", id);
       await firestoreApi.deleteData(docRef);
       loadDepartments();
+      setIsConfirmModalOpen(false);
+      setDeletingDepartment(null);
     } catch (error) {
       console.error("Error deleting department:", error);
       alert("حدث خطأ أثناء الحذف");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -103,27 +120,31 @@ function DepartmentsPageContent() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center">
-                <MaterialIcon name="business" className="text-primary-600" size="3xl" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
+                <MaterialIcon name="business" className="text-white relative z-10" size="3xl" />
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-medium text-gray-900 mb-1">الإدارات</h1>
-                <p className="text-gray-600 text-sm">إدارة وإضافة الإدارات في النظام</p>
+                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">الإدارات</h1>
+                <p className="text-slate-600 text-lg font-semibold">إدارة وإضافة الإدارات في النظام</p>
               </div>
             </div>
           </div>
-          <Button
-            onClick={() => {
-              setEditingDepartment(null);
-              setFormData(new BaseModel({ name: '', description: '', notes: '' }));
-              setIsModalOpen(true);
-            }}
-            size="lg"
-            className="normal-case"
-          >
-            <MaterialIcon name="add" className="text-lg mr-1" size="lg" />
-            إضافة إدارة جديدة
-          </Button>
+          {canAdd && (
+            <Button
+              onClick={() => {
+                setEditingDepartment(null);
+                setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+                setIsModalOpen(true);
+              }}
+              leftIcon={<MaterialIcon name="add" className="w-5 h-5" size="lg" />}
+              size="lg"
+              variant="primary"
+              className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+            >
+              إضافة إدارة جديدة
+            </Button>
+          )}
         </div>
       </div>
 
@@ -131,8 +152,15 @@ function DepartmentsPageContent() {
       <DataTable
         data={departments}
         columns={columns}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onEdit={canEdit ? handleEdit : undefined}
+        onDelete={canDelete ? handleDelete : undefined}
+        onAddNew={canAdd ? () => {
+          setEditingDepartment(null);
+          setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+          setIsModalOpen(true);
+        } : undefined}
+        title="الإدارات"
+        exportFileName="departments"
         loading={loading}
       />
 
@@ -184,7 +212,7 @@ function DepartmentsPageContent() {
               placeholder="أدخل أي ملاحظات إضافية"
             />
 
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
               <Button
                 type="button"
                 variant="outline"
@@ -207,6 +235,22 @@ function DepartmentsPageContent() {
             </div>
           </form>
         </Modal>
+
+        {/* Confirm Delete Modal */}
+        <ConfirmModal
+          isOpen={isConfirmModalOpen}
+          onClose={() => {
+            setIsConfirmModalOpen(false);
+            setDeletingDepartment(null);
+          }}
+          onConfirm={confirmDelete}
+          title="تأكيد الحذف"
+          message={`هل أنت متأكد من حذف ${deletingDepartment?.get('name') || 'هذه الإدارة'}؟ لا يمكن التراجع عن هذا الإجراء.`}
+          confirmText="حذف"
+          cancelText="إلغاء"
+          variant="danger"
+          loading={deleteLoading}
+        />
     </MainLayout>
   );
 }

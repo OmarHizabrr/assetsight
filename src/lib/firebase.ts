@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableNetwork, disableNetwork, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -19,5 +19,14 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const googleAuthProvider = new GoogleAuthProvider();
+
+// محاولة إعادة الاتصال عند فشل الاتصال
+if (typeof window !== 'undefined') {
+  // إعادة محاولة الاتصال تلقائياً
+  enableNetwork(db).catch((error) => {
+    console.warn('Firestore connection warning:', error);
+  });
+}
+
 export default app;
 

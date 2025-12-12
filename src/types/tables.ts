@@ -69,6 +69,8 @@ export interface User {
   phone?: string;
   office_id?: string;
   role?: string;
+  password?: string;
+  permissions?: string[];
   is_active?: number | boolean;
   created_at?: string;
   updated_at?: string;

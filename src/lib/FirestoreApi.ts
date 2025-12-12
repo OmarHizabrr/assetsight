@@ -235,11 +235,24 @@ export class FirestoreApi {
       updatedTimes: Timestamp.now(),
     };
 
-    // حفظ البيانات في Firestore
-    if (merge) {
-      await setDoc(docRef, newData, { merge: true });
-    } else {
-      await setDoc(docRef, newData);
+    // حفظ البيانات في Firestore مع إعادة المحاولة
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        if (merge) {
+          await setDoc(docRef, newData, { merge: true });
+        } else {
+          await setDoc(docRef, newData);
+        }
+        return; // نجحت العملية
+      } catch (error: any) {
+        retries--;
+        if (retries === 0 || error.code !== 'unavailable') {
+          throw error; // خطأ نهائي أو خطأ غير متعلق بالاتصال
+        }
+        // انتظار قبل إعادة المحاولة
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
   }
 
@@ -275,20 +288,46 @@ export class FirestoreApi {
     }
     updatedData.updatedTimes = Timestamp.now();
 
-    // تنفيذ عملية التحديث في Firestore
-    await updateDoc(docRef, updatedData);
+    // تنفيذ عملية التحديث في Firestore مع إعادة المحاولة
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        await updateDoc(docRef, updatedData);
+        return; // نجحت العملية
+      } catch (error: any) {
+        retries--;
+        if (retries === 0 || error.code !== 'unavailable') {
+          throw error; // خطأ نهائي أو خطأ غير متعلق بالاتصال
+        }
+        // انتظار قبل إعادة المحاولة
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
   }
 
   /**
    * جلب بيانات مستند
    */
   async getData(docRef: DocumentReference): Promise<{ [key: string]: any } | null> {
-    const snap = await getDoc(docRef);
-    if (!snap.exists()) {
-      return null;
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        const snap = await getDoc(docRef);
+        if (!snap.exists()) {
+          return null;
+        }
+        const data = snap.data();
+        return this.convertTimestamps(data);
+      } catch (error: any) {
+        retries--;
+        if (retries === 0 || error.code !== 'unavailable') {
+          throw error; // خطأ نهائي أو خطأ غير متعلق بالاتصال
+        }
+        // انتظار قبل إعادة المحاولة
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
-    const data = snap.data();
-    return this.convertTimestamps(data);
+    return null;
   }
 
   /**
@@ -328,8 +367,22 @@ export class FirestoreApi {
       q = query(q, limit(options.limit));
     }
 
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs;
+    // إعادة المحاولة في حالة فشل الاتصال
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs;
+      } catch (error: any) {
+        retries--;
+        if (retries === 0 || error.code !== 'unavailable') {
+          throw error; // خطأ نهائي أو خطأ غير متعلق بالاتصال
+        }
+        // انتظار قبل إعادة المحاولة
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    return [];
   }
 
   /**

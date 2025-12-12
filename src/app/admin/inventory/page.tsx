@@ -1,6 +1,6 @@
 'use client';
 
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
@@ -10,13 +10,17 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Select } from "@/components/ui/Select";
 import { Tabs } from "@/components/ui/Tabs";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 function InventoryPageContent() {
+  const pathname = usePathname();
+  const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/inventory');
   const [cycles, setCycles] = useState<BaseModel[]>([]);
   const [items, setItems] = useState<BaseModel[]>([]);
   const [departments, setDepartments] = useState<BaseModel[]>([]);
@@ -25,6 +29,11 @@ function InventoryPageContent() {
   const [activeTab, setActiveTab] = useState<'cycles' | 'items'>('cycles');
   const [isCycleModalOpen, setIsCycleModalOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [deletingCycle, setDeletingCycle] = useState<BaseModel | null>(null);
+  const [deletingItem, setDeletingItem] = useState<BaseModel | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteType, setDeleteType] = useState<'cycle' | 'item'>('cycle');
   const [editingCycle, setEditingCycle] = useState<BaseModel | null>(null);
   const [editingItem, setEditingItem] = useState<BaseModel | null>(null);
   const [selectedCycleId, setSelectedCycleId] = useState<string>('');
@@ -222,51 +231,71 @@ function InventoryPageContent() {
     }
   };
 
-  const handleDeleteCycle = async (cycle: BaseModel) => {
-    const id = cycle.get('id');
-    const deptId = cycle.get('department_id');
-    if (!id || !deptId) return;
-    if (!confirm(`هل أنت متأكد من حذف ${cycle.get('name')}؟`)) return;
-    
-    try {
-      const docRef = firestoreApi.getSubDocument(
-        "departments",
-        deptId,
-        "departments",
-        id
-      );
-      await firestoreApi.deleteData(docRef);
-      loadData();
-    } catch (error) {
-      console.error("Error deleting cycle:", error);
-      alert("حدث خطأ أثناء الحذف");
-    }
+  const handleDeleteCycle = (cycle: BaseModel) => {
+    setDeletingCycle(cycle);
+    setDeleteType('cycle');
+    setIsConfirmModalOpen(true);
   };
 
-  const handleDeleteItem = async (item: BaseModel) => {
-    const id = item.get('id');
-    const cycleId = item.get('cycle_id');
-    if (!id || !cycleId) return;
-    if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
-    
-    try {
-      const cycle = cycles.find(c => c.get('id') === cycleId);
-      const deptId = cycle?.get('department_id');
-      if (deptId) {
-        const docRef = firestoreApi.getNestedSubDocument(
+  const handleDeleteItem = (item: BaseModel) => {
+    setDeletingItem(item);
+    setDeleteType('item');
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteType === 'cycle' && deletingCycle) {
+      const id = deletingCycle.get('id');
+      const deptId = deletingCycle.get('department_id');
+      if (!id || !deptId) return;
+      
+      try {
+        setDeleteLoading(true);
+        const docRef = firestoreApi.getSubDocument(
           "departments",
           deptId,
           "departments",
-          cycleId,
-          "inventoryItems",
           id
         );
         await firestoreApi.deleteData(docRef);
+        loadData();
+        setIsConfirmModalOpen(false);
+        setDeletingCycle(null);
+      } catch (error) {
+        console.error("Error deleting cycle:", error);
+        alert("حدث خطأ أثناء الحذف");
+      } finally {
+        setDeleteLoading(false);
       }
-      loadData();
-    } catch (error) {
-      console.error("Error deleting item:", error);
-      alert("حدث خطأ أثناء الحذف");
+    } else if (deleteType === 'item' && deletingItem) {
+      const id = deletingItem.get('id');
+      const cycleId = deletingItem.get('cycle_id');
+      if (!id || !cycleId) return;
+      
+      try {
+        setDeleteLoading(true);
+        const cycle = cycles.find(c => c.get('id') === cycleId);
+        const deptId = cycle?.get('department_id');
+        if (deptId) {
+          const docRef = firestoreApi.getNestedSubDocument(
+            "departments",
+            deptId,
+            "departments",
+            cycleId,
+            "inventoryItems",
+            id
+          );
+          await firestoreApi.deleteData(docRef);
+        }
+        loadData();
+        setIsConfirmModalOpen(false);
+        setDeletingItem(null);
+      } catch (error) {
+        console.error("Error deleting item:", error);
+        alert("حدث خطأ أثناء الحذف");
+      } finally {
+        setDeleteLoading(false);
+      }
     }
   };
 
@@ -352,12 +381,12 @@ function InventoryPageContent() {
       <div className="mb-10">
         <div className="space-y-3">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
               <span className="text-3xl relative z-10">📋</span>
             </div>
             <div className="flex-1">
-              <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent mb-2">الجرد</h1>
+              <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">الجرد</h1>
               <p className="text-slate-600 text-lg font-semibold">إدارة دورات الجرد وعناصر الجرد</p>
             </div>
           </div>
@@ -380,28 +409,30 @@ function InventoryPageContent() {
 
         {activeTab === 'cycles' && (
           <div>
-            <div className="flex justify-end mb-4">
-              <Button
-                onClick={() => {
-                  setEditingCycle(null);
-                  setCycleFormData(new BaseModel({ name: '', start_date: '', end_date: '', department_id: '', notes: '' }));
-                  setIsCycleModalOpen(true);
-                }}
-                leftIcon={<PlusIcon className="w-5 h-5" />}
-                size="md"
-              >
-                إضافة دورة جديدة
-              </Button>
-            </div>
+            {canAdd && (
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={() => {
+                    setEditingCycle(null);
+                    setCycleFormData(new BaseModel({ name: '', start_date: '', end_date: '', department_id: '', notes: '' }));
+                    setIsCycleModalOpen(true);
+                  }}
+                  leftIcon={<PlusIcon className="w-5 h-5" />}
+                  size="md"
+                >
+                  إضافة دورة جديدة
+                </Button>
+              </div>
+            )}
             <DataTable
               data={cycles}
               columns={cycleColumns}
-              onEdit={(cycle) => {
+              onEdit={canEdit ? ((cycle) => {
                 setEditingCycle(cycle);
                 setCycleFormData(new BaseModel(cycle.getData()));
                 setIsCycleModalOpen(true);
-              }}
-              onDelete={handleDeleteCycle}
+              }) : undefined}
+              onDelete={canDelete ? handleDeleteCycle : undefined}
               loading={loading}
             />
           </div>
@@ -422,32 +453,34 @@ function InventoryPageContent() {
                 ]}
                 className="flex-1 max-w-xs"
               />
-              <Button
-                onClick={() => {
-                  setEditingItem(null);
-                  const newData = new BaseModel({ cycle_id: selectedCycleId || '', asset_id: '', scanned_tag: '', scanned_office_id: '', found: true, note: '' });
-                  setItemFormData(newData);
-                  setIsItemModalOpen(true);
-                }}
-                leftIcon={<PlusIcon className="w-5 h-5" />}
-                size="md"
-              >
-                إضافة عنصر جديد
-              </Button>
+              {canAdd && (
+                <Button
+                  onClick={() => {
+                    setEditingItem(null);
+                    const newData = new BaseModel({ cycle_id: selectedCycleId || '', asset_id: '', scanned_tag: '', scanned_office_id: '', found: true, note: '' });
+                    setItemFormData(newData);
+                    setIsItemModalOpen(true);
+                  }}
+                  leftIcon={<PlusIcon className="w-5 h-5" />}
+                  size="md"
+                >
+                  إضافة عنصر جديد
+                </Button>
+              )}
             </div>
             <DataTable
               data={filteredItems}
               columns={itemColumns}
-                onEdit={(item) => {
-                  setEditingItem(item);
-                  const itemData = item.getData();
-                  itemData.found = item.getValue<number>('found') === 1 || item.getValue<boolean>('found') === true;
-                  setItemFormData(new BaseModel(itemData));
-                  setIsItemModalOpen(true);
-                }}
-                onDelete={handleDeleteItem}
-                loading={loading}
-              />
+              onEdit={canEdit ? ((item) => {
+                setEditingItem(item);
+                const itemData = item.getData();
+                itemData.found = item.getValue<number>('found') === 1 || item.getValue<boolean>('found') === true;
+                setItemFormData(new BaseModel(itemData));
+                setIsItemModalOpen(true);
+              }) : undefined}
+              onDelete={canDelete ? handleDeleteItem : undefined}
+              loading={loading}
+            />
           </div>
         )}
 
@@ -501,7 +534,7 @@ function InventoryPageContent() {
               rows={3}
               placeholder="أدخل أي ملاحظات إضافية"
             />
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
               <Button
                 type="button"
                 variant="outline"
@@ -571,7 +604,7 @@ function InventoryPageContent() {
               rows={3}
               placeholder="أدخل أي ملاحظات"
             />
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
               <Button
                 type="button"
                 variant="outline"
@@ -590,6 +623,27 @@ function InventoryPageContent() {
             </div>
           </form>
         </Modal>
+
+        {/* Confirm Delete Modal */}
+        <ConfirmModal
+          isOpen={isConfirmModalOpen}
+          onClose={() => {
+            setIsConfirmModalOpen(false);
+            setDeletingCycle(null);
+            setDeletingItem(null);
+          }}
+          onConfirm={confirmDelete}
+          title="تأكيد الحذف"
+          message={
+            deleteType === 'cycle'
+              ? `هل أنت متأكد من حذف ${deletingCycle?.get('name') || 'هذا الدورة'}؟ لا يمكن التراجع عن هذا الإجراء.`
+              : 'هل أنت متأكد من حذف هذا العنصر؟ لا يمكن التراجع عن هذا الإجراء.'
+          }
+          confirmText="حذف"
+          cancelText="إلغاء"
+          variant="danger"
+          loading={deleteLoading}
+        />
     </MainLayout>
   );
 }

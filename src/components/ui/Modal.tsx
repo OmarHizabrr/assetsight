@@ -1,6 +1,5 @@
 'use client';
 
-import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { useEffect } from "react";
 
 interface ModalProps {
@@ -10,6 +9,8 @@ interface ModalProps {
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   showCloseButton?: boolean;
+  centered?: boolean;
+  footer?: React.ReactNode;
 }
 
 export function Modal({
@@ -19,6 +20,8 @@ export function Modal({
   children,
   size = 'md',
   showCloseButton = true,
+  centered = false,
+  footer,
 }: ModalProps) {
   useEffect(() => {
     if (isOpen) {
@@ -44,53 +47,69 @@ export function Modal({
   if (!isOpen) return null;
 
   const sizes = {
-    sm: 'sm:max-w-lg',
-    md: 'sm:max-w-2xl',
-    lg: 'sm:max-w-4xl',
-    xl: 'sm:max-w-6xl',
-    full: 'sm:max-w-full sm:mx-4',
+    sm: 'modal-sm',
+    md: '',
+    lg: 'modal-lg',
+    xl: 'modal-xl',
+    full: 'modal-fullscreen',
   };
+
+  const modalDialogClass = `modal-dialog ${sizes[size]} modal-dialog-centered`;
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto"
+      className={`modal fade ${isOpen ? 'show' : ''}`}
+      style={{ display: isOpen ? 'block' : 'none' }}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
-      <div className="flex items-center justify-center min-h-screen px-3 sm:px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 material-transition bg-secondary-900/60 animate-fade-in"
-          onClick={onClose}
-          aria-hidden="true"
-        />
+      {/* Backdrop */}
+      <div
+        className="modal-backdrop fade show"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-        {/* Modal Panel */}
-        <div className={`inline-block align-bottom bg-white rounded-2xl text-right overflow-hidden shadow-elevation-24 transform material-transition animate-scale-in sm:my-8 sm:align-middle w-full border border-gray-200 ${sizes[size]}`}>
-          <div className="bg-white px-6 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8 pb-5 border-b border-gray-200">
-              <h3
-                id="modal-title"
-                className="text-2xl sm:text-3xl font-semibold text-gray-900"
-              >
-                {title}
-              </h3>
-              {showCloseButton && (
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 material-transition flex-shrink-0"
-                  aria-label="إغلاق"
-                >
-                  <MaterialIcon name="close" size="lg" />
-                </button>
-              )}
-            </div>
-
-            {/* Content */}
-            <div className="text-gray-700 text-sm sm:text-base">{children}</div>
+      {/* Modal Dialog */}
+      <div className={modalDialogClass} role="document" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-content">
+          {/* Modal Header */}
+          <div className="modal-header">
+            <h5 className="modal-title" id="modal-title" style={{ color: '#4b465c', fontWeight: 600, fontSize: '1.125rem' }}>
+              {title}
+            </h5>
+            {showCloseButton && (
+              <button
+                type="button"
+                className="btn-close"
+                onClick={onClose}
+                aria-label="Close"
+                style={{ 
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%234b465c'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e")`,
+                  opacity: 0.5
+                }}
+              />
+            )}
           </div>
+
+          {/* Modal Body */}
+          <div className="modal-body" style={{ color: '#6f6b7d' }}>
+            {children}
+          </div>
+
+          {/* Modal Footer */}
+          {footer && (
+            <div className="modal-footer">
+              {footer}
+            </div>
+          )}
         </div>
       </div>
     </div>

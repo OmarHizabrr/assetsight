@@ -27,16 +27,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full material-transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed normal-case text-sm ripple elevation-2 hover:elevation-4';
+    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full material-transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed normal-case text-sm';
     
     const variants = {
-      primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500',
-      secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
-      success: 'bg-success-600 text-white hover:bg-success-700 focus:ring-success-500',
-      warning: 'bg-warning-600 text-white hover:bg-warning-700 focus:ring-warning-500',
-      error: 'bg-error-600 text-white hover:bg-error-700 focus:ring-error-500',
-      outline: 'border border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500 bg-transparent',
-      ghost: 'text-primary-600 hover:bg-primary-50 focus:ring-primary-500 bg-transparent shadow-none hover:shadow-none',
+      primary: 'text-white font-medium hover:opacity-90 focus:ring-primary-500',
+      secondary: 'text-white font-medium hover:opacity-90 focus:ring-gray-500',
+      success: 'text-white font-medium hover:opacity-90 focus:ring-success-500',
+      warning: 'text-white font-medium hover:opacity-90 focus:ring-warning-500',
+      error: 'text-white font-medium hover:opacity-90 focus:ring-error-500',
+      outline: 'border border-primary-500 text-primary-600 font-medium hover:bg-primary-50 focus:ring-primary-500 bg-white',
+      ghost: 'text-primary-600 font-medium hover:bg-primary-50 focus:ring-primary-500 bg-transparent',
     };
 
     const sizes = {
@@ -55,9 +55,25 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       xl: 'w-5 h-5',
     };
 
+    // Ensure variant styles are applied correctly
+    const variantStyles = variants[variant] || variants.primary;
+    
+    // Vuexy color styles
+    const colorStyles = {
+      primary: { backgroundColor: '#7367f0', borderColor: '#7367f0' },
+      secondary: { backgroundColor: '#a8aaae', borderColor: '#a8aaae' },
+      success: { backgroundColor: '#28c76f', borderColor: '#28c76f' },
+      warning: { backgroundColor: '#ff9f43', borderColor: '#ff9f43' },
+      error: { backgroundColor: '#ea5455', borderColor: '#ea5455' },
+      outline: {},
+      ghost: {},
+    };
+    
+    const buttonStyle = colorStyles[variant] || colorStyles.primary;
+    
     const combinedClassName = `
       ${baseStyles}
-      ${variants[variant]}
+      ${variantStyles}
       ${sizes[size]}
       ${fullWidth ? 'w-full' : ''}
       ${className}
@@ -67,6 +83,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={combinedClassName}
+        style={buttonStyle}
         disabled={disabled || isLoading}
         {...props}
       >
@@ -96,9 +113,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           </>
         ) : (
           <>
-            {leftIcon && <span className={iconSizes[size]}>{leftIcon}</span>}
-            {children}
-            {rightIcon && <span className={iconSizes[size]}>{rightIcon}</span>}
+            {leftIcon && (
+              <span className={iconSizes[size]}>
+                {leftIcon}
+              </span>
+            )}
+            <span>{children}</span>
+            {rightIcon && (
+              <span className={iconSizes[size]}>
+                {rightIcon}
+              </span>
+            )}
           </>
         )}
       </button>

@@ -1,6 +1,7 @@
 'use client';
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -142,12 +143,12 @@ function ReportsPageContent() {
       <div className="mb-10">
         <div className="space-y-3">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-              <span className="text-3xl relative z-10">📈</span>
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
+              <MaterialIcon name="assessment" className="text-white relative z-10" size="3xl" />
             </div>
             <div className="flex-1">
-              <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent mb-2">التقارير والإحصائيات</h1>
+              <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">التقارير والإحصائيات</h1>
               <p className="text-slate-600 text-lg font-semibold">نظرة شاملة على بيانات الأصول</p>
             </div>
           </div>
@@ -156,64 +157,79 @@ function ReportsPageContent() {
 
         {/* إحصائيات عامة */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <Card hover variant="elevated">
-            <CardBody padding="md">
+          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-primary-50/30 border-primary-200/40">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-secondary-600 mb-1">إجمالي الأصول</p>
-                  <p className="text-3xl font-bold text-secondary-900">{stats.totalAssets}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">إجمالي الأصول</p>
+                  <p className="text-4xl font-black bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-1">{stats.totalAssets}</p>
+                  <p className="text-xs text-slate-500 font-medium">أصل مسجل</p>
                 </div>
-                <div className="text-4xl">💼</div>
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30">
+                  <MaterialIcon name="inventory" className="text-white" size="3xl" />
+                </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated">
-            <CardBody padding="md">
+          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-success-50/30 border-success-200/40">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-secondary-600 mb-1">القيمة الإجمالية</p>
-                  <p className="text-3xl font-bold text-secondary-900">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">القيمة الإجمالية</p>
+                  <p className="text-4xl font-black bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-1">
                     {stats.totalValue.toLocaleString('ar-SA')}
                   </p>
+                  <p className="text-xs text-slate-500 font-medium">ريال سعودي</p>
                 </div>
-                <div className="text-4xl">💰</div>
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-success-500 to-success-700 flex items-center justify-center shadow-lg shadow-success-500/30">
+                  <MaterialIcon name="attach_money" className="text-white" size="3xl" />
+                </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated">
-            <CardBody padding="md">
+          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-accent-50/30 border-accent-200/40">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-secondary-600 mb-1">أصول نشطة</p>
-                  <p className="text-3xl font-bold text-secondary-900">{stats.activeAssets}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">أصول نشطة</p>
+                  <p className="text-4xl font-black bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-1">{stats.activeAssets}</p>
+                  <p className="text-xs text-slate-500 font-medium">أصل نشط</p>
                 </div>
-                <div className="text-4xl">✅</div>
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-accent-500 to-accent-700 flex items-center justify-center shadow-lg shadow-accent-500/30">
+                  <MaterialIcon name="check_circle" className="text-white" size="3xl" />
+                </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated">
-            <CardBody padding="md">
+          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-warning-50/30 border-warning-200/40">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-secondary-600 mb-1">الإدارات</p>
-                  <p className="text-3xl font-bold text-secondary-900">{stats.departments}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">الإدارات</p>
+                  <p className="text-4xl font-black bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-1">{stats.departments}</p>
+                  <p className="text-xs text-slate-500 font-medium">إدارة نشطة</p>
                 </div>
-                <div className="text-4xl">🏢</div>
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-warning-500 to-warning-700 flex items-center justify-center shadow-lg shadow-warning-500/30">
+                  <MaterialIcon name="business" className="text-white" size="3xl" />
+                </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card hover variant="elevated">
-            <CardBody padding="md">
+          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-primary-50/30 border-primary-200/40">
+            <CardBody padding="lg">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-secondary-600 mb-1">المكاتب</p>
-                  <p className="text-3xl font-bold text-secondary-900">{stats.offices}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">المكاتب</p>
+                  <p className="text-4xl font-black bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-1">{stats.offices}</p>
+                  <p className="text-xs text-slate-500 font-medium">مكتب متاح</p>
                 </div>
-                <div className="text-4xl">🚪</div>
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30">
+                  <MaterialIcon name="meeting_room" className="text-white" size="3xl" />
+                </div>
               </div>
             </CardBody>
           </Card>
@@ -231,10 +247,10 @@ function ReportsPageContent() {
                   {assetsByStatus.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-4 bg-secondary-50 rounded-lg hover:bg-secondary-100 transition-colors duration-200 animate-fade-in"
+                      className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200 animate-fade-in border border-slate-200/50"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <span className="font-medium text-secondary-700">{item.status}</span>
+                      <span className="font-semibold text-slate-700 text-sm">{item.status}</span>
                       <Badge variant="primary" size="lg">
                         {item.count}
                       </Badge>
@@ -256,10 +272,10 @@ function ReportsPageContent() {
                   {assetsByDepartment.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-4 bg-secondary-50 rounded-lg hover:bg-secondary-100 transition-colors duration-200 animate-fade-in"
+                      className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200 animate-fade-in border border-slate-200/50"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <span className="font-medium text-secondary-700">{item.department}</span>
+                      <span className="font-semibold text-slate-700 text-sm">{item.department}</span>
                       <Badge variant="success" size="lg">
                         {item.count}
                       </Badge>
