@@ -29,11 +29,9 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ['192.168.0.170'],
   compress: true,
   poweredByHeader: false,
-  swcMinify: true,
   reactStrictMode: true,
   // Performance optimizations
   productionBrowserSourceMaps: false,
-  optimizeFonts: true,
   async headers() {
     return [
       {
