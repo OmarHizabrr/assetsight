@@ -10,6 +10,7 @@ import { Input } from "./Input";
 import { Select } from "./Select";
 import { Card, CardBody, CardHeader } from "./Card";
 import { DebouncedInput } from "./DebouncedInput";
+import logoText from "@/assets/images/logos/logo-text.png";
 
 // Utility function to format dates
 const formatDate = (dateValue: any): string => {
@@ -403,47 +404,254 @@ export function DataTable({
   };
 
   const exportToPDF = () => {
-    // Simple PDF export using window.print
+    // PDF export with header and footer
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+    
+    // Get current date and time
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ar-SA', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit' 
+    });
+    const timeStr = now.toLocaleTimeString('ar-SA', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    });
+    
+    // Get logo path (convert import to string if needed)
+    const logoPath = typeof logoText === 'string' ? logoText : (logoText?.src || logoText || '/favicon.png');
     
     const tableHTML = `
       <html>
         <head>
           <title>${exportFileName}</title>
           <style>
-            body { font-family: Arial, sans-serif; direction: rtl; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-            th { background-color: #f8f7fa; font-weight: bold; }
+            @page {
+              margin: 100px 50px 80px 50px;
+              @top-center {
+                content: element(header);
+              }
+              @bottom-center {
+                content: element(footer);
+              }
+            }
+            
+            body { 
+              font-family: 'Arial', 'Tahoma', sans-serif; 
+              direction: rtl;
+              margin: 0;
+              padding: 0;
+            }
+            
+            #header {
+              position: running(header);
+              width: 100%;
+              padding: 15px 0;
+              border-bottom: 2px solid #4b465c;
+              background: white;
+            }
+            
+            .header-content {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0 20px;
+            }
+            
+            .header-right {
+              display: flex;
+              align-items: center;
+              gap: 20px;
+            }
+            
+            .header-logo {
+              height: 60px;
+              width: auto;
+              object-fit: contain;
+            }
+            
+            .header-text {
+              text-align: right;
+            }
+            
+            .header-title {
+              font-size: 20px;
+              font-weight: bold;
+              color: #4b465c;
+              margin: 0 0 5px 0;
+            }
+            
+            .header-subtitle {
+              font-size: 14px;
+              color: #6f6b7d;
+              margin: 0;
+            }
+            
+            .header-left {
+              text-align: left;
+            }
+            
+            .header-date {
+              font-size: 14px;
+              color: #6f6b7d;
+              margin: 0;
+            }
+            
+            #footer {
+              position: running(footer);
+              width: 100%;
+              padding: 10px 0;
+              border-top: 2px solid #4b465c;
+              background: #f8f7fa;
+              text-align: center;
+            }
+            
+            .footer-content {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0 20px;
+            }
+            
+            .footer-right {
+              font-size: 14px;
+              font-weight: bold;
+              color: #4b465c;
+            }
+            
+            .footer-left {
+              font-size: 12px;
+              color: #6f6b7d;
+            }
+            
+            .content {
+              margin-top: 20px;
+            }
+            
+            h2 {
+              text-align: center;
+              color: #4b465c;
+              margin: 20px 0;
+              font-size: 18px;
+            }
+            
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 20px 0;
+              font-size: 12px;
+            }
+            
+            th, td { 
+              border: 1px solid #dbdade; 
+              padding: 10px 8px; 
+              text-align: right; 
+            }
+            
+            th { 
+              background-color: #f8f7fa; 
+              font-weight: bold;
+              color: #5d596c;
+              font-size: 13px;
+            }
+            
+            td {
+              color: #6f6b7d;
+            }
+            
+            tr:nth-child(even) {
+              background-color: #fafafa;
+            }
+            
+            @media print {
+              body {
+                margin: 0;
+              }
+              
+              #header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+              }
+              
+              #footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+              }
+              
+              .content {
+                margin-top: 100px;
+                margin-bottom: 80px;
+              }
+            }
           </style>
         </head>
         <body>
-          <h2>${title || 'الجدول'}</h2>
-          <table>
-            <thead>
-              <tr>
-                ${columns.map((col) => `<th>${col.label}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${sortedData.map((item) => `
+          <div id="header">
+            <div class="header-content">
+              <div class="header-right">
+                <img src="${logoPath}" alt="Logo" class="header-logo" onerror="this.style.display='none'" />
+                <div class="header-text">
+                  <h1 class="header-title">${title || 'الجدول'}</h1>
+                  <p class="header-subtitle">${exportFileName}</p>
+                </div>
+              </div>
+              <div class="header-left">
+                <p class="header-date">التاريخ: ${dateStr}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="content">
+            <table>
+              <thead>
                 <tr>
-                  ${columns.map((col) => {
-                    const value = col.render ? col.render(item) : item.get(col.key);
-                    return `<td>${typeof value === 'string' || typeof value === 'number' ? value : String(value || '')}</td>`;
-                  }).join('')}
+                  <th style="width: 50px; text-align: center;">#</th>
+                  ${columns.map((col) => `<th>${col.label}</th>`).join('')}
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${sortedData.map((item, index) => `
+                  <tr>
+                    <td style="text-align: center; font-weight: bold; color: #7367f0;">${index + 1}</td>
+                    ${columns.map((col) => {
+                      const value = col.render ? col.render(item) : item.get(col.key);
+                      return `<td>${typeof value === 'string' || typeof value === 'number' ? value : String(value || '')}</td>`;
+                    }).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div id="footer">
+            <div class="footer-content">
+              <div class="footer-right">نظام AssetSight</div>
+              <div class="footer-left">${timeStr} - ${dateStr}</div>
+            </div>
+          </div>
         </body>
       </html>
     `;
     
     printWindow.document.write(tableHTML);
     printWindow.document.close();
-    printWindow.print();
+    
+    // Wait for images to load before printing
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    };
+    
     setExportDropdownOpen(false);
   };
 
