@@ -607,11 +607,11 @@ export function DataTable({
                 <img src="${logoPath}" alt="Logo" class="header-logo" onerror="this.style.display='none'" />
                 <div class="header-text">
                   <h1 class="header-title">${title || 'الجدول'}</h1>
-                  <p class="header-subtitle">${settings.rightHeader || exportFileName}</p>
+                  <p class="header-subtitle">${(settings.rightHeader || exportFileName).replace(/\n/g, '<br>')}</p>
                 </div>
               </div>
               <div class="header-left">
-                <p class="header-subtitle" style="text-align: left; margin-bottom: 5px;">${settings.leftHeader || ''}</p>
+                <p class="header-subtitle" style="text-align: left; margin-bottom: 5px; white-space: pre-line;">${(settings.leftHeader || '').replace(/\n/g, '<br>')}</p>
                 <p class="header-date">${hijri}</p>
                 <p class="header-date" style="font-size: 12px; margin-top: 3px;">${gregorian}</p>
               </div>
@@ -644,7 +644,7 @@ export function DataTable({
           ${settings.isHeaderVisible ? `
           <div id="footer">
             <div class="footer-content">
-              <div class="footer-right">${settings.footerText || 'نظام AssetSight'}</div>
+              <div class="footer-right" style="white-space: pre-line; text-align: right;">${(settings.footerText || 'نظام AssetSight').replace(/\n/g, '<br>')}</div>
               <div class="footer-left">${timeStr} - ${hijri} / ${gregorian}</div>
             </div>
           </div>

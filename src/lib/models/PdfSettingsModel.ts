@@ -11,6 +11,6 @@ export const defaultPdfSettings: PdfSettingsModel = {
   logoBase64: '',
   rightHeader: 'نظام AssetSight\nإدارة الأصول والممتلكات',
   leftHeader: 'AssetSight System\nAssets Management',
-  footerText: 'شئون الموظفين | مدير الشئون الإدارية | المحاسب | رئيس قسم الحسابات | المسؤول المالي',
+  footerText: 'اسم الطالب\nالسجل\nمكان السجل\nالمشرف',
 };
 
