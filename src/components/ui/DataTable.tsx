@@ -106,6 +106,7 @@ export function DataTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [exportDropdownPosition, setExportDropdownPosition] = useState<{ top: number; right: number } | null>(null);
   const [actionDropdownOpen, setActionDropdownOpen] = useState<{ [key: string]: boolean }>({});
   const [actionDropdownPosition, setActionDropdownPosition] = useState<{ [key: string]: { top: number; left: number } }>({});
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -113,6 +114,7 @@ export function DataTable({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(pageSize || 10);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
+  const exportButtonRef = useRef<HTMLButtonElement>(null);
   const actionDropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const actionButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
@@ -122,8 +124,11 @@ export function DataTable({
       const target = event.target as Node;
       
       // Check export dropdown
-      if (exportDropdownRef.current && !exportDropdownRef.current.contains(target)) {
+      const isClickOnExportButton = exportButtonRef.current?.contains(target);
+      const isClickOnExportDropdown = document.querySelector('[data-export-dropdown]')?.contains(target);
+      if (!isClickOnExportButton && !isClickOnExportDropdown) {
         setExportDropdownOpen(false);
+        setExportDropdownPosition(null);
       }
       
       // Check action dropdowns - exclude the button itself
@@ -158,6 +163,20 @@ export function DataTable({
     };
   }, [actionDropdownOpen]);
 
+  // Calculate export dropdown position when opened
+  useLayoutEffect(() => {
+    if (exportDropdownOpen && exportButtonRef.current) {
+      const button = exportButtonRef.current;
+      const rect = button.getBoundingClientRect();
+      setExportDropdownPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right, // RTL: use right instead of left
+      });
+    } else {
+      setExportDropdownPosition(null);
+    }
+  }, [exportDropdownOpen]);
+
   // Calculate and update dropdown position when opened - use useLayoutEffect for synchronous updates
   useLayoutEffect(() => {
     Object.keys(actionDropdownOpen).forEach((key) => {
@@ -189,6 +208,17 @@ export function DataTable({
   // Update dropdown position on scroll and resize
   useEffect(() => {
     const handleScroll = () => {
+      // Update export dropdown position
+      if (exportDropdownOpen && exportButtonRef.current) {
+        const button = exportButtonRef.current;
+        const rect = button.getBoundingClientRect();
+        setExportDropdownPosition({
+          top: rect.bottom + 8,
+          right: window.innerWidth - rect.right,
+        });
+      }
+      
+      // Update action dropdowns position
       Object.keys(actionDropdownOpen).forEach((key) => {
         if (actionDropdownOpen[key] && actionButtonRefs.current[key]) {
           const button = actionButtonRefs.current[key];
@@ -207,7 +237,7 @@ export function DataTable({
       });
     };
 
-    if (Object.keys(actionDropdownOpen).length > 0) {
+    if (exportDropdownOpen || Object.keys(actionDropdownOpen).length > 0) {
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', handleScroll);
       return () => {
@@ -215,7 +245,7 @@ export function DataTable({
         window.removeEventListener('resize', handleScroll);
       };
     }
-  }, [actionDropdownOpen]);
+  }, [actionDropdownOpen, exportDropdownOpen]);
 
   // Filter data using debounced search term - memoized for performance
   const filteredData = useMemo(() => {
@@ -485,6 +515,7 @@ export function DataTable({
             {/* Export Dropdown */}
             <div className="relative" ref={exportDropdownRef}>
               <Button
+                ref={exportButtonRef}
                 variant="outline"
                 size="sm"
                 onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
@@ -494,46 +525,6 @@ export function DataTable({
                 <span className="hidden sm:inline mr-1">تصدير</span>
                 <MaterialIcon name="arrow_drop_down" size="sm" />
               </Button>
-              {exportDropdownOpen && (
-                <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-scale-in z-50">
-                  <button
-                    onClick={exportToExcel}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
-                  >
-                    <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
-                    <span>Excel</span>
-                  </button>
-                  <button
-                    onClick={exportToCSV}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
-                  >
-                    <MaterialIcon name="description" className="text-primary-600" size="sm" />
-                    <span>CSV</span>
-                  </button>
-                  <button
-                    onClick={exportToPDF}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
-                  >
-                    <MaterialIcon name="picture_as_pdf" className="text-primary-600" size="sm" />
-                    <span>PDF</span>
-                  </button>
-                  <button
-                    onClick={printTable}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
-                  >
-                    <MaterialIcon name="print" className="text-primary-600" size="sm" />
-                    <span>طباعة</span>
-                  </button>
-                  <div className="mx-2 my-1 h-px bg-slate-200"></div>
-                  <button
-                    onClick={copyToClipboard}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
-                  >
-                    <MaterialIcon name="content_copy" className="text-primary-600" size="sm" />
-                    <span>نسخ</span>
-                  </button>
-                </div>
-              )}
             </div>
             
             {onAddNew && (
@@ -1098,6 +1089,200 @@ export function DataTable({
         )}
       </CardBody>
     </Card>
+    {/* Render export dropdown using Portal */}
+    {typeof window !== 'undefined' && exportDropdownOpen && exportDropdownPosition && createPortal(
+      <div
+        data-export-dropdown
+        className="animate-scale-in"
+        style={{
+          position: 'fixed',
+          right: `${exportDropdownPosition.right}px`,
+          top: `${exportDropdownPosition.top}px`,
+          backgroundColor: 'white',
+          border: '2px solid #dbdade',
+          borderRadius: '1rem',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(115, 103, 240, 0.1)',
+          zIndex: 10000,
+          minWidth: '192px',
+          padding: '0.5rem 0',
+          transformOrigin: 'top right',
+          overflow: 'hidden'
+        }}
+      >
+        <button
+          onClick={() => {
+            exportToExcel();
+            setExportDropdownOpen(false);
+            setExportDropdownPosition(null);
+          }}
+          style={{
+            width: '100%',
+            padding: '0.625rem 1rem',
+            textAlign: 'right',
+            border: 'none',
+            background: 'transparent',
+            color: '#6f6b7d',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '0.75rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#f8f7fa';
+            e.currentTarget.style.color = '#7367f0';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#6f6b7d';
+          }}
+        >
+          <span>Excel</span>
+          <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
+        </button>
+        <button
+          onClick={() => {
+            exportToCSV();
+            setExportDropdownOpen(false);
+            setExportDropdownPosition(null);
+          }}
+          style={{
+            width: '100%',
+            padding: '0.625rem 1rem',
+            textAlign: 'right',
+            border: 'none',
+            background: 'transparent',
+            color: '#6f6b7d',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '0.75rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#f8f7fa';
+            e.currentTarget.style.color = '#7367f0';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#6f6b7d';
+          }}
+        >
+          <span>CSV</span>
+          <MaterialIcon name="description" className="text-primary-600" size="sm" />
+        </button>
+        <button
+          onClick={() => {
+            exportToPDF();
+            setExportDropdownOpen(false);
+            setExportDropdownPosition(null);
+          }}
+          style={{
+            width: '100%',
+            padding: '0.625rem 1rem',
+            textAlign: 'right',
+            border: 'none',
+            background: 'transparent',
+            color: '#6f6b7d',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '0.75rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#f8f7fa';
+            e.currentTarget.style.color = '#7367f0';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#6f6b7d';
+          }}
+        >
+          <span>PDF</span>
+          <MaterialIcon name="picture_as_pdf" className="text-primary-600" size="sm" />
+        </button>
+        <button
+          onClick={() => {
+            printTable();
+            setExportDropdownOpen(false);
+            setExportDropdownPosition(null);
+          }}
+          style={{
+            width: '100%',
+            padding: '0.625rem 1rem',
+            textAlign: 'right',
+            border: 'none',
+            background: 'transparent',
+            color: '#6f6b7d',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '0.75rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#f8f7fa';
+            e.currentTarget.style.color = '#7367f0';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#6f6b7d';
+          }}
+        >
+          <span>طباعة</span>
+          <MaterialIcon name="print" className="text-primary-600" size="sm" />
+        </button>
+        <div style={{ margin: '0.25rem 0.5rem', height: '1px', background: '#e2e8f0' }}></div>
+        <button
+          onClick={() => {
+            copyToClipboard();
+            setExportDropdownOpen(false);
+            setExportDropdownPosition(null);
+          }}
+          style={{
+            width: '100%',
+            padding: '0.625rem 1rem',
+            textAlign: 'right',
+            border: 'none',
+            background: 'transparent',
+            color: '#6f6b7d',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '0.75rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#f8f7fa';
+            e.currentTarget.style.color = '#7367f0';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#6f6b7d';
+          }}
+        >
+          <span>نسخ</span>
+          <MaterialIcon name="content_copy" className="text-primary-600" size="sm" />
+        </button>
+      </div>,
+      document.body
+    )}
     {/* Render action dropdowns using Portal outside the table */}
     {typeof window !== 'undefined' && Object.keys(actionDropdownOpen).map((itemId) => {
       if (!actionDropdownOpen[itemId] || !actionDropdownPosition[itemId]) return null;
