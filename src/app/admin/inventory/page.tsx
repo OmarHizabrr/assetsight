@@ -4,23 +4,25 @@ import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute
 import { PlusIcon } from "@/components/icons";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card, CardBody } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
 import { Modal } from "@/components/ui/Modal";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { Select } from "@/components/ui/Select";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Tabs } from "@/components/ui/Tabs";
+import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 function InventoryPageContent() {
   const pathname = usePathname();
   const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/inventory');
+  const { showSuccess, showError, showWarning } = useToast();
   const [cycles, setCycles] = useState<BaseModel[]>([]);
   const [items, setItems] = useState<BaseModel[]>([]);
   const [departments, setDepartments] = useState<BaseModel[]>([]);
@@ -138,11 +140,11 @@ function InventoryPageContent() {
     setItemFormData(newData);
   };
 
-  const handleCycleSubmit = async (e: React.FormEvent) => {
+  const handleCycleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     const deptId = cycleFormData.get('department_id');
     if (!deptId) {
-      alert("يرجى اختيار الإدارة");
+      showWarning("يرجى اختيار الإدارة");
       return;
     }
     
@@ -159,6 +161,7 @@ function InventoryPageContent() {
           cycleId
         );
         await firestoreApi.updateData(docRef, data);
+        showSuccess("تم تحديث دورة الجرد بنجاح");
       } else {
         const newId = firestoreApi.getNewId("cycles");
         const docRef = firestoreApi.getSubDocument(
@@ -168,6 +171,7 @@ function InventoryPageContent() {
           newId
         );
         await firestoreApi.setData(docRef, data);
+        showSuccess("تم إضافة دورة الجرد بنجاح");
       }
       setIsCycleModalOpen(false);
       setEditingCycle(null);
@@ -175,22 +179,22 @@ function InventoryPageContent() {
       loadData();
     } catch (error) {
       console.error("Error saving cycle:", error);
-      alert("حدث خطأ أثناء الحفظ");
+      showError("حدث خطأ أثناء الحفظ");
     }
-  };
+  }, [cycleFormData, editingCycle, showSuccess, showError, showWarning]);
 
-  const handleItemSubmit = async (e: React.FormEvent) => {
+  const handleItemSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     const cycleId = itemFormData.get('cycle_id');
     if (!cycleId) {
-      alert("يرجى اختيار الجولة");
+      showWarning("يرجى اختيار الجولة");
       return;
     }
     
     const cycle = cycles.find(c => c.get('id') === cycleId);
     const deptId = cycle?.get('department_id');
     if (!deptId) {
-      alert("معلومات الجولة غير صحيحة");
+      showWarning("معلومات الجولة غير صحيحة");
       return;
     }
     
@@ -224,12 +228,13 @@ function InventoryPageContent() {
       setIsItemModalOpen(false);
       setEditingItem(null);
       setItemFormData(new BaseModel({ cycle_id: '', asset_id: '', scanned_tag: '', scanned_office_id: '', found: true, note: '' }));
+      showSuccess(editingItem ? "تم تحديث عنصر الجرد بنجاح" : "تم إضافة عنصر الجرد بنجاح");
       loadData();
     } catch (error) {
       console.error("Error saving item:", error);
-      alert("حدث خطأ أثناء الحفظ");
+      showError("حدث خطأ أثناء الحفظ");
     }
-  };
+  }, [itemFormData, cycles, editingItem, showSuccess, showError, showWarning]);
 
   const handleDeleteCycle = (cycle: BaseModel) => {
     setDeletingCycle(cycle);
@@ -258,12 +263,13 @@ function InventoryPageContent() {
           id
         );
         await firestoreApi.deleteData(docRef);
+        showSuccess("تم حذف دورة الجرد بنجاح");
         loadData();
         setIsConfirmModalOpen(false);
         setDeletingCycle(null);
       } catch (error) {
         console.error("Error deleting cycle:", error);
-        alert("حدث خطأ أثناء الحذف");
+        showError("حدث خطأ أثناء الحذف");
       } finally {
         setDeleteLoading(false);
       }
@@ -287,12 +293,13 @@ function InventoryPageContent() {
           );
           await firestoreApi.deleteData(docRef);
         }
+        showSuccess("تم حذف عنصر الجرد بنجاح");
         loadData();
         setIsConfirmModalOpen(false);
         setDeletingItem(null);
       } catch (error) {
         console.error("Error deleting item:", error);
-        alert("حدث خطأ أثناء الحذف");
+        showError("حدث خطأ أثناء الحذف");
       } finally {
         setDeleteLoading(false);
       }
@@ -325,22 +332,23 @@ function InventoryPageContent() {
     { 
       key: 'name', 
       label: 'اسم الجولة',
-      render: (item: BaseModel) => item.get('name'),
+      sortable: true,
     },
     { 
       key: 'start_date', 
       label: 'تاريخ البداية',
-      render: (item: BaseModel) => item.get('start_date'),
+      sortable: true,
     },
     { 
       key: 'end_date', 
       label: 'تاريخ النهاية',
-      render: (item: BaseModel) => item.get('end_date'),
+      sortable: true,
     },
     { 
       key: 'department_id', 
       label: 'الإدارة',
       render: (item: BaseModel) => getDepartmentName(item.get('department_id')),
+      sortable: true,
     },
   ];
 
@@ -349,16 +357,18 @@ function InventoryPageContent() {
       key: 'cycle_id', 
       label: 'الجولة',
       render: (item: BaseModel) => getCycleName(item.get('cycle_id')),
+      sortable: true,
     },
     { 
       key: 'scanned_tag', 
       label: 'التاج الممسوح',
-      render: (item: BaseModel) => item.get('scanned_tag'),
+      sortable: true,
     },
     { 
       key: 'scanned_office_id', 
       label: 'مكتب المسح',
       render: (item: BaseModel) => getOfficeName(item.get('scanned_office_id')),
+      sortable: true,
     },
     { 
       key: 'found', 
@@ -367,11 +377,12 @@ function InventoryPageContent() {
         const found = item.getValue<number>('found') === 1 || item.getValue<boolean>('found') === true;
         return found ? '✓' : '✗';
       },
+      sortable: true,
     },
     { 
       key: 'note', 
       label: 'ملاحظة',
-      render: (item: BaseModel) => item.get('note'),
+      sortable: true,
     },
   ];
 
@@ -441,9 +452,9 @@ function InventoryPageContent() {
         {activeTab === 'items' && (
           <div>
             <div className="mb-4 flex justify-between items-center gap-4">
-              <Select
+              <SearchableSelect
                 value={selectedCycleId}
-                onChange={(e) => setSelectedCycleId(e.target.value)}
+                onChange={(value) => setSelectedCycleId(value)}
                 options={[
                   { value: '', label: 'جميع الدورات' },
                   ...cycles.map((cycle) => ({
@@ -451,7 +462,9 @@ function InventoryPageContent() {
                     label: cycle.get('name'),
                   })),
                 ]}
+                placeholder="اختر الدورة"
                 className="flex-1 max-w-xs"
+                fullWidth={false}
               />
               {canAdd && (
                 <Button
@@ -494,8 +507,30 @@ function InventoryPageContent() {
           }}
           title={editingCycle ? "تعديل دورة جرد" : "إضافة دورة جرد جديدة"}
           size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCycleModalOpen(false)}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                form="cycle-form"
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+              >
+                {editingCycle ? "تحديث" : "حفظ"}
+              </Button>
+            </div>
+          }
         >
-          <form onSubmit={handleCycleSubmit} className="space-y-6">
+          <form id="cycle-form" onSubmit={handleCycleSubmit} className="space-y-6">
             <Input
               label="اسم الجولة"
               type="text"
@@ -504,7 +539,7 @@ function InventoryPageContent() {
               onChange={(e) => updateCycleField('name', e.target.value)}
               placeholder="أدخل اسم الجولة"
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label="تاريخ البداية"
                 type="date"
@@ -518,39 +553,23 @@ function InventoryPageContent() {
                 onChange={(e) => updateCycleField('end_date', e.target.value)}
               />
             </div>
-            <Select
+            <SearchableSelect
               label="الإدارة"
               value={cycleFormData.get('department_id')}
-              onChange={(e) => updateCycleField('department_id', e.target.value)}
+              onChange={(value) => updateCycleField('department_id', value)}
               options={departments.map((dept) => ({
                 value: dept.get('id'),
                 label: dept.get('name'),
               }))}
+              placeholder="اختر الإدارة"
             />
             <Textarea
               label="الملاحظات"
               value={cycleFormData.get('notes')}
               onChange={(e) => updateCycleField('notes', e.target.value)}
-              rows={3}
+              rows={1}
               placeholder="أدخل أي ملاحظات إضافية"
             />
-            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCycleModalOpen(false)}
-                size="lg"
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-              >
-                {editingCycle ? "تحديث" : "حفظ"}
-              </Button>
-            </div>
           </form>
         </Modal>
 
@@ -564,33 +583,59 @@ function InventoryPageContent() {
           }}
           title={editingItem ? "تعديل عنصر جرد" : "إضافة عنصر جرد جديد"}
           size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsItemModalOpen(false)}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                form="item-form"
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+              >
+                {editingItem ? "تحديث" : "حفظ"}
+              </Button>
+            </div>
+          }
         >
-          <form onSubmit={handleItemSubmit} className="space-y-6">
-            <Select
-              label="الجولة"
-              required
-              value={itemFormData.get('cycle_id')}
-              onChange={(e) => updateItemField('cycle_id', e.target.value)}
-              options={cycles.map((cycle) => ({
-                value: cycle.get('id'),
-                label: cycle.get('name'),
-              }))}
-            />
+          <form id="item-form" onSubmit={handleItemSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <SearchableSelect
+                label="الجولة"
+                required
+                value={itemFormData.get('cycle_id')}
+                onChange={(value) => updateItemField('cycle_id', value)}
+                options={cycles.map((cycle) => ({
+                  value: cycle.get('id'),
+                  label: cycle.get('name'),
+                }))}
+                placeholder="اختر الجولة"
+              />
+              <SearchableSelect
+                label="مكتب المسح"
+                value={itemFormData.get('scanned_office_id')}
+                onChange={(value) => updateItemField('scanned_office_id', value)}
+                options={offices.map((office) => ({
+                  value: office.get('id'),
+                  label: office.get('name'),
+                }))}
+                placeholder="اختر مكتب المسح"
+              />
+            </div>
             <Input
               label="التاج الممسوح"
               type="text"
               value={itemFormData.get('scanned_tag')}
               onChange={(e) => updateItemField('scanned_tag', e.target.value)}
               placeholder="كود الأصل الممسوح ضوئياً"
-            />
-            <Select
-              label="مكتب المسح"
-              value={itemFormData.get('scanned_office_id')}
-              onChange={(e) => updateItemField('scanned_office_id', e.target.value)}
-              options={offices.map((office) => ({
-                value: office.get('id'),
-                label: office.get('name'),
-              }))}
             />
             <Checkbox
               label="موجود"
@@ -601,26 +646,9 @@ function InventoryPageContent() {
               label="ملاحظة"
               value={itemFormData.get('note')}
               onChange={(e) => updateItemField('note', e.target.value)}
-              rows={3}
+              rows={1}
               placeholder="أدخل أي ملاحظات"
             />
-            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsItemModalOpen(false)}
-                size="lg"
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-              >
-                {editingItem ? "تحديث" : "حفظ"}
-              </Button>
-            </div>
           </form>
         </Modal>
 

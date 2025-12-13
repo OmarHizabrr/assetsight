@@ -16,13 +16,13 @@ export function Card({
   className = '',
   ...props
 }: CardProps) {
-  const baseStyles = 'rounded-xl material-transition';
+  const baseStyles = 'rounded-2xl material-transition backdrop-blur-sm relative overflow-hidden';
   
   const variants = {
-    default: 'bg-white shadow-sm border',
-    elevated: 'bg-white shadow-md border',
-    outlined: 'bg-white border-2',
-    flat: 'bg-white',
+    default: 'bg-white/95 shadow-lg border border-slate-200/60 hover:shadow-xl hover:border-primary-200/50 hover:scale-[1.01]',
+    elevated: 'bg-white/95 shadow-xl border border-slate-200/60 hover:shadow-2xl hover:border-primary-200/50 hover:scale-[1.01]',
+    outlined: 'bg-white/95 border-2 border-slate-300 hover:border-primary-300 hover:shadow-lg hover:scale-[1.01]',
+    flat: 'bg-white/95 hover:shadow-md hover:scale-[1.005]',
   };
 
   const paddings = {
@@ -33,7 +33,7 @@ export function Card({
   };
 
   const hoverStyles = hover
-    ? 'hover:shadow-md cursor-pointer material-transition'
+    ? 'hover:shadow-2xl hover:shadow-primary-500/10 hover:scale-[1.02] cursor-pointer material-transition hover:border-primary-200/50 hover:bg-gradient-to-br hover:from-white hover:to-primary-50/20'
     : '';
 
   const combinedClassName = `
@@ -48,7 +48,9 @@ export function Card({
   
   return (
     <div className={combinedClassName} style={{ borderColor }} {...props}>
-      {children}
+      {/* Subtle gradient overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-500/0 via-primary-500/0 to-primary-500/0 group-hover:from-primary-500/5 group-hover:via-primary-500/0 group-hover:to-primary-500/5 material-transition pointer-events-none rounded-2xl"></div>
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }
@@ -68,17 +70,19 @@ export function CardHeader({
   ...props
 }: CardHeaderProps) {
   return (
-    <div className={`px-6 py-5 ${className}`} {...props}>
+    <div className={`px-6 py-5 border-b border-slate-200/60 bg-gradient-to-br from-slate-50/60 via-white to-slate-50/40 backdrop-blur-sm relative overflow-hidden ${className}`} {...props}>
+      {/* Decorative accent line */}
+      <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-primary-500 via-primary-600 to-primary-500 opacity-0 group-hover:opacity-100 material-transition"></div>
       {(title || subtitle || action) && (
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 relative z-10">
           <div className="flex-1 min-w-0">
             {title && (
-              <h3 className="text-2xl font-medium text-secondary-900 mb-1.5">
+              <h3 className="text-2xl font-bold text-slate-800 mb-2 bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent material-transition">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-sm text-secondary-600 font-normal leading-relaxed">{subtitle}</p>
+              <p className="text-sm text-slate-600 font-medium leading-relaxed">{subtitle}</p>
             )}
           </div>
           {action && <div className="flex-shrink-0">{action}</div>}

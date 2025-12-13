@@ -10,6 +10,7 @@ import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
@@ -18,6 +19,7 @@ import { useEffect, useState } from "react";
 function DepartmentsPageContent() {
   const pathname = usePathname();
   const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/departments');
+  const { showSuccess, showError, showWarning } = useToast();
   const [departments, setDepartments] = useState<BaseModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,9 +68,10 @@ function DepartmentsPageContent() {
       setEditingDepartment(null);
       setFormData(new BaseModel({ name: '', description: '', notes: '' }));
       loadDepartments();
+      showSuccess(editingDepartment ? "تم تحديث الإدارة بنجاح" : "تم إضافة الإدارة بنجاح");
     } catch (error) {
       console.error("Error saving department:", error);
-      alert("حدث خطأ أثناء الحفظ");
+      showError("حدث خطأ أثناء حفظ الإدارة");
     }
   };
 
@@ -95,9 +98,10 @@ function DepartmentsPageContent() {
       loadDepartments();
       setIsConfirmModalOpen(false);
       setDeletingDepartment(null);
+      showSuccess("تم حذف الإدارة بنجاح");
     } catch (error) {
       console.error("Error deleting department:", error);
-      alert("حدث خطأ أثناء الحذف");
+      showError("حدث خطأ أثناء حذف الإدارة");
     } finally {
       setDeleteLoading(false);
     }
@@ -166,11 +170,11 @@ function DepartmentsPageContent() {
       }
 
       if (errorCount > 0) {
-        const errorMessage = errors.slice(0, 10).join('\n');
-        const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
-        alert(`تم استيراد ${successCount} إدارة بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم استيراد ${successCount} إدارة بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
       } else {
-        alert(`تم استيراد ${successCount} إدارة بنجاح`);
+        showSuccess(`تم استيراد ${successCount} إدارة بنجاح`);
       }
 
       loadDepartments();
@@ -186,42 +190,57 @@ function DepartmentsPageContent() {
     { 
       key: 'name', 
       label: 'اسم الإدارة',
-      render: (item: BaseModel) => item.get('name'),
+      sortable: true,
     },
     { 
       key: 'description', 
       label: 'الوصف',
-      render: (item: BaseModel) => item.get('description'),
+      sortable: true,
     },
   ];
 
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10">
+      <div className="mb-10 relative">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
                 <MaterialIcon name="business" className="text-white relative z-10" size="3xl" />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
               </div>
               <div className="flex-1">
-                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">الإدارات</h1>
-                <p className="text-slate-600 text-lg font-semibold">إدارة وإضافة الإدارات في النظام</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
+                    الإدارات
+                  </h1>
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
+                    <MaterialIcon name="business" className="text-primary-600" size="sm" />
+                    <span className="text-xs font-semibold text-primary-700">{departments.length}</span>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
+                  <span>إدارة وإضافة الإدارات في النظام</span>
+                </p>
               </div>
             </div>
           </div>
           {canAdd && (
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 onClick={() => setIsImportModalOpen(true)}
-                leftIcon={<MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />}
                 size="lg"
                 variant="outline"
-                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold"
+                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold border-2 hover:border-primary-400"
               >
-                استيراد من Excel
+                <span className="flex items-center gap-2">
+                  <MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />
+                  <span>استيراد من Excel</span>
+                </span>
               </Button>
               <Button
                 onClick={() => {
@@ -234,11 +253,17 @@ function DepartmentsPageContent() {
                 variant="primary"
                 className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
               >
-                إضافة إدارة جديدة
+                <span className="flex items-center gap-2">
+                  <MaterialIcon name="add" className="w-5 h-5" size="lg" />
+                  <span>إضافة إدارة جديدة</span>
+                </span>
               </Button>
             </div>
           )}
         </div>
+        
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/5 to-accent-500/5 rounded-full blur-3xl -z-10"></div>
       </div>
 
       {/* Data Table */}
@@ -266,8 +291,34 @@ function DepartmentsPageContent() {
           }}
           title={editingDepartment ? "تعديل إدارة" : "إضافة إدارة جديدة"}
           size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingDepartment(null);
+                  setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                form="department-form"
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+              >
+                {editingDepartment ? "تحديث" : "حفظ"}
+              </Button>
+            </div>
+          }
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id="department-form" onSubmit={handleSubmit} className="space-y-6">
             <Input
               label="اسم الإدارة"
               type="text"
@@ -289,7 +340,7 @@ function DepartmentsPageContent() {
                 newData.put('description', e.target.value);
                 setFormData(newData);
               }}
-              rows={4}
+              rows={1}
               placeholder="أدخل وصف الإدارة"
             />
 
@@ -301,31 +352,9 @@ function DepartmentsPageContent() {
                 newData.put('notes', e.target.value);
                 setFormData(newData);
               }}
-              rows={3}
+              rows={1}
               placeholder="أدخل أي ملاحظات إضافية"
             />
-
-            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setEditingDepartment(null);
-                  setFormData(new BaseModel({ name: '', description: '', notes: '' }));
-                }}
-                size="lg"
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-              >
-                {editingDepartment ? "تحديث" : "حفظ"}
-              </Button>
-            </div>
           </form>
         </Modal>
 

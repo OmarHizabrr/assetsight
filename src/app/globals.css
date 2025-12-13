@@ -25,13 +25,32 @@ body {
 }
 
 body {
-  background: #f8f7fa;
+  background: linear-gradient(135deg, #f8f7fa 0%, #f5f4f7 50%, #f0eff2 100%);
+  background-attachment: fixed;
   color: #6f6b7d;
-  line-height: 1.47;
+  line-height: 1.6;
   font-size: 0.9375rem;
   font-weight: 400;
   letter-spacing: 0.01em;
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Subtle background pattern */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(115, 103, 240, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(212, 70, 239, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(40, 199, 111, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Responsive Typography */
@@ -53,35 +72,63 @@ a {
   transition: color 0.2s ease;
 }
 
-/* Custom Scrollbar - Material Design */
+/* Custom Scrollbar - Premium Design */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: linear-gradient(to bottom, #f8f7fa 0%, #f0eff2 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(219, 218, 222, 0.3);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #bdbdbd;
-  border-radius: 9999px;
+  background: linear-gradient(135deg, #7367f0 0%, #5e52d5 50%, #4a3fd0 100%);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9e9e9e;
+  background: linear-gradient(135deg, #5e52d5 0%, #4a3fd0 50%, #3c35a8 100%);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(115, 103, 240, 0.3);
+  transform: scale(1.1);
 }
 
-/* Focus Styles - Material Design */
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(135deg, #4a3fd0 0%, #3c35a8 100%);
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #7367f0 #f8f7fa;
+}
+
+/* Focus Styles - Premium Design */
 *:focus-visible {
-  outline: 2px solid #2196f3;
-  outline-offset: 2px;
+  outline: 3px solid rgba(115, 103, 240, 0.5);
+  outline-offset: 3px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.1), 0 0 0 2px rgba(115, 103, 240, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Selection - Material Design */
+/* Selection - Premium Design */
 ::selection {
-  background-color: #2196f3;
+  background: linear-gradient(135deg, #7367f0 0%, #5e52d5 100%);
   color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+::-moz-selection {
+  background: linear-gradient(135deg, #7367f0 0%, #5e52d5 100%);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Material Design Ripple Effect */
@@ -123,29 +170,70 @@ a {
   transition: 0s;
 }
 
-/* Material Design Transitions */
+/* Premium Material Design Transitions */
 .material-transition {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity, box-shadow;
 }
 
 .material-transition-fast {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
 }
 
 .material-transition-slow {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity, box-shadow;
 }
 
-/* Smooth Transitions */
+/* Smooth hover effects */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.hover-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(115, 103, 240, 0.4);
+}
+
+.hover-scale {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Premium Smooth Transitions */
 button,
 a,
 input,
 select,
 textarea {
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Loading Animation */
+/* Enhanced button interactions */
+button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced link hover */
+a:hover {
+  text-decoration: none;
+  filter: brightness(1.1);
+}
+
+/* Premium Loading Animation */
 @keyframes shimmer {
   0% {
     background-position: -1000px 0;
@@ -167,7 +255,123 @@ textarea {
   background-size: 1000px 100%;
 }
 
-/* Animation Classes */
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Modal Improvements */
+@media (max-width: 640px) {
+  .modal-content {
+    max-height: 95vh !important;
+    margin: 0.5rem !important;
+    border-radius: 1rem !important;
+  }
+  
+  .modal-body {
+    padding: 1.25rem !important;
+    max-height: calc(95vh - 180px) !important;
+  }
+  
+  .modal-footer {
+    padding: 1rem 1.25rem !important;
+    flex-direction: column !important;
+  }
+  
+  .modal-footer button {
+    width: 100% !important;
+  }
+}
+
+/* Input and Textarea Responsive */
+@media (max-width: 640px) {
+  input, textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+}
+
+/* Premium Input and Textarea Styling */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea {
+  line-height: 1 !important;
+  font-size: 1rem !important;
+  letter-spacing: 0.01em;
+}
+
+/* Ensure consistent line height across all inputs */
+input, textarea {
+  line-height: 1 !important;
+  vertical-align: baseline;
+}
+
+/* Force line-height for all input elements */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="search"] {
+  line-height: 1 !important;
+  font-size: 1rem !important;
+}
+
+/* Force line-height for all input and textarea elements */
+input[class*="rounded-xl"],
+textarea[class*="rounded-xl"] {
+  line-height: 1 !important;
+  border-radius: 0.75rem !important; /* rounded-xl - ensure elegant rounded corners always */
+}
+
+/* Ensure elegant rounded corners on focus - prevent square appearance */
+input[class*="rounded-xl"]:focus,
+textarea[class*="rounded-xl"]:focus,
+input[class*="rounded-xl"]:focus-visible,
+textarea[class*="rounded-xl"]:focus-visible {
+  border-radius: 0.75rem !important; /* rounded-xl - maintain elegant rounded corners on focus */
+  outline: none !important;
+}
+
+/* Textarea auto-resize smooth transition */
+textarea {
+  transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  resize: none !important;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+  line-height: 1 !important;
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+}
+
+/* Better text rendering for line-height: 1 */
+input, textarea {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Premium Animation Classes */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -179,21 +383,130 @@ textarea {
 
 @keyframes scale-in {
   from {
-    transform: scale(0.95);
+    transform: scale(0.95) translateY(10px);
     opacity: 0;
   }
   to {
-    transform: scale(1);
+    transform: scale(1) translateY(0);
     opacity: 1;
   }
 }
 
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(115, 103, 240, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(115, 103, 240, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+  animation: fade-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .animate-scale-in {
-  animation: scale-in 0.3s ease-out;
+  animation: scale-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    #f1f5f9 0%,
+    #e2e8f0 20%,
+    #f1f5f9 40%,
+    #f1f5f9 100%
+  );
+  background-size: 1000px 100%;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
 }
 
 /* Modal Styles - Vuexy Theme */
@@ -201,7 +514,7 @@ textarea {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1055;
+  z-index: 9999 !important;
   display: none;
   width: 100%;
   height: 100%;
@@ -218,10 +531,11 @@ textarea {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1050;
+  z-index: 9998 !important;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(75, 70, 92, 0.5);
+  background: linear-gradient(135deg, rgba(75, 70, 92, 0.6) 0%, rgba(115, 103, 240, 0.4) 100%);
+  backdrop-filter: blur(4px);
 }
 
 .modal-backdrop.fade {
@@ -248,7 +562,7 @@ textarea {
   margin: 1.75rem auto;
   max-width: 500px;
   pointer-events: none;
-  z-index: 1056;
+  z-index: 10000 !important;
 }
 
 .modal-dialog-centered {
@@ -263,14 +577,26 @@ textarea {
   flex-direction: column;
   width: 100%;
   pointer-events: auto;
-  background-color: #fff;
+  background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
   background-clip: padding-box;
-  border: 1px solid #dbdade;
+  border: 2px solid rgba(219, 218, 222, 0.8);
   border-radius: 1.5rem;
-  box-shadow: 0 0.25rem 1rem rgba(165, 163, 174, 0.45);
+  box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(115, 103, 240, 0.1);
   outline: 0;
-  z-index: 1056;
+  z-index: 10000 !important;
   overflow: hidden;
+  animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {
@@ -278,11 +604,11 @@ textarea {
   flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #dbdade;
+  padding: 1.5rem 2rem;
+  border-bottom: 2px solid rgba(219, 218, 222, 0.6);
   border-top-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
-  background-color: #f8f7fa;
+  background: linear-gradient(to bottom, #f8f7fa 0%, #ffffff 100%);
 }
 
 .modal-title {
@@ -293,8 +619,10 @@ textarea {
 .modal-body {
   position: relative;
   flex: 1 1 auto;
-  padding: 1.5rem;
+  padding: 2rem;
   background-color: #fff;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
 }
 
 .modal-footer {
@@ -303,12 +631,12 @@ textarea {
   flex-shrink: 0;
   align-items: center;
   justify-content: flex-end;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #dbdade;
+  padding: 1.5rem 2rem;
+  border-top: 2px solid rgba(219, 218, 222, 0.6);
   border-bottom-right-radius: 1.5rem;
   border-bottom-left-radius: 1.5rem;
-  background-color: #f8f7fa;
-  gap: 0.5rem;
+  background: linear-gradient(to top, #f8f7fa 0%, #ffffff 100%);
+  gap: 0.75rem;
 }
 
 .btn-close {

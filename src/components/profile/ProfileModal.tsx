@@ -4,13 +4,12 @@ import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { BaseModel } from "@/lib/BaseModel";
+import { useAuth } from "@/contexts/AuthContext";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { storage } from "@/lib/firebase";
-import { useAuth } from "@/contexts/AuthContext";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { useState, useRef } from "react";
+import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import Image from "next/image";
+import { useRef, useState } from "react";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -180,8 +179,33 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       onClose={handleClose}
       title="تعديل البروفايل"
       size="md"
+      footer={
+        <div className="flex justify-end gap-4 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            size="lg"
+            disabled={loading}
+            className="w-full sm:w-auto font-bold"
+          >
+            إلغاء
+          </Button>
+          <Button
+            type="submit"
+            form="profile-form"
+            variant="primary"
+            size="lg"
+            isLoading={loading}
+            disabled={loading}
+            className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+          >
+            حفظ التغييرات
+          </Button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form id="profile-form" onSubmit={handleSubmit} className="space-y-6">
         {error && (
           <div className="p-4 bg-gradient-to-r from-error-50 to-error-100/50 border-2 border-error-200/60 rounded-xl text-error-700 text-sm font-medium shadow-sm">
             {error}
@@ -257,53 +281,29 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         <div className="space-y-4 pt-4 border-t-2 border-slate-200">
           <h3 className="text-sm font-semibold text-slate-700 mb-4">تغيير كلمة المرور</h3>
           
-          <div className="relative">
-            <Input
-              label="كلمة المرور الجديدة"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="اتركها فارغة للحفاظ على الكلمة الحالية"
-              rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-slate-500 hover:text-slate-700 material-transition cursor-pointer"
-                  tabIndex={-1}
-                >
-                  <MaterialIcon 
-                    name={showPassword ? "visibility_off" : "visibility"} 
-                    size="md" 
-                  />
-                </button>
-              }
-            />
-          </div>
+          <Input
+            label="كلمة المرور الجديدة"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="اتركها فارغة للحفاظ على الكلمة الحالية"
+            showPasswordToggle={true}
+            isPasswordVisible={showPassword}
+            onTogglePassword={() => setShowPassword(!showPassword)}
+          />
           
           {password && (
-            <div className="relative">
-              <Input
-                label="تأكيد كلمة المرور"
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="أعد إدخال كلمة المرور"
-                required={!!password}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="text-slate-500 hover:text-slate-700 material-transition cursor-pointer"
-                    tabIndex={-1}
-                  >
-                    <MaterialIcon 
-                      name={showConfirmPassword ? "visibility_off" : "visibility"} 
-                      size="md" 
-                    />
-                  </button>
-                }
-              />
-            </div>
+            <Input
+              label="تأكيد كلمة المرور"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="أعد إدخال كلمة المرور"
+              required={!!password}
+              showPasswordToggle={true}
+              isPasswordVisible={showConfirmPassword}
+              onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
+            />
           )}
         </div>
 
@@ -325,28 +325,6 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             <span className="text-sm font-semibold text-slate-600">الدور:</span>
             <span className="text-sm font-medium text-slate-900">{user?.get('role') || '-'}</span>
           </div>
-        </div>
-
-        {/* أزرار الإجراءات */}
-        <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
-            size="lg"
-            disabled={loading}
-          >
-            إلغاء
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            isLoading={loading}
-            disabled={loading}
-          >
-            حفظ التغييرات
-          </Button>
         </div>
       </form>
     </Modal>

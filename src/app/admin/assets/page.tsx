@@ -1,7 +1,7 @@
 'use client';
 
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
-import { PlusIcon } from "@/components/icons";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -9,17 +9,18 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { Select } from "@/components/ui/Select";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 function AssetsPageContent() {
   const pathname = usePathname();
   const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/assets');
+  const { showSuccess, showError } = useToast();
   const [assets, setAssets] = useState<BaseModel[]>([]);
   const [assetNames, setAssetNames] = useState<BaseModel[]>([]);
   const [assetTypes, setAssetTypes] = useState<BaseModel[]>([]);
@@ -161,9 +162,10 @@ function AssetsPageContent() {
       setEditingAsset(null);
       resetForm();
       loadData();
+      showSuccess(editingAsset ? "تم تحديث الأصل بنجاح" : "تم إضافة الأصل بنجاح");
     } catch (error) {
       console.error("Error saving asset:", error);
-      alert("حدث خطأ أثناء الحفظ");
+      showError("حدث خطأ أثناء الحفظ");
     }
   };
 
@@ -263,60 +265,61 @@ function AssetsPageContent() {
       setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("assets", id);
       await firestoreApi.deleteData(docRef);
+      showSuccess("تم حذف الأصل بنجاح");
       loadData();
       setIsConfirmModalOpen(false);
       setDeletingAsset(null);
     } catch (error) {
       console.error("Error deleting asset:", error);
-      alert("حدث خطأ أثناء الحذف");
+      showError("حدث خطأ أثناء الحذف");
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  const getAssetName = (id?: string) => {
+  const getAssetName = useCallback((id?: string) => {
     if (!id) return '-';
     const name = assetNames.find(n => n.get('id') === id);
     return name?.get('name') || '-';
-  };
+  }, [assetNames]);
 
-  const getAssetType = (id?: string) => {
+  const getAssetType = useCallback((id?: string) => {
     if (!id) return '-';
     const type = assetTypes.find(t => t.get('id') === id);
     return type?.get('name') || '-';
-  };
+  }, [assetTypes]);
 
-  const getAssetStatus = (id?: string) => {
+  const getAssetStatus = useCallback((id?: string) => {
     if (!id) return '-';
     const status = assetStatuses.find(s => s.get('id') === id);
     return status?.get('name') || '-';
-  };
+  }, [assetStatuses]);
 
-  const getOfficeName = (id?: string) => {
+  const getOfficeName = useCallback((id?: string) => {
     if (!id) return '-';
     const office = offices.find(o => o.get('id') === id);
     return office?.get('name') || '-';
-  };
+  }, [offices]);
 
-  const getUserName = (id?: string) => {
+  const getUserName = useCallback((id?: string) => {
     if (!id) return '-';
     const user = users.find(u => u.get('id') === id);
     return user?.get('full_name') || '-';
-  };
+  }, [users]);
 
-  const getCurrencyName = (id?: string) => {
+  const getCurrencyName = useCallback((id?: string) => {
     if (!id) return '-';
     const currency = currencies.find(c => c.get('id') === id);
     return currency ? `${currency.get('name')} (${currency.get('code')})` : '-';
-  };
+  }, [currencies]);
 
-  const getCurrencySymbol = (id?: string) => {
+  const getCurrencySymbol = useCallback((id?: string) => {
     if (!id) return 'ر.س';
     const currency = currencies.find(c => c.get('id') === id);
     return currency?.get('symbol') || currency?.get('code') || 'ر.س';
-  };
+  }, [currencies]);
 
-  const getDepartmentName = (officeId?: string) => {
+  const getDepartmentName = useCallback((officeId?: string) => {
     if (!officeId) return '-';
     const office = allOffices.find(o => o.get('id') === officeId);
     if (!office) return '-';
@@ -324,49 +327,60 @@ function AssetsPageContent() {
     if (!deptId) return '-';
     const dept = departments.find(d => d.get('id') === deptId);
     return dept?.get('name') || '-';
-  };
+  }, [allOffices, departments]);
 
-  const updateField = (key: string, value: any) => {
+  const updateField = useCallback((key: string, value: any) => {
     const newData = new BaseModel(formData.getData());
     newData.put(key, value);
     setFormData(newData);
-  };
+  }, [formData]);
 
-  const columns = [
+  const columns = useMemo(() => [
     { 
       key: 'asset_tag', 
       label: 'كود الأصل',
-      render: (item: BaseModel) => item.get('asset_tag'),
+      sortable: true,
     },
     { 
       key: 'asset_name_id', 
       label: 'اسم الأصل',
       render: (item: BaseModel) => getAssetName(item.get('asset_name_id')),
+      sortable: true,
     },
     { 
       key: 'type_id', 
       label: 'النوع',
       render: (item: BaseModel) => getAssetType(item.get('type_id')),
+      sortable: true,
     },
     { 
       key: 'status_id', 
       label: 'الحالة',
       render: (item: BaseModel) => getAssetStatus(item.get('status_id')),
+      sortable: true,
     },
     { 
       key: 'department', 
       label: 'الإدارة',
       render: (item: BaseModel) => getDepartmentName(item.get('location_office_id')),
+      sortable: true,
     },
     { 
       key: 'location_office_id', 
       label: 'المكتب',
       render: (item: BaseModel) => getOfficeName(item.get('location_office_id')),
+      sortable: true,
     },
     { 
       key: 'custodian_user_id', 
       label: 'حامل الأصل',
       render: (item: BaseModel) => getUserName(item.get('custodian_user_id')),
+      sortable: true,
+    },
+    { 
+      key: 'purchase_date', 
+      label: 'تاريخ الشراء',
+      sortable: true,
     },
     { 
       key: 'purchase_value', 
@@ -381,28 +395,48 @@ function AssetsPageContent() {
           </span>
         );
       },
+      sortable: true,
     },
     { 
       key: 'currency_id', 
       label: 'العملة',
       render: (item: BaseModel) => getCurrencyName(item.get('currency_id')),
+      sortable: true,
     },
-  ];
+    { 
+      key: 'warranty_end', 
+      label: 'نهاية الضمان',
+      sortable: true,
+    },
+  ], [getAssetName, getAssetType, getAssetStatus, getDepartmentName, getOfficeName, getUserName, getCurrencyName, getCurrencySymbol]);
 
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10">
+      <div className="mb-10 relative">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <span className="text-3xl relative z-10">💼</span>
+                <MaterialIcon name="inventory" className="text-white relative z-10" size="3xl" />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
               </div>
               <div className="flex-1">
-                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">الأصول</h1>
-                <p className="text-slate-600 text-lg font-semibold">إدارة وإضافة الأصول في النظام</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
+                    الأصول
+                  </h1>
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
+                    <MaterialIcon name="inventory" className="text-primary-600" size="sm" />
+                    <span className="text-xs font-semibold text-primary-700">{assets.length}</span>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
+                  <span>إدارة وإضافة الأصول في النظام</span>
+                </p>
               </div>
             </div>
           </div>
@@ -413,15 +447,20 @@ function AssetsPageContent() {
                 resetForm();
                 setIsModalOpen(true);
               }}
-              leftIcon={<PlusIcon className="w-5 h-5" />}
               size="lg"
               variant="primary"
               className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
             >
-              إضافة أصل جديد
+              <span className="flex items-center gap-2">
+                <MaterialIcon name="add" className="w-5 h-5" size="lg" />
+                <span>إضافة أصل جديد</span>
+              </span>
             </Button>
           )}
         </div>
+        
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/5 to-accent-500/5 rounded-full blur-3xl -z-10"></div>
       </div>
 
       {/* Data Table */}
@@ -442,35 +481,61 @@ function AssetsPageContent() {
           }}
           title={editingAsset ? "تعديل أصل" : "إضافة أصل جديد"}
           size="xl"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingAsset(null);
+                  resetForm();
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                form="asset-form"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+              >
+                {editingAsset ? "تحديث" : "حفظ"}
+              </Button>
+            </div>
+          }
         >
-          <form onSubmit={handleSubmit} className="space-y-6 max-h-[80vh] overflow-y-auto pr-2">
-            <SearchableSelect
-              label="الإدارة"
-              required
-              value={formData.get('department_id') || selectedDepartmentId}
-              onChange={(value) => handleDepartmentChange(value)}
-              options={departments.map((dept) => ({
-                value: dept.get('id'),
-                label: dept.get('name'),
-              }))}
-              placeholder="اختر الإدارة"
-            />
-            <SearchableSelect
-              label="المكتب الحالي"
-              required
-              value={formData.get('location_office_id')}
-              onChange={(value) => updateField('location_office_id', value)}
-              disabled={!selectedDepartmentId || offices.length === 0}
-              options={offices.map((office) => ({
-                value: office.get('id'),
-                label: office.get('name'),
-              }))}
-              placeholder={!selectedDepartmentId ? "اختر الإدارة أولاً" : offices.length === 0 ? "لا توجد مكاتب في هذه الإدارة" : "اختر المكتب"}
-            />
+          <form id="asset-form" onSubmit={handleSubmit} className="space-y-4">
+            {/* معلومات أساسية */}
+            <div className="grid grid-cols-2 gap-4">
+              <SearchableSelect
+                label="الإدارة"
+                value={formData.get('department_id') || selectedDepartmentId}
+                onChange={(value) => handleDepartmentChange(value)}
+                options={departments.map((dept) => ({
+                  value: dept.get('id'),
+                  label: dept.get('name'),
+                }))}
+                placeholder="اختر الإدارة"
+              />
+              <SearchableSelect
+                label="المكتب الحالي"
+                value={formData.get('location_office_id')}
+                onChange={(value) => updateField('location_office_id', value)}
+                disabled={!selectedDepartmentId || offices.length === 0}
+                options={offices.map((office) => ({
+                  value: office.get('id'),
+                  label: office.get('name'),
+                }))}
+                placeholder={!selectedDepartmentId ? "اختر الإدارة أولاً" : offices.length === 0 ? "لا توجد مكاتب في هذه الإدارة" : "اختر المكتب"}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <SearchableSelect
                 label="اسم الأصل"
-                required
                 value={formData.get('asset_name_id')}
                 onChange={(value) => updateField('asset_name_id', value)}
                 options={assetNames.map((name) => ({
@@ -478,35 +543,38 @@ function AssetsPageContent() {
                   label: name.get('name'),
                 }))}
                 placeholder="اختر اسم الأصل"
+                fullWidth={false}
               />
-              <div>
-                <Input
-                  type="text"
-                  label="كود الأصل"
-                  required
-                  value={formData.get('asset_tag')}
-                  onChange={(e) => updateField('asset_tag', e.target.value)}
-                  placeholder="سيتم توليده تلقائياً"
-                  className="flex-1"
-                />
-                {!editingAsset && (
-                  <div className="mt-2">
+              <div className="flex flex-col">
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <Input
+                      type="text"
+                      label="كود الأصل"
+                      value={formData.get('asset_tag')}
+                      onChange={(e) => updateField('asset_tag', e.target.value)}
+                      placeholder="سيتم توليده تلقائياً"
+                    />
+                  </div>
+                  {!editingAsset && (
                     <Button
                       type="button"
                       variant="outline"
-                      size="sm"
+                      size="md"
                       onClick={() => updateField('asset_tag', generateAssetTag())}
+                      className="mb-0"
+                      style={{ minWidth: '100px', height: '42px' }}
                     >
                       توليد
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 mt-1.5 mr-1">سيتم توليده تلقائياً</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <SearchableSelect
                 label="نوع الأصل"
-                required
                 value={formData.get('type_id')}
                 onChange={(value) => updateField('type_id', value)}
                 options={assetTypes.map((type) => ({
@@ -514,10 +582,10 @@ function AssetsPageContent() {
                   label: type.get('name'),
                 }))}
                 placeholder="اختر نوع الأصل"
+                fullWidth={false}
               />
               <SearchableSelect
                 label="حالة الأصل"
-                required
                 value={formData.get('status_id')}
                 onChange={(value) => updateField('status_id', value)}
                 options={assetStatuses.map((status) => ({
@@ -525,49 +593,58 @@ function AssetsPageContent() {
                   label: status.get('name'),
                 }))}
                 placeholder="اختر حالة الأصل"
+                fullWidth={false}
               />
             </div>
-            <SearchableSelect
-              label="حامل الأصل"
-              value={formData.get('custodian_user_id')}
-              onChange={(value) => updateField('custodian_user_id', value)}
-              options={users.map((user) => ({
-                value: user.get('id'),
-                label: user.get('full_name'),
-              }))}
-              placeholder="اختر حامل الأصل"
-            />
-            <Input
-              label="الرقم التسلسلي"
-              type="text"
-              value={formData.get('serial_number')}
-              onChange={(e) => updateField('serial_number', e.target.value)}
-              placeholder="أدخل الرقم التسلسلي"
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <SearchableSelect
+                label="حامل الأصل"
+                value={formData.get('custodian_user_id')}
+                onChange={(value) => updateField('custodian_user_id', value)}
+                options={users.map((user) => ({
+                  value: user.get('id'),
+                  label: user.get('full_name'),
+                }))}
+                placeholder="اختر حامل الأصل"
+                fullWidth={false}
+              />
+              <Input
+                label="الرقم التسلسلي"
+                type="text"
+                value={formData.get('serial_number')}
+                onChange={(e) => updateField('serial_number', e.target.value)}
+                placeholder="أدخل الرقم التسلسلي"
+                fullWidth={false}
+              />
+            </div>
+            
+            {/* التواريخ - صف 5 */}
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="تاريخ الشراء"
                 type="date"
                 value={formData.get('purchase_date')}
                 onChange={(e) => updateField('purchase_date', e.target.value)}
+                fullWidth={false}
               />
               <Input
                 label="نهاية الضمان"
                 type="date"
                 value={formData.get('warranty_end')}
                 onChange={(e) => updateField('warranty_end', e.target.value)}
+                fullWidth={false}
               />
             </div>
+            
+            {/* تاريخ الصيانة - صف 6 */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Input
-                  label="قيمة الشراء"
-                  type="number"
-                  step="0.01"
-                  value={formData.getValue<number>('purchase_value') || 0}
-                  onChange={(e) => updateField('purchase_value', parseFloat(e.target.value) || 0)}
-                />
-              </div>
+              <Input
+                label="تاريخ آخر صيانة"
+                type="date"
+                value={formData.get('last_maintenance_date')}
+                onChange={(e) => updateField('last_maintenance_date', e.target.value)}
+                fullWidth={false}
+              />
               <SearchableSelect
                 label="العملة"
                 value={formData.get('currency_id')}
@@ -577,104 +654,113 @@ function AssetsPageContent() {
                   label: `${currency.get('name')} (${currency.get('code')})`,
                 }))}
                 placeholder="اختر العملة"
+                fullWidth={false}
               />
             </div>
-            <Input
-              label="القيمة الحالية"
-              type="number"
-              step="0.01"
-              value={formData.getValue<number>('current_value') || 0}
-              onChange={(e) => updateField('current_value', parseFloat(e.target.value) || 0)}
-            />
+            
+            {/* القيم المالية - صف 7 */}
             <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="قيمة الشراء"
+                type="number"
+                step="0.01"
+                value={formData.getValue<number>('purchase_value') || 0}
+                onChange={(e) => updateField('purchase_value', parseFloat(e.target.value) || 0)}
+                fullWidth={false}
+              />
+              <Input
+                label="القيمة الحالية"
+                type="number"
+                step="0.01"
+                value={formData.getValue<number>('current_value') || 0}
+                onChange={(e) => updateField('current_value', parseFloat(e.target.value) || 0)}
+                fullWidth={false}
+              />
+            </div>
+            
+            {/* القيمة المتبقية والإهلاك - صف 8 */}
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="القيمة المتبقية"
+                type="number"
+                step="0.01"
+                value={formData.getValue<number>('residual_value') || 0}
+                onChange={(e) => updateField('residual_value', parseFloat(e.target.value) || 0)}
+                fullWidth={false}
+              />
+              <Input
+                label="طريقة الإهلاك"
+                type="text"
+                value={formData.get('depreciation_method')}
+                onChange={(e) => updateField('depreciation_method', e.target.value)}
+                placeholder="مثل: خطي، متسارع"
+                fullWidth={false}
+              />
+            </div>
+            
+            {/* عمر الخدمة والفئة - صف 9 */}
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="عمر الخدمة المتوقع (بالسنوات)"
+                type="number"
+                value={formData.getValue<number>('expected_lifetime_years') || 0}
+                onChange={(e) => updateField('expected_lifetime_years', parseFloat(e.target.value) || 0)}
+                fullWidth={false}
+              />
               <Input
                 label="الفئة"
                 type="text"
                 value={formData.get('category')}
                 onChange={(e) => updateField('category', e.target.value)}
                 placeholder="أدخل الفئة"
+                fullWidth={false}
               />
+            </div>
+            
+            {/* المورد ورقم الفاتورة - صف 10 */}
+            <div className="grid grid-cols-2 gap-4">
               <Input
                 label="المورد"
                 type="text"
                 value={formData.get('supplier')}
                 onChange={(e) => updateField('supplier', e.target.value)}
                 placeholder="أدخل اسم المورد"
+                fullWidth={false}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <Input
                 label="رقم الفاتورة"
                 type="text"
                 value={formData.get('invoice_number')}
                 onChange={(e) => updateField('invoice_number', e.target.value)}
                 placeholder="أدخل رقم الفاتورة"
-              />
-              <Input
-                label="تاريخ آخر صيانة"
-                type="date"
-                value={formData.get('last_maintenance_date')}
-                onChange={(e) => updateField('last_maintenance_date', e.target.value)}
+                fullWidth={false}
               />
             </div>
+            
+            {/* الوصف والملاحظات - صف 9 */}
             <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="طريقة الإهلاك"
-                type="text"
-                value={formData.get('depreciation_method')}
-                onChange={(e) => updateField('depreciation_method', e.target.value)}
-                placeholder="مثل: خطي، متسارع، إلخ"
+              <Textarea
+                label="الوصف"
+                value={formData.get('description')}
+                onChange={(e) => updateField('description', e.target.value)}
+                rows={1}
+                placeholder="أدخل وصف الأصل"
+                fullWidth={false}
               />
-              <Input
-                label="عمر الخدمة المتوقع (بالسنوات)"
-                type="number"
-                value={formData.getValue<number>('expected_lifetime_years') || 0}
-                onChange={(e) => updateField('expected_lifetime_years', parseFloat(e.target.value) || 0)}
+              <Textarea
+                label="الملاحظات"
+                value={formData.get('notes')}
+                onChange={(e) => updateField('notes', e.target.value)}
+                rows={1}
+                placeholder="أدخل أي ملاحظات إضافية"
+                fullWidth={false}
               />
             </div>
-            <Input
-              label="القيمة المتبقية"
-              type="number"
-              step="0.01"
-              value={formData.getValue<number>('residual_value') || 0}
-              onChange={(e) => updateField('residual_value', parseFloat(e.target.value) || 0)}
-            />
-            <Textarea
-              label="الوصف"
-              value={formData.get('description')}
-              onChange={(e) => updateField('description', e.target.value)}
-              rows={4}
-              placeholder="أدخل وصف الأصل"
-            />
             <Checkbox
               label="نشط"
               checked={formData.getValue<boolean>('is_active') === true || formData.getValue<number>('is_active') === 1}
               onChange={(e) => updateField('is_active', e.target.checked)}
             />
-            <Textarea
-              label="الملاحظات"
-              value={formData.get('notes')}
-              onChange={(e) => updateField('notes', e.target.value)}
-              rows={3}
-              placeholder="أدخل أي ملاحظات إضافية"
-            />
-            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsModalOpen(false)}
-                size="lg"
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-              >
-                {editingAsset ? "تحديث" : "حفظ"}
-              </Button>
-            </div>
           </form>
         </Modal>
 

@@ -2,10 +2,70 @@
 
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { BaseModel } from "@/lib/BaseModel";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import * as XLSX from 'xlsx';
 import { Button } from "./Button";
 import { Input } from "./Input";
+import { Select } from "./Select";
+import { Card, CardBody, CardHeader } from "./Card";
+import { DebouncedInput } from "./DebouncedInput";
+
+// Utility function to format dates
+const formatDate = (dateValue: any): string => {
+  if (!dateValue) return '-';
+  
+  try {
+    let date: Date;
+    if (typeof dateValue === 'string') {
+      // Handle ISO strings and various date formats
+      date = new Date(dateValue);
+    } else if (dateValue instanceof Date) {
+      date = dateValue;
+    } else if (typeof dateValue === 'number') {
+      date = new Date(dateValue);
+    } else {
+      return String(dateValue);
+    }
+    
+    if (isNaN(date.getTime())) {
+      return String(dateValue);
+    }
+    
+    // Format as Arabic date: YYYY/MM/DD
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}/${month}/${day}`;
+  } catch (error) {
+    return String(dateValue);
+  }
+};
+
+// Utility function to detect if a value is a date
+const isDateValue = (value: any): boolean => {
+  if (!value) return false;
+  if (value instanceof Date) return true;
+  if (typeof value === 'string') {
+    // Check if it's a date string (ISO format or common date patterns)
+    const datePattern = /^\d{4}-\d{2}-\d{2}|^\d{4}\/\d{2}\/\d{2}|^\d{2}\/\d{2}\/\d{4}/;
+    if (datePattern.test(value)) {
+      const date = new Date(value);
+      return !isNaN(date.getTime());
+    }
+  }
+  return false;
+};
+
+// Utility function to detect if a value is a number
+const isNumericValue = (value: any): boolean => {
+  if (typeof value === 'number') return true;
+  if (typeof value === 'string') {
+    return !isNaN(Number(value)) && value.trim() !== '';
+  }
+  return false;
+};
 
 interface Column {
   key: string;
@@ -44,6 +104,7 @@ export function DataTable({
   pageSizeOptions = [7, 10, 25, 50, 75, 100],
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [actionDropdownOpen, setActionDropdownOpen] = useState<{ [key: string]: boolean }>({});
   const [actionDropdownPosition, setActionDropdownPosition] = useState<{ [key: string]: { top: number; left: number } }>({});
@@ -53,17 +114,29 @@ export function DataTable({
   const [itemsPerPage, setItemsPerPage] = useState(pageSize || 10);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
   const actionDropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const actionButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      
+      // Check export dropdown
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(target)) {
         setExportDropdownOpen(false);
       }
+      
+      // Check action dropdowns - exclude the button itself
       Object.keys(actionDropdownOpen).forEach((key) => {
         const dropdownElement = document.querySelector(`[data-dropdown-id="${key}"]`);
-        if (actionDropdownRefs.current[key] && !actionDropdownRefs.current[key]?.contains(event.target as Node) && 
-            dropdownElement && !dropdownElement.contains(event.target as Node)) {
+        const buttonElement = actionDropdownRefs.current[key]?.querySelector('button[type="button"]');
+        
+        // Check if click is outside both the dropdown menu and the button
+        const isClickOnButton = buttonElement && (buttonElement.contains(target) || buttonElement === target);
+        const isClickOnDropdown = dropdownElement && dropdownElement.contains(target);
+        const isClickInContainer = actionDropdownRefs.current[key]?.contains(target);
+        
+        if (!isClickOnButton && !isClickOnDropdown && !isClickInContainer) {
           setActionDropdownOpen((prev) => ({ ...prev, [key]: false }));
           setActionDropdownPosition((prevPos) => {
             const newPos = { ...prevPos };
@@ -74,18 +147,54 @@ export function DataTable({
       });
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    // Use a slight delay to allow button click to process first
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside, true);
+    }, 0);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside, true);
+    };
   }, [actionDropdownOpen]);
 
-  // Update dropdown position on scroll
+  // Calculate and update dropdown position when opened - use useLayoutEffect for synchronous updates
+  useLayoutEffect(() => {
+    Object.keys(actionDropdownOpen).forEach((key) => {
+      if (actionDropdownOpen[key] && actionButtonRefs.current[key]) {
+        const button = actionButtonRefs.current[key];
+        if (button) {
+          const rect = button.getBoundingClientRect();
+          setActionDropdownPosition((prevPos) => {
+            // Only update if position changed significantly (more than 1px)
+            const currentPos = prevPos[key];
+            if (!currentPos || 
+                Math.abs(currentPos.top - (rect.bottom + 4)) > 1 || 
+                Math.abs(currentPos.left - rect.left) > 1) {
+              return {
+                ...prevPos,
+                [key]: {
+                  top: rect.bottom + 4,
+                  left: rect.left,
+                }
+              };
+            }
+            return prevPos;
+          });
+        }
+      }
+    });
+  }, [actionDropdownOpen]);
+
+  // Update dropdown position on scroll and resize
   useEffect(() => {
     const handleScroll = () => {
       Object.keys(actionDropdownOpen).forEach((key) => {
-        if (actionDropdownOpen[key] && actionDropdownRefs.current[key]) {
-          const button = actionDropdownRefs.current[key]?.querySelector('button');
+        if (actionDropdownOpen[key] && actionButtonRefs.current[key]) {
+          const button = actionButtonRefs.current[key];
           if (button) {
             const rect = button.getBoundingClientRect();
+            // Fixed positioning is relative to viewport, not page
             setActionDropdownPosition((prevPos) => ({
               ...prevPos,
               [key]: {
@@ -100,59 +209,77 @@ export function DataTable({
 
     if (Object.keys(actionDropdownOpen).length > 0) {
       window.addEventListener('scroll', handleScroll, true);
-      return () => window.removeEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleScroll);
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleScroll);
+      };
     }
   }, [actionDropdownOpen]);
 
-  // Filter data
-  const filteredData = data.filter((item) => {
-    if (!searchTerm) return true;
-    return columns.some((col) => {
-      const value = col.render ? col.render(item) : item.get(col.key);
-      return value?.toString().toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter data using debounced search term - memoized for performance
+  const filteredData = useMemo(() => {
+    if (!debouncedSearchTerm) return data;
+    return data.filter((item) => {
+      return columns.some((col) => {
+        const value = col.render ? col.render(item) : item.get(col.key);
+        const searchValue = debouncedSearchTerm.toLowerCase();
+        const itemValue = value?.toString().toLowerCase() || '';
+        return itemValue.includes(searchValue);
+      });
     });
-  });
+  }, [data, debouncedSearchTerm, columns]);
 
-  // Sort data
-  const sortedData = [...filteredData].sort((a, b) => {
-    if (!sortColumn) return 0;
+  // Sort data - memoized for performance with improved date and number sorting
+  const sortedData = useMemo(() => {
+    if (!sortColumn) return filteredData;
     
     const column = columns.find(col => col.key === sortColumn);
-    if (!column) return 0;
+    if (!column) return filteredData;
     
-    // Get values
-    let valueA: any = a.get(sortColumn);
-    let valueB: any = b.get(sortColumn);
-    
-    // If column has render function, we need to extract text value
-    if (column.render) {
-      // For rendered columns, try to get the raw value
-      valueA = a.get(sortColumn);
-      valueB = b.get(sortColumn);
-    }
-    
-    // Handle null/undefined
-    if (valueA == null) valueA = '';
-    if (valueB == null) valueB = '';
-    
-    // Convert to comparable types
-    if (typeof valueA === 'number' && typeof valueB === 'number') {
-      return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
-    }
-    
-    // String comparison
-    const strA = String(valueA).toLowerCase();
-    const strB = String(valueB).toLowerCase();
-    
-    if (sortDirection === 'asc') {
-      return strA.localeCompare(strB, 'ar');
-    } else {
-      return strB.localeCompare(strA, 'ar');
-    }
-  });
+    return [...filteredData].sort((a, b) => {
+      // Get values
+      let valueA: any = a.get(sortColumn);
+      let valueB: any = b.get(sortColumn);
+      
+      // Handle null/undefined
+      if (valueA == null) valueA = '';
+      if (valueB == null) valueB = '';
+      
+      // Check if values are dates
+      const isDateA = isDateValue(valueA);
+      const isDateB = isDateValue(valueB);
+      
+      if (isDateA && isDateB) {
+        const dateA = new Date(valueA).getTime();
+        const dateB = new Date(valueB).getTime();
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      
+      // Check if values are numbers
+      const isNumA = isNumericValue(valueA);
+      const isNumB = isNumericValue(valueB);
+      
+      if (isNumA && isNumB) {
+        const numA = Number(valueA);
+        const numB = Number(valueB);
+        return sortDirection === 'asc' ? numA - numB : numB - numA;
+      }
+      
+      // String comparison with Arabic locale
+      const strA = String(valueA).toLowerCase();
+      const strB = String(valueB).toLowerCase();
+      
+      if (sortDirection === 'asc') {
+        return strA.localeCompare(strB, 'ar', { numeric: true, sensitivity: 'base' });
+      } else {
+        return strB.localeCompare(strA, 'ar', { numeric: true, sensitivity: 'base' });
+      }
+    });
+  }, [filteredData, sortColumn, sortDirection, columns]);
 
-  // Handle column sort
-  const handleSort = (columnKey: string) => {
+  // Handle column sort - memoized with useCallback
+  const handleSort = useCallback((columnKey: string) => {
     const column = columns.find(col => col.key === columnKey);
     if (!column || column.sortable === false) return;
     
@@ -166,32 +293,42 @@ export function DataTable({
     }
     // Reset to first page when sorting
     setCurrentPage(1);
-  };
+  }, [columns, sortColumn, sortDirection]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedData = sortedData.slice(startIndex, endIndex);
+  // Pagination logic - memoized for performance
+  const paginationInfo = useMemo(() => {
+    const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = sortedData.slice(startIndex, endIndex);
+    return { totalPages, startIndex, endIndex, paginatedData };
+  }, [sortedData, itemsPerPage, currentPage]);
+  
+  const { totalPages, startIndex, endIndex, paginatedData } = paginationInfo;
 
   // Reset to first page when search term changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [debouncedSearchTerm]);
 
   // Reset to first page when items per page changes
   useEffect(() => {
     setCurrentPage(1);
   }, [itemsPerPage]);
 
-  // Handle page change
-  const handlePageChange = (page: number) => {
+  // Handle page change - memoized with useCallback
+  const handlePageChange = useCallback((page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      // Scroll to top of table
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Scroll to top of table smoothly
+      const tableElement = document.querySelector('.table-responsive');
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
-  };
+  }, [totalPages]);
 
   // Export functions
   const exportToExcel = () => {
@@ -314,158 +451,97 @@ export function DataTable({
   }
 
   return (
-    <div className="card" style={{ border: '1px solid #dbdade', borderRadius: '1.5rem', boxShadow: '0 0.25rem 1rem rgba(165, 163, 174, 0.45)', overflow: 'visible' }}>
-      <div className="card-header" style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #dbdade', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          {title && (
-            <h5 style={{ margin: 0, color: '#5d596c', fontWeight: 500, fontSize: '1.125rem' }}>{title}</h5>
-          )}
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+    <>
+    <Card variant="elevated" className="overflow-visible animate-scale-in border-primary-200/30 shadow-primary/10">
+      <CardHeader className="pb-4 group">
+        {title && (
+          <h5 className="text-lg font-semibold text-slate-800 mb-4">{title}</h5>
+        )}
+        
+        {/* Search and Controls Row */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Select
+              value={itemsPerPage.toString()}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              options={pageSizeOptions.map(size => ({ value: size.toString(), label: size.toString() }))}
+              className="w-20"
+              fullWidth={false}
+            />
+            <span className="text-sm text-slate-600 font-medium">عنصر في الصفحة</span>
+          </div>
+          
+          <div className="flex items-center gap-3 flex-wrap flex-1 sm:flex-initial sm:justify-end">
+            <div className="flex-1 sm:flex-initial min-w-[200px] sm:min-w-[280px]">
+              <DebouncedInput
+                value={searchTerm}
+                onChange={setDebouncedSearchTerm}
+                placeholder="بحث في الجدول..."
+                debounce={300}
+                fullWidth
+              />
+            </div>
+            
             {/* Export Dropdown */}
             <div className="relative" ref={exportDropdownRef}>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-                className="normal-case"
-                style={{ borderColor: '#7367f0', color: '#7367f0' }}
+                className="normal-case shadow-sm hover:shadow-md material-transition"
               >
-                <MaterialIcon name="file_download" size="sm" />
+                <MaterialIcon name="archive" size="sm" />
                 <span className="hidden sm:inline mr-1">تصدير</span>
                 <MaterialIcon name="arrow_drop_down" size="sm" />
               </Button>
               {exportDropdownOpen && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: '100%',
-                    marginTop: '0.5rem',
-                    backgroundColor: 'white',
-                    border: '1px solid #dbdade',
-                    borderRadius: '1.25rem',
-                    boxShadow: '0 0.25rem 1rem rgba(165, 163, 174, 0.45)',
-                    zIndex: 50,
-                    minWidth: '150px',
-                    padding: '0.5rem 0'
-                  }}
-                >
+                <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-scale-in z-50">
                   <button
                     onClick={exportToExcel}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 1rem',
-                      textAlign: 'right',
-                      border: 'none',
-                      background: 'transparent',
-                      color: '#6f6b7d',
-                      fontSize: '0.875rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
                   >
-                    <MaterialIcon name="table_chart" size="sm" />
+                    <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
                     <span>Excel</span>
                   </button>
                   <button
                     onClick={exportToCSV}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 1rem',
-                      textAlign: 'right',
-                      border: 'none',
-                      background: 'transparent',
-                      color: '#6f6b7d',
-                      fontSize: '0.875rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
                   >
-                    <MaterialIcon name="description" size="sm" />
+                    <MaterialIcon name="description" className="text-primary-600" size="sm" />
                     <span>CSV</span>
                   </button>
                   <button
                     onClick={exportToPDF}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 1rem',
-                      textAlign: 'right',
-                      border: 'none',
-                      background: 'transparent',
-                      color: '#6f6b7d',
-                      fontSize: '0.875rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
                   >
-                    <MaterialIcon name="picture_as_pdf" size="sm" />
+                    <MaterialIcon name="picture_as_pdf" className="text-primary-600" size="sm" />
                     <span>PDF</span>
                   </button>
                   <button
                     onClick={printTable}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 1rem',
-                      textAlign: 'right',
-                      border: 'none',
-                      background: 'transparent',
-                      color: '#6f6b7d',
-                      fontSize: '0.875rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
                   >
-                    <MaterialIcon name="print" size="sm" />
+                    <MaterialIcon name="print" className="text-primary-600" size="sm" />
                     <span>طباعة</span>
                   </button>
-                  <div style={{ height: '1px', backgroundColor: '#dbdade', margin: '0.5rem 0' }}></div>
+                  <div className="mx-2 my-1 h-px bg-slate-200"></div>
                   <button
                     onClick={copyToClipboard}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 1rem',
-                      textAlign: 'right',
-                      border: 'none',
-                      background: 'transparent',
-                      color: '#6f6b7d',
-                      fontSize: '0.875rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition"
                   >
-                    <MaterialIcon name="content_copy" size="sm" />
+                    <MaterialIcon name="content_copy" className="text-primary-600" size="sm" />
                     <span>نسخ</span>
                   </button>
                 </div>
               )}
             </div>
-            {/* Add New Record Button */}
+            
             {onAddNew && (
               <Button
                 variant="primary"
                 size="sm"
                 onClick={onAddNew}
-                className="normal-case"
+                className="normal-case shadow-lg hover:shadow-xl hover:scale-105 material-transition"
               >
                 <MaterialIcon name="add" size="sm" />
                 <span className="hidden sm:inline mr-1">إضافة جديد</span>
@@ -473,24 +549,13 @@ export function DataTable({
             )}
           </div>
         </div>
-        <div className="max-w-lg">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="بحث في الجدول..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              leftIcon={<MaterialIcon name="search" className="text-slate-400" size="lg" />}
-              className="bg-white"
-              style={{ borderColor: '#dbdade' }}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="card-datatable table-responsive" style={{ paddingTop: 0, overflowX: 'auto', overflowY: 'visible', maxWidth: '100%' }}>
+      </CardHeader>
+      
+      <CardBody padding="none" className="p-0">
+        <div className="table-responsive overflow-x-auto" style={{ maxWidth: '100%' }}>
         {/* Desktop Table */}
-        <table className="table datatables-basic" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-          <thead>
+        <table className="table datatables-basic" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+          <thead className="sticky top-0 z-10">
             <tr style={{ backgroundColor: '#f8f7fa' }}>
               {columns.map((col, colIndex) => {
                 const isSortable = col.sortable !== false;
@@ -508,26 +573,31 @@ export function DataTable({
                       fontWeight: 600,
                       color: '#5d596c',
                       borderBottom: '2px solid #dbdade',
-                      backgroundColor: '#f8f7fa',
+                      background: 'linear-gradient(to bottom, #f8f7fa 0%, #f0eff2 100%)',
                       cursor: isSortable ? 'pointer' : 'default',
                       userSelect: 'none',
                       position: 'relative',
-                      transition: 'all 0.2s ease-in-out',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       letterSpacing: '0.01em',
                       borderTopRightRadius: isFirstColumn ? '1.5rem' : '0',
-                      borderTopLeftRadius: isLastColumn ? '1.5rem' : '0'
+                      borderTopLeftRadius: isLastColumn ? '1.5rem' : '0',
+                      backdropFilter: 'blur(10px)'
                     }}
                     onMouseEnter={(e) => {
                       if (isSortable) {
-                        e.currentTarget.style.backgroundColor = '#f0eff2';
+                        e.currentTarget.style.background = 'linear-gradient(to bottom, #f0eff2 0%, #e8e6ea 100%)';
                         e.currentTarget.style.borderBottomColor = '#7367f0';
                         e.currentTarget.style.color = '#7367f0';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(115, 103, 240, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
                       }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f8f7fa';
+                      e.currentTarget.style.background = 'linear-gradient(to bottom, #f8f7fa 0%, #f0eff2 100%)';
                       e.currentTarget.style.borderBottomColor = '#dbdade';
                       e.currentTarget.style.color = '#5d596c';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
@@ -597,16 +667,28 @@ export function DataTable({
               <tr>
                 <td
                   colSpan={columns.length + (onEdit || onDelete || onView || onArchive ? 1 : 0)}
-                  style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
+                  style={{ padding: '4rem 1.5rem', textAlign: 'center' }}
+                  className="animate-fade-in"
                 >
                   <div className="flex flex-col items-center gap-4">
-                    <div style={{ width: '4rem', height: '4rem', borderRadius: '50%', backgroundColor: '#f8f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <MaterialIcon name="search" className="text-slate-400" size="4xl" />
+                    <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center shadow-lg animate-pulse">
+                      <MaterialIcon name="inventory" className="text-slate-400" size="3xl" />
                     </div>
-                    <div className="space-y-1">
-                      <p style={{ color: '#4b465c', fontWeight: 500, fontSize: '1rem' }}>لا توجد بيانات</p>
-                      {searchTerm && (
-                        <p style={{ color: '#6f6b7d', fontSize: '0.875rem' }}>جرب البحث بكلمات مختلفة</p>
+                    <div className="space-y-2">
+                      <p className="text-slate-700 font-semibold text-lg">لا توجد بيانات</p>
+                      {debouncedSearchTerm && (
+                        <p className="text-slate-500 text-sm">جرب البحث بكلمات مختلفة</p>
+                      )}
+                      {!debouncedSearchTerm && onAddNew && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={onAddNew}
+                          className="mt-2"
+                        >
+                          <MaterialIcon name="add" size="sm" />
+                          <span className="mr-1">إضافة أول عنصر</span>
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -616,50 +698,90 @@ export function DataTable({
               paginatedData.map((item, index) => (
                 <tr
                   key={item.get('id')}
+                  className="material-transition animate-fade-in"
                   style={{
                     borderBottom: '1px solid #f0eff2',
-                    transition: 'all 0.2s ease-in-out',
-                    backgroundColor: 'transparent'
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    backgroundColor: 'transparent',
+                    animationDelay: `${index * 0.02}s`,
+                    animationFillMode: 'both'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f8f7fa';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(115, 103, 240, 0.08)';
+                    e.currentTarget.style.background = 'linear-gradient(to right, #f8f7fa 0%, #f0eff2 50%, #f8f7fa 100%)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(115, 103, 240, 0.2), 0 2px 8px rgba(115, 103, 240, 0.1)';
+                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.002)';
+                    e.currentTarget.style.borderLeft = '3px solid #7367f0';
                     Array.from(e.currentTarget.children).forEach((cell) => {
                       (cell as HTMLElement).style.borderBottomColor = '#e8e6ea';
                     });
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.borderLeft = 'none';
                     Array.from(e.currentTarget.children).forEach((cell) => {
                       (cell as HTMLElement).style.borderBottomColor = '#f0eff2';
                     });
                   }}
                 >
-                  {columns.map((col) => (
-                    <td
-                      key={col.key}
-                      style={{
-                        padding: '1rem 1.5rem',
-                        fontSize: '0.9375rem',
-                        color: '#4b465c',
-                        verticalAlign: 'middle',
-                        borderBottom: '1px solid #f0eff2',
-                        transition: 'all 0.15s ease-in-out'
-                      }}
-                    >
-                      <div style={{ 
-                        overflow: 'hidden', 
-                        textOverflow: 'ellipsis', 
-                        whiteSpace: 'nowrap', 
-                        maxWidth: '300px',
-                        fontWeight: 400,
-                        lineHeight: '1.5'
-                      }}>
-                        {col.render ? col.render(item) : String(item.get(col.key) || "-")}
-                      </div>
-                    </td>
-                  ))}
+                  {columns.map((col) => {
+                    const rawValue = item.get(col.key);
+                    const isDate = isDateValue(rawValue);
+                    const isNumber = isNumericValue(rawValue);
+                    
+                    let displayValue: React.ReactNode;
+                    if (col.render) {
+                      displayValue = col.render(item);
+                    } else if (isDate) {
+                      displayValue = (
+                        <span className="font-medium text-slate-700" title={rawValue}>
+                          {formatDate(rawValue)}
+                        </span>
+                      );
+                    } else if (isNumber) {
+                      const numValue = Number(rawValue);
+                      displayValue = (
+                        <span className="font-semibold text-slate-800" title={numValue.toLocaleString('ar-SA')}>
+                          {numValue.toLocaleString('ar-SA')}
+                        </span>
+                      );
+                    } else {
+                      const stringValue = String(rawValue || "-");
+                      displayValue = (
+                        <span className="text-slate-700" title={stringValue}>
+                          {stringValue}
+                        </span>
+                      );
+                    }
+                    
+                    return (
+                      <td
+                        key={col.key}
+                        className="material-transition"
+                        style={{
+                          padding: '1rem 1.5rem',
+                          fontSize: '0.9375rem',
+                          color: '#4b465c',
+                          verticalAlign: 'middle',
+                          borderBottom: '1px solid #f0eff2',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                      >
+                        <div 
+                          className="truncate max-w-[300px]"
+                          style={{ 
+                            fontWeight: 400,
+                            lineHeight: '1.6',
+                            wordBreak: 'break-word'
+                          }}
+                          title={typeof rawValue === 'string' ? rawValue : String(rawValue || '')}
+                        >
+                          {displayValue}
+                        </div>
+                      </td>
+                    );
+                  })}
                   {(onEdit || onDelete || onView || onArchive) && (
                     <td style={{ 
                       padding: '1rem 1.5rem', 
@@ -670,24 +792,19 @@ export function DataTable({
                     }}>
                       <div className="flex items-center gap-2 justify-end">
                         {/* Actions Dropdown */}
-                        <div className="relative" ref={(el) => { actionDropdownRefs.current[item.get('id')] = el; }}>
+                        <div className="relative inline-block" ref={(el) => { actionDropdownRefs.current[item.get('id')] = el; }}>
                           <button
+                            ref={(el) => { actionButtonRefs.current[item.get('id')] = el; }}
+                            type="button"
                             onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               const button = e.currentTarget;
-                              const rect = button.getBoundingClientRect();
                               const itemId = item.get('id');
+                              
                               setActionDropdownOpen((prev) => {
                                 const newState = { ...prev, [itemId]: !prev[itemId] };
-                                if (newState[itemId]) {
-                                  // Store position for fixed positioning
-                                  setActionDropdownPosition((prevPos) => ({
-                                    ...prevPos,
-                                    [itemId]: {
-                                      top: rect.bottom + 4,
-                                      left: rect.left,
-                                    }
-                                  }));
-                                } else {
+                                if (!newState[itemId]) {
                                   // Clear position when closing
                                   setActionDropdownPosition((prevPos) => {
                                     const newPos = { ...prevPos };
@@ -698,171 +815,35 @@ export function DataTable({
                                 return newState;
                               });
                             }}
+                            className="material-transition hover:bg-primary-50 hover:scale-110 active:scale-95"
                             style={{
-                              padding: '0.375rem',
+                              padding: '0.5rem',
                               border: 'none',
                               background: 'transparent',
                               color: '#7367f0',
                               cursor: 'pointer',
-                              borderRadius: '1.25rem',
+                              borderRadius: '50%',
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center'
+                              justifyContent: 'center',
+                              minWidth: '2rem',
+                              minHeight: '2rem',
+                              zIndex: 10,
+                              position: 'relative'
                             }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#f8f7fa';
+                              e.currentTarget.style.color = '#5e52d5';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.color = '#7367f0';
+                            }}
+                            aria-label="خيارات"
+                            title="خيارات"
                           >
                             <MaterialIcon name="more_vert" size="md" />
                           </button>
-                          {actionDropdownOpen[item.get('id')] && actionDropdownPosition[item.get('id')] && (
-                            <div
-                              data-dropdown-id={item.get('id')}
-                              style={{
-                                position: 'fixed',
-                                left: `${actionDropdownPosition[item.get('id')].left}px`,
-                                top: `${actionDropdownPosition[item.get('id')].top}px`,
-                                backgroundColor: 'white',
-                                border: '1px solid #dbdade',
-                                borderRadius: '1.25rem',
-                                boxShadow: '0 0.25rem 1rem rgba(165, 163, 174, 0.45)',
-                                zIndex: 9999,
-                                minWidth: '150px',
-                                padding: '0.5rem 0'
-                              }}
-                            >
-                              {onView && (
-                                <button
-                                  onClick={() => {
-                                    onView(item);
-                                    const itemId = item.get('id');
-                                    setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
-                                    setActionDropdownPosition((prevPos) => {
-                                      const newPos = { ...prevPos };
-                                      delete newPos[itemId];
-                                      return newPos;
-                                    });
-                                  }}
-                                  style={{
-                                    width: '100%',
-                                    padding: '0.5rem 1rem',
-                                    textAlign: 'right',
-                                    border: 'none',
-                                    background: 'transparent',
-                                    color: '#6f6b7d',
-                                    fontSize: '0.875rem',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
-                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                >
-                                  <MaterialIcon name="visibility" size="sm" />
-                                  <span>التفاصيل</span>
-                                </button>
-                              )}
-                              {onEdit && (
-                                <button
-                                  onClick={() => {
-                                    onEdit(item);
-                                    const itemId = item.get('id');
-                                    setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
-                                    setActionDropdownPosition((prevPos) => {
-                                      const newPos = { ...prevPos };
-                                      delete newPos[itemId];
-                                      return newPos;
-                                    });
-                                  }}
-                                  style={{
-                                    width: '100%',
-                                    padding: '0.5rem 1rem',
-                                    textAlign: 'right',
-                                    border: 'none',
-                                    background: 'transparent',
-                                    color: '#6f6b7d',
-                                    fontSize: '0.875rem',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
-                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                >
-                                  <MaterialIcon name="edit" size="sm" />
-                                  <span>تعديل</span>
-                                </button>
-                              )}
-                              {onArchive && (
-                                <button
-                                  onClick={() => {
-                                    onArchive(item);
-                                    const itemId = item.get('id');
-                                    setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
-                                    setActionDropdownPosition((prevPos) => {
-                                      const newPos = { ...prevPos };
-                                      delete newPos[itemId];
-                                      return newPos;
-                                    });
-                                  }}
-                                  style={{
-                                    width: '100%',
-                                    padding: '0.5rem 1rem',
-                                    textAlign: 'right',
-                                    border: 'none',
-                                    background: 'transparent',
-                                    color: '#6f6b7d',
-                                    fontSize: '0.875rem',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
-                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                >
-                                  <MaterialIcon name="archive" size="sm" />
-                                  <span>أرشفة</span>
-                                </button>
-                              )}
-                              {(onView || onEdit || onArchive) && onDelete && (
-                                <div style={{ height: '1px', backgroundColor: '#dbdade', margin: '0.5rem 0' }}></div>
-                              )}
-                              {onDelete && (
-                                <button
-                                  onClick={() => {
-                                    onDelete(item);
-                                    const itemId = item.get('id');
-                                    setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
-                                    setActionDropdownPosition((prevPos) => {
-                                      const newPos = { ...prevPos };
-                                      delete newPos[itemId];
-                                      return newPos;
-                                    });
-                                  }}
-                                  style={{
-                                    width: '100%',
-                                    padding: '0.5rem 1rem',
-                                    textAlign: 'right',
-                                    border: 'none',
-                                    background: 'transparent',
-                                    color: '#ea5455',
-                                    fontSize: '0.875rem',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ffebee'}
-                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                >
-                                  <MaterialIcon name="delete" size="sm" />
-                                  <span>حذف</span>
-                                </button>
-                              )}
-                            </div>
-                          )}
                         </div>
                         {/* Quick Edit Button */}
                         {onEdit && (
@@ -926,16 +907,42 @@ export function DataTable({
                 }}
               >
                 <div className="space-y-3">
-                  {columns.slice(0, 3).map((col) => (
-                    <div key={col.key} className="flex justify-between items-start gap-3 mb-3 last:mb-0">
-                      <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#6f6b7d', minWidth: '90px' }}>
-                        {col.label}:
-                      </span>
-                      <span style={{ fontSize: '0.875rem', color: '#4b465c', textAlign: 'right', flex: 1, fontWeight: 400 }}>
-                        {col.render ? col.render(item) : String(item.get(col.key) || "-")}
-                      </span>
-                    </div>
-                  ))}
+                  {columns.slice(0, 3).map((col) => {
+                    const rawValue = item.get(col.key);
+                    const isDate = isDateValue(rawValue);
+                    const isNumber = isNumericValue(rawValue);
+                    
+                    let displayValue: React.ReactNode;
+                    if (col.render) {
+                      displayValue = col.render(item);
+                    } else if (isDate) {
+                      displayValue = (
+                        <span className="font-medium text-slate-700">
+                          {formatDate(rawValue)}
+                        </span>
+                      );
+                    } else if (isNumber) {
+                      const numValue = Number(rawValue);
+                      displayValue = (
+                        <span className="font-semibold text-slate-800">
+                          {numValue.toLocaleString('ar-SA')}
+                        </span>
+                      );
+                    } else {
+                      displayValue = String(rawValue || "-");
+                    }
+                    
+                    return (
+                      <div key={col.key} className="flex justify-between items-start gap-3 mb-3 last:mb-0">
+                        <span className="text-xs font-semibold text-slate-600 min-w-[90px]">
+                          {col.label}:
+                        </span>
+                        <span className="text-sm text-slate-800 text-right flex-1 font-medium">
+                          {displayValue}
+                        </span>
+                      </div>
+                    );
+                  })}
                   {(onEdit || onDelete) && (
                     <div className="flex items-center gap-2 justify-end pt-3 mt-3" style={{ borderTop: '1px solid #dbdade' }}>
                       {onEdit && (
@@ -969,83 +976,46 @@ export function DataTable({
             ))
           )}
         </div>
-      </div>
-      {/* Pagination Footer */}
-      {sortedData.length > 0 && (
-        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #dbdade', backgroundColor: '#f8f7fa', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        </div>
+        
+        {/* Pagination Footer */}
+        {sortedData.length > 0 && (
+          <div className="px-6 py-4 border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
         {/* Info and Page Size Selector */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.875rem', color: '#6f6b7d' }}>عرض</span>
-            <select
-              value={itemsPerPage}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-600 font-medium">عرض</span>
+            <Select
+              value={itemsPerPage.toString()}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              style={{
-                padding: '0.375rem 2rem 0.375rem 0.75rem',
-                border: '1px solid #dbdade',
-                borderRadius: '9999px',
-                backgroundColor: 'white',
-                color: '#5d596c',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-                outline: 'none',
-                appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.5rem center',
-                backgroundSize: '16px 12px'
-              }}
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <span style={{ fontSize: '0.875rem', color: '#6f6b7d' }}>عنصر في الصفحة</span>
+              options={pageSizeOptions.map(size => ({ value: size.toString(), label: size.toString() }))}
+              className="w-20"
+              fullWidth={false}
+            />
+            <span className="text-sm text-slate-600 font-medium">عنصر في الصفحة</span>
           </div>
-          <div style={{ fontSize: '0.875rem', color: '#6f6b7d' }}>
-            عرض <span style={{ color: '#7367f0', fontWeight: 600 }}>{sortedData.length > 0 ? startIndex + 1 : 0}</span> إلى{' '}
-            <span style={{ color: '#7367f0', fontWeight: 600 }}>{Math.min(endIndex, sortedData.length)}</span> من{' '}
-            <span style={{ color: '#7367f0', fontWeight: 600 }}>{sortedData.length}</span> عنصر
+          <div className="text-sm text-slate-600">
+            عرض <span className="text-primary-600 font-semibold">{sortedData.length > 0 ? startIndex + 1 : 0}</span> إلى{' '}
+            <span className="text-primary-600 font-semibold">{Math.min(endIndex, sortedData.length)}</span> من{' '}
+            <span className="text-primary-600 font-semibold">{sortedData.length}</span> عنصر
             {sortedData.length !== data.length && (
-              <span> (من أصل <span style={{ color: '#7367f0', fontWeight: 600 }}>{data.length}</span>)</span>
+              <span> (من أصل <span className="text-primary-600 font-semibold">{data.length}</span>)</span>
             )}
           </div>
         </div>
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div className="flex justify-center items-center gap-2 flex-wrap animate-fade-in">
             {/* First Page */}
             <button
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
-              style={{
-                padding: '0.375rem 0.75rem',
-                border: '1px solid #dbdade',
-                borderRadius: '9999px',
-                backgroundColor: currentPage === 1 ? '#f8f7fa' : 'white',
-                color: currentPage === 1 ? '#a5a3ae' : '#5d596c',
-                fontSize: '0.875rem',
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                transition: 'all 0.15s ease-in-out'
-              }}
-              onMouseEnter={(e) => {
-                if (currentPage !== 1) {
-                  e.currentTarget.style.backgroundColor = '#f8f7fa';
-                  e.currentTarget.style.borderColor = '#7367f0';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentPage !== 1) {
-                  e.currentTarget.style.backgroundColor = 'white';
-                  e.currentTarget.style.borderColor = '#dbdade';
-                }
-              }}
+              className={`px-3 py-2 rounded-full border border-slate-300 text-sm font-medium flex items-center gap-1 material-transition ${
+                currentPage === 1
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-white text-slate-700 hover:bg-primary-50 hover:border-primary-500 hover:text-primary-700 hover:shadow-md hover:scale-105'
+              }`}
             >
               <MaterialIcon name="chevron_right" size="sm" />
               <MaterialIcon name="chevron_right" size="sm" />
@@ -1055,31 +1025,11 @@ export function DataTable({
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              style={{
-                padding: '0.375rem 0.75rem',
-                border: '1px solid #dbdade',
-                borderRadius: '9999px',
-                backgroundColor: currentPage === 1 ? '#f8f7fa' : 'white',
-                color: currentPage === 1 ? '#a5a3ae' : '#5d596c',
-                fontSize: '0.875rem',
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                transition: 'all 0.15s ease-in-out'
-              }}
-              onMouseEnter={(e) => {
-                if (currentPage !== 1) {
-                  e.currentTarget.style.backgroundColor = '#f8f7fa';
-                  e.currentTarget.style.borderColor = '#7367f0';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentPage !== 1) {
-                  e.currentTarget.style.backgroundColor = 'white';
-                  e.currentTarget.style.borderColor = '#dbdade';
-                }
-              }}
+              className={`px-3 py-2 rounded-full border border-slate-300 text-sm font-medium flex items-center gap-1 material-transition ${
+                currentPage === 1
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-white text-slate-700 hover:bg-primary-50 hover:border-primary-500 hover:text-primary-700 hover:shadow-md hover:scale-105'
+              }`}
             >
               <MaterialIcon name="chevron_right" size="sm" />
               <span>السابق</span>
@@ -1103,31 +1053,11 @@ export function DataTable({
                   <button
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
-                    style={{
-                      minWidth: '2.5rem',
-                      height: '2.5rem',
-                      padding: '0.375rem 0.75rem',
-                      border: '1px solid #dbdade',
-                      borderRadius: '9999px',
-                      backgroundColor: currentPage === pageNum ? '#7367f0' : 'white',
-                      color: currentPage === pageNum ? 'white' : '#5d596c',
-                      fontSize: '0.875rem',
-                      fontWeight: currentPage === pageNum ? 600 : 400,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease-in-out'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (currentPage !== pageNum) {
-                        e.currentTarget.style.backgroundColor = '#f8f7fa';
-                        e.currentTarget.style.borderColor = '#7367f0';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (currentPage !== pageNum) {
-                        e.currentTarget.style.backgroundColor = 'white';
-                        e.currentTarget.style.borderColor = '#dbdade';
-                      }
-                    }}
+                    className={`min-w-[2.5rem] h-10 px-3 rounded-full border text-sm font-medium material-transition ${
+                      currentPage === pageNum
+                        ? 'bg-primary-600 text-white border-primary-600 shadow-lg shadow-primary-600/30 scale-105'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-primary-50 hover:border-primary-500 hover:text-primary-700 hover:shadow-md hover:scale-105'
+                    }`}
                   >
                     {pageNum}
                   </button>
@@ -1139,31 +1069,11 @@ export function DataTable({
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              style={{
-                padding: '0.375rem 0.75rem',
-                border: '1px solid #dbdade',
-                borderRadius: '9999px',
-                backgroundColor: currentPage === totalPages ? '#f8f7fa' : 'white',
-                color: currentPage === totalPages ? '#a5a3ae' : '#5d596c',
-                fontSize: '0.875rem',
-                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                transition: 'all 0.15s ease-in-out'
-              }}
-              onMouseEnter={(e) => {
-                if (currentPage !== totalPages) {
-                  e.currentTarget.style.backgroundColor = '#f8f7fa';
-                  e.currentTarget.style.borderColor = '#7367f0';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentPage !== totalPages) {
-                  e.currentTarget.style.backgroundColor = 'white';
-                  e.currentTarget.style.borderColor = '#dbdade';
-                }
-              }}
+              className={`px-3 py-2 rounded-full border border-slate-300 text-sm font-medium flex items-center gap-1 material-transition ${
+                currentPage === totalPages
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-white text-slate-700 hover:bg-primary-50 hover:border-primary-500 hover:text-primary-700 hover:shadow-md hover:scale-105'
+              }`}
             >
               <span>التالي</span>
               <MaterialIcon name="chevron_left" size="sm" />
@@ -1173,40 +1083,179 @@ export function DataTable({
             <button
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
-              style={{
-                padding: '0.375rem 0.75rem',
-                border: '1px solid #dbdade',
-                borderRadius: '9999px',
-                backgroundColor: currentPage === totalPages ? '#f8f7fa' : 'white',
-                color: currentPage === totalPages ? '#a5a3ae' : '#5d596c',
-                fontSize: '0.875rem',
-                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                transition: 'all 0.15s ease-in-out'
-              }}
-              onMouseEnter={(e) => {
-                if (currentPage !== totalPages) {
-                  e.currentTarget.style.backgroundColor = '#f8f7fa';
-                  e.currentTarget.style.borderColor = '#7367f0';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentPage !== totalPages) {
-                  e.currentTarget.style.backgroundColor = 'white';
-                  e.currentTarget.style.borderColor = '#dbdade';
-                }
-              }}
+              className={`px-3 py-2 rounded-full border border-slate-300 text-sm font-medium flex items-center gap-1 material-transition ${
+                currentPage === totalPages
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-white text-slate-700 hover:bg-primary-50 hover:border-primary-500 hover:text-primary-700 hover:shadow-md hover:scale-105'
+              }`}
             >
               <MaterialIcon name="chevron_left" size="sm" />
               <MaterialIcon name="chevron_left" size="sm" />
             </button>
           </div>
         )}
-        </div>
-      )}
-    </div>
+          </div>
+        )}
+      </CardBody>
+    </Card>
+    {/* Render action dropdowns using Portal outside the table */}
+    {typeof window !== 'undefined' && Object.keys(actionDropdownOpen).map((itemId) => {
+      if (!actionDropdownOpen[itemId] || !actionDropdownPosition[itemId]) return null;
+      
+      const item = paginatedData.find((i) => i.get('id') === itemId);
+      if (!item) return null;
+      
+      return createPortal(
+        <div
+          key={itemId}
+          data-dropdown-id={itemId}
+          className="animate-scale-in"
+          style={{
+            position: 'fixed',
+            left: `${actionDropdownPosition[itemId].left}px`,
+            top: `${actionDropdownPosition[itemId].top}px`,
+            backgroundColor: 'white',
+            border: '2px solid #dbdade',
+            borderRadius: '1rem',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(115, 103, 240, 0.1)',
+            zIndex: 10000,
+            minWidth: '180px',
+            padding: '0.5rem 0',
+            transformOrigin: 'top right'
+          }}
+        >
+          {onView && (
+            <button
+              onClick={() => {
+                onView(item);
+                setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
+                setActionDropdownPosition((prevPos) => {
+                  const newPos = { ...prevPos };
+                  delete newPos[itemId];
+                  return newPos;
+                });
+              }}
+              style={{
+                width: '100%',
+                padding: '0.5rem 1rem',
+                textAlign: 'right',
+                border: 'none',
+                background: 'transparent',
+                color: '#6f6b7d',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <MaterialIcon name="visibility" size="sm" />
+              <span>التفاصيل</span>
+            </button>
+          )}
+          {onEdit && (
+            <button
+              onClick={() => {
+                onEdit(item);
+                setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
+                setActionDropdownPosition((prevPos) => {
+                  const newPos = { ...prevPos };
+                  delete newPos[itemId];
+                  return newPos;
+                });
+              }}
+              style={{
+                width: '100%',
+                padding: '0.5rem 1rem',
+                textAlign: 'right',
+                border: 'none',
+                background: 'transparent',
+                color: '#6f6b7d',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <MaterialIcon name="edit" size="sm" />
+              <span>تعديل</span>
+            </button>
+          )}
+          {onArchive && (
+            <button
+              onClick={() => {
+                onArchive(item);
+                setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
+                setActionDropdownPosition((prevPos) => {
+                  const newPos = { ...prevPos };
+                  delete newPos[itemId];
+                  return newPos;
+                });
+              }}
+              style={{
+                width: '100%',
+                padding: '0.5rem 1rem',
+                textAlign: 'right',
+                border: 'none',
+                background: 'transparent',
+                color: '#6f6b7d',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f7fa'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <MaterialIcon name="archive" size="sm" />
+              <span>أرشفة</span>
+            </button>
+          )}
+          {(onView || onEdit || onArchive) && onDelete && (
+            <div style={{ height: '1px', backgroundColor: '#dbdade', margin: '0.5rem 0' }}></div>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => {
+                onDelete(item);
+                setActionDropdownOpen((prev) => ({ ...prev, [itemId]: false }));
+                setActionDropdownPosition((prevPos) => {
+                  const newPos = { ...prevPos };
+                  delete newPos[itemId];
+                  return newPos;
+                });
+              }}
+              style={{
+                width: '100%',
+                padding: '0.5rem 1rem',
+                textAlign: 'right',
+                border: 'none',
+                background: 'transparent',
+                color: '#ea5455',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ffebee'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <MaterialIcon name="delete" size="sm" />
+              <span>حذف</span>
+            </button>
+          )}
+        </div>,
+        document.body
+      );
+    })}
+    </>
   );
 }
 

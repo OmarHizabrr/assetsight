@@ -27,11 +27,11 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
     const hasError = !!error;
 
-    const baseStyles = 'block w-full rounded-full border-2 bg-white px-4 py-3.5 pr-12 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer shadow-sm';
+    const baseStyles = 'block w-full rounded-xl border-2 bg-white px-4 py-3.5 pr-12 text-sm font-semibold material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/30 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer shadow-md hover:shadow-lg';
     
     const selectStyles = hasError
-      ? 'border-error-300 text-error-900 placeholder-error-400 focus:border-error-500 focus:ring-error-500/20 bg-gradient-to-r from-error-50 to-error-50/70 shadow-error-200/50'
-      : 'border-slate-200 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:bg-white focus:shadow-lg focus:shadow-primary-500/15 hover:border-slate-300';
+      ? 'border-error-400 text-error-900 placeholder-error-400 focus:border-error-500 focus:ring-error-500/30 bg-gradient-to-r from-error-50 to-error-50/70 shadow-error-200/50 hover:border-error-500'
+      : 'border-slate-300 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:bg-white focus:shadow-xl focus:shadow-primary-500/20 hover:border-primary-400 hover:shadow-lg';
 
     const combinedSelectClassName = `
       ${baseStyles}

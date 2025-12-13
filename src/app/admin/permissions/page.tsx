@@ -2,20 +2,20 @@
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { PlusIcon, UserIcon } from "@/components/icons";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { DataTable } from "@/components/ui/DataTable";
-import { Input } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { Select } from "@/components/ui/Select";
-import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { DataTable } from "@/components/ui/DataTable";
+import { Modal } from "@/components/ui/Modal";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
-import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 // قائمة جميع الصفحات في النظام
 const allPages = [
@@ -34,6 +34,7 @@ const allPages = [
 
 function PermissionsPageContent() {
   const searchParams = useSearchParams();
+  const { showSuccess, showError, showWarning, showInfo } = useToast();
   const [users, setUsers] = useState<BaseModel[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [permissions, setPermissions] = useState<BaseModel[]>([]);
@@ -51,24 +52,7 @@ function PermissionsPageContent() {
     can_delete: false,
   }));
 
-  useEffect(() => {
-    loadData();
-    // قراءة userId من query parameters
-    const userId = searchParams.get('userId');
-    if (userId) {
-      setSelectedUserId(userId);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (selectedUserId) {
-      loadPermissions();
-    } else {
-      setPermissions([]);
-    }
-  }, [selectedUserId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const userDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("users"));
@@ -76,12 +60,13 @@ function PermissionsPageContent() {
       setUsers(usersData);
     } catch (error) {
       console.error("Error loading data:", error);
+      showError("حدث خطأ أثناء تحميل المستخدمين");
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
 
-  const loadPermissions = async () => {
+  const loadPermissions = useCallback(async () => {
     if (!selectedUserId) {
       setPermissions([]);
       return;
@@ -96,17 +81,34 @@ function PermissionsPageContent() {
       setPermissions(permissionsData);
     } catch (error) {
       console.error("Error loading permissions:", error);
-      alert("حدث خطأ أثناء تحميل الصلاحيات");
+      showError("حدث خطأ أثناء تحميل الصلاحيات");
       setPermissions([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedUserId, showError]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    loadData();
+    // قراءة userId من query parameters
+    const userId = searchParams.get('userId');
+    if (userId) {
+      setSelectedUserId(userId);
+    }
+  }, [searchParams, loadData]);
+
+  useEffect(() => {
+    if (selectedUserId) {
+      loadPermissions();
+    } else {
+      setPermissions([]);
+    }
+  }, [selectedUserId, loadPermissions]);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUserId) {
-      alert("يرجى اختيار مستخدم أولاً");
+      showWarning("يرجى اختيار مستخدم أولاً");
       return;
     }
 
@@ -134,6 +136,7 @@ function PermissionsPageContent() {
         // تحديث صلاحية موجودة
         const docRef = firestoreApi.getSubDocument("powers", selectedUserId, "powers", permissionId);
         await firestoreApi.updateData(docRef, submitData);
+        showSuccess("تم تحديث الصلاحية بنجاح");
       } else {
         // إضافة صلاحية جديدة - التحقق من عدم تكرار الصفحة
         const pagePath = submitData.page_path;
@@ -143,7 +146,7 @@ function PermissionsPageContent() {
         });
         
         if (existingPermission) {
-          alert("هذه الصفحة موجودة بالفعل في الصلاحيات. يرجى اختيار صفحة أخرى أو تعديل الصلاحية الموجودة");
+          showWarning("هذه الصفحة موجودة بالفعل في الصلاحيات. يرجى اختيار صفحة أخرى أو تعديل الصلاحية الموجودة");
           return;
         }
         
@@ -152,6 +155,7 @@ function PermissionsPageContent() {
         console.log("Saving permission:", submitData, "to:", docRef.path);
         await firestoreApi.setData(docRef, submitData);
         console.log("Permission saved successfully");
+        showSuccess("تم إضافة الصلاحية بنجاح");
       }
       
       setIsModalOpen(false);
@@ -167,9 +171,9 @@ function PermissionsPageContent() {
       await loadPermissions();
     } catch (error) {
       console.error("Error saving permission:", error);
-      alert("حدث خطأ أثناء الحفظ");
+      showError("حدث خطأ أثناء الحفظ");
     }
-  };
+  }, [selectedUserId, formData, editingPermission, permissions, loadPermissions, showSuccess, showError, showWarning]);
 
   const handleEdit = (permission: BaseModel) => {
     setEditingPermission(permission);
@@ -187,7 +191,7 @@ function PermissionsPageContent() {
     setIsConfirmModalOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = useCallback(async () => {
     if (!deletingPermission || !selectedUserId) return;
     const id = deletingPermission.get('id');
     if (!id) return;
@@ -196,34 +200,36 @@ function PermissionsPageContent() {
       setDeleteLoading(true);
       const docRef = firestoreApi.getSubDocument("powers", selectedUserId, "powers", id);
       await firestoreApi.deleteData(docRef);
+      showSuccess("تم حذف الصلاحية بنجاح");
       loadPermissions();
       setIsConfirmModalOpen(false);
       setDeletingPermission(null);
     } catch (error) {
       console.error("Error deleting permission:", error);
-      alert("حدث خطأ أثناء الحذف");
+      showError("حدث خطأ أثناء الحذف");
     } finally {
       setDeleteLoading(false);
     }
-  };
+  }, [deletingPermission, selectedUserId, loadPermissions, showSuccess, showError]);
 
-  const getUserName = (userId?: string) => {
+  const getUserName = useCallback((userId?: string) => {
     if (!userId) return '-';
     const user = users.find(u => u.get('id') === userId);
     return user?.get('full_name') || user?.get('username') || '-';
-  };
+  }, [users]);
 
-  const getPageLabel = (path?: string) => {
+  const getPageLabel = useCallback((path?: string) => {
     if (!path) return '-';
     const page = allPages.find(p => p.path === path);
     return page?.label || path;
-  };
+  }, []);
 
-  const columns = [
+  const columns = useMemo(() => [
     { 
       key: 'page_path', 
       label: 'الصفحة',
       render: (item: BaseModel) => getPageLabel(item.get('page_path')),
+      sortable: true,
     },
     { 
       key: 'can_view', 
@@ -236,6 +242,7 @@ function PermissionsPageContent() {
           </Badge>
         );
       },
+      sortable: true,
     },
     { 
       key: 'can_add', 
@@ -248,6 +255,7 @@ function PermissionsPageContent() {
           </Badge>
         );
       },
+      sortable: true,
     },
     { 
       key: 'can_edit', 
@@ -260,6 +268,7 @@ function PermissionsPageContent() {
           </Badge>
         );
       },
+      sortable: true,
     },
     { 
       key: 'can_delete', 
@@ -272,8 +281,9 @@ function PermissionsPageContent() {
           </Badge>
         );
       },
+      sortable: true,
     },
-  ];
+  ], [getPageLabel]);
 
   return (
     <MainLayout>
@@ -297,21 +307,19 @@ function PermissionsPageContent() {
 
       {/* Select User */}
       <div className="mb-6">
-        <Select
+        <SearchableSelect
           label="اختر المستخدم"
           value={selectedUserId}
-          onChange={(e) => {
-            const userId = e.target.value;
+          onChange={(value) => {
+            const userId = value;
             console.log("User selected:", userId);
             setSelectedUserId(userId);
           }}
-          options={[
-            { value: '', label: '-- اختر مستخدم --' },
-            ...users.map((user) => ({
-              value: user.get('id'),
-              label: `${user.get('full_name') || user.get('username')} (${user.get('username') || user.get('employee_number')})`,
-            })),
-          ]}
+          options={users.map((user) => ({
+            value: user.get('id'),
+            label: `${user.get('full_name') || user.get('username')} (${user.get('username') || user.get('employee_number')})`,
+          }))}
+          placeholder="ابحث واختر المستخدم"
         />
       </div>
 
@@ -382,12 +390,12 @@ function PermissionsPageContent() {
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Select
+          <SearchableSelect
             label="الصفحة"
             value={formData.get('page_path')}
-            onChange={(e) => {
+            onChange={(value) => {
               const newData = new BaseModel(formData.getData());
-              newData.put('page_path', e.target.value);
+              newData.put('page_path', value);
               setFormData(newData);
             }}
             required
@@ -409,6 +417,7 @@ function PermissionsPageContent() {
                 label: page.label,
               }));
             })()}
+            placeholder="ابحث واختر الصفحة"
           />
 
           <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
@@ -455,7 +464,7 @@ function PermissionsPageContent() {
             />
           </div>
 
-          <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t-2 border-slate-200/60 bg-gradient-to-r from-slate-50/50 via-transparent to-slate-50/50 -mx-6 -mb-6 px-6 pb-6">
             <Button
               type="button"
               variant="outline"
@@ -471,6 +480,7 @@ function PermissionsPageContent() {
                 }));
               }}
               size="lg"
+              className="w-full sm:w-auto font-bold"
             >
               إلغاء
             </Button>
@@ -478,6 +488,7 @@ function PermissionsPageContent() {
               type="submit"
               variant="primary"
               size="lg"
+              className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
             >
               {editingPermission ? "تحديث" : "حفظ"}
             </Button>

@@ -1,12 +1,12 @@
 'use client';
 
-import { hasPermissionAsync } from "@/components/auth/ProtectedRoute";
+import logoText from "@/assets/images/logos/logo-text.png";
+import miscMaskLight from "@/assets/images/pages/misc-mask-light.png";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { ProfileModal } from "@/components/profile/ProfileModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { firestoreApi } from "@/lib/FirestoreApi";
-import { BaseModel } from "@/lib/BaseModel";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -150,41 +150,86 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#f8f7fa' }}>
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50 flex-shrink-0" style={{ borderColor: '#dbdade' }}>
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
+      {/* Header - Professional Design with Advanced Effects */}
+      <header 
+        className="sticky top-0 z-50 flex-shrink-0 relative" 
+        style={{ 
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          backgroundColor: 'rgba(255, 255, 255, 0.72)',
+          borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
+          boxShadow: '0 1px 0 0 rgba(255, 255, 255, 0.5) inset, 0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        }}
+      >
+        {/* Subtle gradient overlay */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-50"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(115, 103, 240, 0.03) 0%, transparent 100%)',
+          }}
+        />
+        
+        <div className="px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex justify-between items-center" style={{ minHeight: '4.75rem' }}>
+            {/* Left Section - Logo & Menu */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* Mobile Menu Button - Enhanced */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-full text-gray-600 hover:bg-gradient-to-br hover:from-primary-50 hover:to-primary-100 hover:text-primary-600 material-transition"
+                className="lg:hidden p-2.5 rounded-xl text-slate-600 hover:bg-gradient-to-br hover:from-primary-50 hover:to-primary-100/50 hover:text-primary-600 active:scale-95 material-transition relative group"
                 aria-label="فتح القائمة"
+                style={{
+                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
               >
-                <MaterialIcon name="menu" size="xl" />
+                {/* Ripple effect */}
+                <div className="absolute inset-0 rounded-xl bg-primary-500/0 group-active:bg-primary-500/20 group-active:scale-150 material-transition pointer-events-none" style={{ transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                <MaterialIcon name="menu" size="xl" className="relative z-10" />
               </button>
-              <Link href="/" className="flex items-center gap-3 hover:opacity-90 material-transition group">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#7367f0' }}>
-                  <svg width="20" height="14" viewBox="0 0 32 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M0.00172773 0V6.85398C0.00172773 6.85398 -0.133178 9.01207 1.98092 10.8388L13.6912 21.9964L19.7809 21.9181L18.8042 9.88248L16.4951 7.17289L9.23799 0H0.00172773Z"
-                      fill="white"
-                    />
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M7.77295 16.3566L23.6563 0H32V6.88383C32 6.88383 31.8262 9.17836 30.6591 10.4057L19.7824 22H13.6938L7.77295 16.3566Z"
-                      fill="white"
-                    />
-                  </svg>
+              
+              {/* Logo - Natural Size with Original Colors */}
+              <Link 
+                href="/" 
+                className="flex items-center gap-3 hover:opacity-90 material-transition group relative"
+              >
+                {/* Glow effect on hover */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/0 via-primary-500/0 to-primary-500/0 group-hover:from-primary-500/20 group-hover:via-primary-500/10 group-hover:to-primary-500/20 rounded-2xl blur-md material-transition opacity-0 group-hover:opacity-100" />
+                
+                <div 
+                  className="relative rounded-2xl overflow-hidden flex items-center justify-center shadow-lg ring-2 ring-primary-500/10 group-hover:ring-primary-500/20 group-hover:scale-105 material-transition bg-white/90 backdrop-blur-sm p-1.5" 
+                  style={{ 
+                    boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(115, 103, 240, 0.08)',
+                    height: '3.5rem', // Fixed height to match header
+                  }}
+                >
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 material-transition rounded-2xl" />
+                  <img
+                    src={typeof logoText === 'string' ? logoText : logoText.src}
+                    alt="AssetSight Logo"
+                    className="relative z-10"
+                    style={{
+                      height: '100%',
+                      width: 'auto',
+                      maxHeight: '3.5rem',
+                      filter: 'none',
+                      display: 'block',
+                      objectFit: 'contain',
+                    }}
+                  />
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold" style={{ color: '#5d596c' }}>AssetSight</h1>
+                <div className="hidden sm:block relative z-10">
+                  <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent group-hover:from-primary-500 group-hover:via-primary-600 group-hover:to-accent-500 material-transition">
+                    AssetSight
+                  </h1>
+                  <p className="text-xs text-slate-500 font-medium -mt-0.5 group-hover:text-slate-600 material-transition">نظام إدارة الأصول</p>
+                </div>
               </Link>
             </div>
+            {/* Right Section - User Profile */}
             {user && (
-              <div className="flex items-center gap-3 relative">
-                {/* زر البروفايل للشاشات الكبيرة */}
+              <div className="flex items-center gap-2 sm:gap-3 relative">
+                {/* Profile Button - Desktop */}
                 <div className="hidden sm:block relative" ref={profileDropdownRef}>
                   <button
                     onClick={(e) => {
@@ -192,65 +237,89 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       e.stopPropagation();
                       setIsProfileDropdownOpen(!isProfileDropdownOpen);
                     }}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-full bg-white border material-transition cursor-pointer group shadow-sm hover:shadow-md ${
+                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl material-transition cursor-pointer group relative overflow-hidden ${
                       isProfileDropdownOpen 
-                        ? 'border-primary-500 bg-primary-50 shadow-md' 
-                        : 'border-slate-200 hover:border-primary-300 hover:bg-slate-50'
+                        ? 'bg-gradient-to-r from-primary-50 to-primary-100/50 shadow-lg ring-2 ring-primary-500/20' 
+                        : 'bg-white/80 hover:bg-white shadow-sm hover:shadow-lg hover:ring-2 hover:ring-primary-500/10'
                     }`}
                     title="القائمة الشخصية"
-                    style={{ borderWidth: '1px' }}
+                    style={{
+                      border: isProfileDropdownOpen ? '1px solid rgba(115, 103, 240, 0.25)' : '1px solid rgba(226, 232, 240, 0.6)',
+                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                    }}
                   >
-                    {/* صورة البروفايل */}
-                    {user.get('imageUrl') || user.get('photoURL') ? (
-                      <div className="relative w-9 h-9 rounded-full overflow-hidden border border-slate-200 shadow-sm">
-                        <Image
-                          src={user.get('imageUrl') || user.get('photoURL')}
-                          alt={user.get('full_name') || user.get('username')}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm">
-                        <MaterialIcon name="person" className="text-white" size="sm" />
-                      </div>
+                    {/* Hover gradient overlay */}
+                    {!isProfileDropdownOpen && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/0 to-primary-500/0 group-hover:from-primary-500/5 group-hover:via-primary-500/0 group-hover:to-primary-500/5 material-transition rounded-xl" />
                     )}
+                    {/* Profile Image - Enhanced */}
+                    <div className="relative z-10">
+                      {user.get('imageUrl') || user.get('photoURL') ? (
+                        <div className="relative w-11 h-11 rounded-xl overflow-hidden ring-2 ring-white/80 shadow-lg group-hover:ring-primary-200/50 material-transition">
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-transparent opacity-0 group-hover:opacity-100 material-transition" />
+                          <Image
+                            src={user.get('imageUrl') || user.get('photoURL')}
+                            alt={user.get('full_name') || user.get('username')}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-lg ring-2 ring-white/80 group-hover:ring-primary-200/50 group-hover:scale-105 material-transition">
+                          <MaterialIcon name="person" className="text-white" size="md" />
+                        </div>
+                      )}
+                    </div>
 
-                    {/* معلومات المستخدم */}
-                    <div className="flex flex-col items-start min-w-0">
-                      <span className={`text-sm font-semibold truncate max-w-[120px] ${
-                        isProfileDropdownOpen ? 'text-primary-700' : 'text-slate-800'
+                    {/* User Info - Enhanced */}
+                    <div className="flex flex-col items-start min-w-0 max-w-[170px] relative z-10">
+                      <span className={`text-sm font-bold truncate w-full text-right material-transition ${
+                        isProfileDropdownOpen ? 'text-primary-700' : 'text-slate-900 group-hover:text-primary-700'
                       }`}>
                         {user.get('full_name') || user.get('username')}
                       </span>
-                      <span className={`text-xs truncate max-w-[120px] ${
-                        isProfileDropdownOpen ? 'text-primary-600' : 'text-slate-500'
+                      <span className={`text-xs truncate w-full text-right font-semibold material-transition ${
+                        isProfileDropdownOpen ? 'text-primary-600' : 'text-slate-500 group-hover:text-primary-600'
                       }`}>
                         {user.get('role') || 'مستخدم'}
                       </span>
                     </div>
 
-                    {/* أيقونة السهم */}
+                    {/* Dropdown Arrow - Enhanced */}
                     <MaterialIcon 
                       name="arrow_drop_down" 
-                      className={`material-transition ${
+                      className={`material-transition transition-all duration-300 relative z-10 ${
                         isProfileDropdownOpen 
-                          ? 'text-primary-600 rotate-180' 
-                          : 'text-slate-400'
+                          ? 'text-primary-600 rotate-180 scale-110' 
+                          : 'text-slate-400 group-hover:text-primary-600 group-hover:scale-110'
                       }`} 
                       size="sm" 
                     />
                   </button>
 
-                  {/* القائمة المنسدلة */}
+                  {/* القائمة المنسدلة - تصميم احترافي جديد */}
                   {isProfileDropdownOpen && (
-                    <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-scale-in" style={{ zIndex: 9999 }}>
-                      {/* رأس القائمة */}
-                      <div className="px-4 py-4 bg-gradient-to-br from-primary-600 to-primary-700 border-b border-primary-500/30">
-                        <div className="flex items-center gap-3">
+                    <div 
+                      className="absolute left-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border-2 border-slate-200/60 overflow-hidden animate-scale-in backdrop-blur-xl" 
+                      style={{ 
+                        zIndex: 9999, 
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(115, 103, 240, 0.1)',
+                        background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(250, 250, 252, 0.98))',
+                      }}
+                    >
+                      {/* رأس القائمة - تصميم أنيق */}
+                      <div className="px-6 py-5 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden">
+                        {/* Decorative pattern */}
+                        <div className="absolute inset-0 opacity-10" style={{
+                          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.3) 0%, transparent 50%)',
+                        }}></div>
+                        
+                        <div className="flex items-center gap-4 relative z-10">
                           {user.get('imageUrl') || user.get('photoURL') ? (
-                            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                            <div className="relative w-14 h-14 rounded-2xl overflow-hidden border-3 border-white/30 shadow-xl ring-4 ring-white/20">
                               <Image
                                 src={user.get('imageUrl') || user.get('photoURL')}
                                 alt={user.get('full_name') || user.get('username')}
@@ -260,45 +329,50 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                               />
                             </div>
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shadow-sm border-2 border-white/30">
-                              <MaterialIcon name="person" className="text-white" size="lg" />
+                            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-xl ring-4 ring-white/20 border-3 border-white/30">
+                              <MaterialIcon name="person" className="text-white" size="xl" />
                             </div>
                           )}
                           <div className="flex flex-col items-start flex-1 min-w-0">
-                            <span className="text-sm font-bold text-white truncate w-full">
+                            <span className="text-base font-bold text-white truncate w-full drop-shadow-sm">
                               {user.get('full_name') || user.get('username')}
                             </span>
-                            <span className="text-xs text-white/90 truncate w-full">
-                              {user.get('email') || user.get('role') || 'مستخدم'}
+                            <span className="text-sm text-white/90 truncate w-full font-medium mt-0.5">
+                              {user.get('role') || 'مستخدم'}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* قائمة الخيارات */}
-                      <div className="py-1">
+                      {/* قائمة الخيارات - تصميم موحد وأنيق */}
+                      <div className="py-3 px-2">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('Opening profile modal, current state:', isProfileModalOpen);
                             isOpeningProfileRef.current = true;
                             setIsProfileModalOpen(true);
-                            console.log('Profile modal state set to true');
-                            // إغلاق القائمة بعد فتح الـ modal
                             setTimeout(() => {
                               setIsProfileDropdownOpen(false);
                               isOpeningProfileRef.current = false;
                             }, 100);
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition cursor-pointer rounded-lg mx-1"
+                          className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-right text-sm font-semibold text-slate-700 hover:bg-gradient-to-l hover:from-primary-50 hover:to-transparent hover:text-primary-700 material-transition cursor-pointer rounded-xl mx-1.5 group relative overflow-hidden"
                         >
-                          <MaterialIcon name="person" className="text-primary-600" size="md" />
-                          <span className="flex-1">عرض البروفايل</span>
+                          {/* Hover effect background */}
+                          <div className="absolute inset-0 bg-gradient-to-l from-primary-50/0 to-primary-50/100 opacity-0 group-hover:opacity-100 material-transition rounded-xl"></div>
+                          
+                          <div className="flex items-center gap-3 flex-1 relative z-10">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 group-hover:from-primary-200 group-hover:to-primary-300 flex items-center justify-center material-transition shadow-sm group-hover:shadow-md">
+                              <MaterialIcon name="person" className="text-primary-600 group-hover:text-primary-700" size="md" />
+                            </div>
+                            <span className="flex-1 text-right font-semibold">عرض البروفايل</span>
+                          </div>
                         </button>
                         
-                        <div className="mx-2 my-1 h-px bg-slate-200"></div>
+                        {/* Separator - أنيق */}
+                        <div className="mx-4 my-2 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
                         
                         <button
                           type="button"
@@ -308,17 +382,24 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             setIsProfileDropdownOpen(false);
                             setIsLogoutConfirmOpen(true);
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-error-600 hover:bg-error-50 material-transition cursor-pointer rounded-lg mx-1"
+                          className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-right text-sm font-semibold text-slate-700 hover:bg-gradient-to-l hover:from-error-50 hover:to-transparent hover:text-error-700 material-transition cursor-pointer rounded-xl mx-1.5 group relative overflow-hidden"
                         >
-                          <MaterialIcon name="logout" className="text-error-600" size="md" />
-                          <span className="flex-1">تسجيل الخروج</span>
+                          {/* Hover effect background */}
+                          <div className="absolute inset-0 bg-gradient-to-l from-error-50/0 to-error-50/100 opacity-0 group-hover:opacity-100 material-transition rounded-xl"></div>
+                          
+                          <div className="flex items-center gap-3 flex-1 relative z-10">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-error-100 to-error-200 group-hover:from-error-200 group-hover:to-error-300 flex items-center justify-center material-transition shadow-sm group-hover:shadow-md">
+                              <MaterialIcon name="logout" className="text-error-600 group-hover:text-error-700" size="md" />
+                            </div>
+                            <span className="flex-1 text-right font-semibold">تسجيل الخروج</span>
+                          </div>
                         </button>
                       </div>
                     </div>
                   )}
                 </div>
                 
-                {/* زر البروفايل للشاشات الصغيرة */}
+                {/* Profile Button - Mobile */}
                 <div className="sm:hidden relative" ref={profileDropdownRef}>
                   <button
                     onClick={(e) => {
@@ -326,16 +407,19 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       e.stopPropagation();
                       setIsProfileDropdownOpen(!isProfileDropdownOpen);
                     }}
-                    className={`p-2 rounded-full bg-white border material-transition cursor-pointer shadow-sm hover:shadow-md ${
+                    className={`p-2 rounded-xl material-transition cursor-pointer ${
                       isProfileDropdownOpen 
-                        ? 'border-primary-500 bg-primary-50' 
-                        : 'border-slate-200 hover:border-primary-300 hover:bg-slate-50'
+                        ? 'bg-primary-50 shadow-md ring-2 ring-primary-500/20' 
+                        : 'bg-white hover:bg-slate-50 shadow-sm hover:shadow-md'
                     }`}
                     title="القائمة الشخصية"
-                    style={{ borderWidth: '1px' }}
+                    style={{
+                      border: isProfileDropdownOpen ? '1px solid rgba(115, 103, 240, 0.2)' : '1px solid rgba(226, 232, 240, 0.8)',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
                   >
                     {user.get('imageUrl') || user.get('photoURL') ? (
-                      <div className="relative w-9 h-9 rounded-full overflow-hidden border border-slate-200 shadow-sm">
+                      <div className="relative w-10 h-10 rounded-xl overflow-hidden ring-2 ring-white shadow-md">
                         <Image
                           src={user.get('imageUrl') || user.get('photoURL')}
                           alt={user.get('full_name') || user.get('username')}
@@ -345,20 +429,32 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         />
                       </div>
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm">
-                        <MaterialIcon name="person" className="text-white" size="sm" />
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-md ring-2 ring-white">
+                        <MaterialIcon name="person" className="text-white" size="md" />
                       </div>
                     )}
                   </button>
 
-                  {/* القائمة المنسدلة للشاشات الصغيرة */}
+                  {/* القائمة المنسدلة للشاشات الصغيرة - نفس التصميم الاحترافي */}
                   {isProfileDropdownOpen && (
-                    <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-scale-in" style={{ zIndex: 9999 }}>
-                      {/* رأس القائمة */}
-                      <div className="px-4 py-4 bg-gradient-to-br from-primary-600 to-primary-700 border-b border-primary-500/30">
-                        <div className="flex items-center gap-3">
+                    <div 
+                      className="absolute left-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border-2 border-slate-200/60 overflow-hidden animate-scale-in backdrop-blur-xl" 
+                      style={{ 
+                        zIndex: 9999, 
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(115, 103, 240, 0.1)',
+                        background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(250, 250, 252, 0.98))',
+                      }}
+                    >
+                      {/* رأس القائمة - تصميم أنيق */}
+                      <div className="px-6 py-5 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 relative overflow-hidden">
+                        {/* Decorative pattern */}
+                        <div className="absolute inset-0 opacity-10" style={{
+                          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.3) 0%, transparent 50%)',
+                        }}></div>
+                        
+                        <div className="flex items-center gap-4 relative z-10">
                           {user.get('imageUrl') || user.get('photoURL') ? (
-                            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                            <div className="relative w-14 h-14 rounded-2xl overflow-hidden border-3 border-white/30 shadow-xl ring-4 ring-white/20">
                               <Image
                                 src={user.get('imageUrl') || user.get('photoURL')}
                                 alt={user.get('full_name') || user.get('username')}
@@ -368,45 +464,50 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                               />
                             </div>
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shadow-sm border-2 border-white/30">
-                              <MaterialIcon name="person" className="text-white" size="lg" />
+                            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-xl ring-4 ring-white/20 border-3 border-white/30">
+                              <MaterialIcon name="person" className="text-white" size="xl" />
                             </div>
                           )}
                           <div className="flex flex-col items-start flex-1 min-w-0">
-                            <span className="text-sm font-bold text-white truncate w-full">
+                            <span className="text-base font-bold text-white truncate w-full drop-shadow-sm">
                               {user.get('full_name') || user.get('username')}
                             </span>
-                            <span className="text-xs text-white/90 truncate w-full">
-                              {user.get('email') || user.get('role') || 'مستخدم'}
+                            <span className="text-sm text-white/90 truncate w-full font-medium mt-0.5">
+                              {user.get('role') || 'مستخدم'}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* قائمة الخيارات */}
-                      <div className="py-1">
+                      {/* قائمة الخيارات - تصميم موحد وأنيق */}
+                      <div className="py-3 px-2">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('Opening profile modal, current state:', isProfileModalOpen);
                             isOpeningProfileRef.current = true;
                             setIsProfileModalOpen(true);
-                            console.log('Profile modal state set to true');
-                            // إغلاق القائمة بعد فتح الـ modal
                             setTimeout(() => {
                               setIsProfileDropdownOpen(false);
                               isOpeningProfileRef.current = false;
                             }, 100);
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition cursor-pointer rounded-lg mx-1"
+                          className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-right text-sm font-semibold text-slate-700 hover:bg-gradient-to-l hover:from-primary-50 hover:to-transparent hover:text-primary-700 material-transition cursor-pointer rounded-xl mx-1.5 group relative overflow-hidden"
                         >
-                          <MaterialIcon name="person" className="text-primary-600" size="md" />
-                          <span className="flex-1">عرض البروفايل</span>
+                          {/* Hover effect background */}
+                          <div className="absolute inset-0 bg-gradient-to-l from-primary-50/0 to-primary-50/100 opacity-0 group-hover:opacity-100 material-transition rounded-xl"></div>
+                          
+                          <div className="flex items-center gap-3 flex-1 relative z-10">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 group-hover:from-primary-200 group-hover:to-primary-300 flex items-center justify-center material-transition shadow-sm group-hover:shadow-md">
+                              <MaterialIcon name="person" className="text-primary-600 group-hover:text-primary-700" size="md" />
+                            </div>
+                            <span className="flex-1 text-right font-semibold">عرض البروفايل</span>
+                          </div>
                         </button>
                         
-                        <div className="mx-2 my-1 h-px bg-slate-200"></div>
+                        {/* Separator - أنيق */}
+                        <div className="mx-4 my-2 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
                         
                         <button
                           type="button"
@@ -416,10 +517,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             setIsProfileDropdownOpen(false);
                             setIsLogoutConfirmOpen(true);
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-error-600 hover:bg-error-50 material-transition cursor-pointer rounded-lg mx-1"
+                          className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-right text-sm font-semibold text-slate-700 hover:bg-gradient-to-l hover:from-error-50 hover:to-transparent hover:text-error-700 material-transition cursor-pointer rounded-xl mx-1.5 group relative overflow-hidden"
                         >
-                          <MaterialIcon name="logout" className="text-error-600" size="md" />
-                          <span className="flex-1">تسجيل الخروج</span>
+                          {/* Hover effect background */}
+                          <div className="absolute inset-0 bg-gradient-to-l from-error-50/0 to-error-50/100 opacity-0 group-hover:opacity-100 material-transition rounded-xl"></div>
+                          
+                          <div className="flex items-center gap-3 flex-1 relative z-10">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-error-100 to-error-200 group-hover:from-error-200 group-hover:to-error-300 flex items-center justify-center material-transition shadow-sm group-hover:shadow-md">
+                              <MaterialIcon name="logout" className="text-error-600 group-hover:text-error-700" size="md" />
+                            </div>
+                            <span className="flex-1 text-right font-semibold">تسجيل الخروج</span>
+                          </div>
                         </button>
                       </div>
                     </div>
@@ -437,39 +545,81 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <aside
           className={`${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0 fixed lg:static top-16 lg:top-0 left-0 z-40 w-64 bg-white shadow-sm border-r transform material-transition lg:transition-none h-[calc(100vh-4rem)] lg:h-screen overflow-y-auto`}
-          style={{ borderColor: '#dbdade' }}
+          } lg:translate-x-0 fixed lg:static top-[4.75rem] lg:top-0 left-0 z-40 w-64 transform material-transition lg:transition-none h-[calc(100vh-4.75rem)] lg:h-screen overflow-y-auto relative`}
+          style={{ 
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            backgroundColor: 'rgba(255, 255, 255, 0.75)',
+            borderRight: '1px solid rgba(226, 232, 240, 0.6)',
+            boxShadow: '2px 0 8px 0 rgba(0, 0, 0, 0.04), 1px 0 0 0 rgba(255, 255, 255, 0.5) inset',
+          }}
         >
-          <nav className="h-full py-4">
+          {/* Subtle gradient overlay */}
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-40"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(115, 103, 240, 0.02) 0%, transparent 50%, rgba(115, 103, 240, 0.02) 100%)',
+            }}
+          />
+          
+          <nav className="h-full py-5 relative z-10">
             <ul className="space-y-1.5 px-3">
-              {menuItems.map((item) => (
-                <li key={item.href}>
+              {menuItems.map((item, index) => (
+                <li key={item.href} style={{ animationDelay: `${index * 30}ms` }}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl material-transition text-sm font-medium relative group ${
+                    className={`flex items-center gap-3.5 px-4 py-3 rounded-xl material-transition text-sm font-semibold relative group overflow-hidden ${
                       pathname === item.href
-                        ? 'text-primary-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-primary-600'
+                        ? 'text-primary-700 bg-gradient-to-r from-primary-50 via-primary-100/70 to-primary-50 shadow-lg shadow-primary-500/15 ring-1 ring-primary-500/20'
+                        : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50/80 hover:via-primary-50/40 hover:to-slate-50/80 hover:text-primary-700 hover:shadow-md hover:ring-1 hover:ring-primary-500/10'
                     }`}
-                    style={pathname === item.href ? { 
-                      backgroundColor: '#eae8fd',
-                      color: '#7367f0'
-                    } : {}}
                     onClick={() => setSidebarOpen(false)}
+                    style={{
+                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
                   >
+                    {/* Active indicator with enhanced gradient */}
                     {pathname === item.href && (
-                      <div className="absolute right-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ backgroundColor: '#7367f0' }}></div>
+                      <div className="absolute right-0 top-0 bottom-0 w-1.5 rounded-l-xl bg-gradient-to-b from-primary-500 via-primary-600 to-primary-500 shadow-xl shadow-primary-500/60"></div>
                     )}
-                    <MaterialIcon 
-                      name={item.icon} 
-                      className={`material-transition ${
-                        pathname === item.href 
-                          ? 'text-primary-600' 
-                          : 'text-gray-500 group-hover:text-primary-500'
-                      }`}
-                      size="xl" 
-                    />
-                    <span className="truncate flex-1">{item.label}</span>
+                    
+                    {/* Hover gradient overlay - Enhanced */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/0 to-primary-500/0 group-hover:from-primary-500/8 group-hover:via-primary-500/0 group-hover:to-primary-500/8 material-transition rounded-xl"></div>
+                    
+                    {/* Icon Container - Enhanced */}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center material-transition relative z-10 ${
+                      pathname === item.href 
+                        ? 'bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white shadow-xl shadow-primary-500/40 scale-110 ring-2 ring-primary-500/30' 
+                        : 'bg-slate-100/80 text-slate-600 group-hover:bg-gradient-to-br group-hover:from-primary-100 group-hover:via-primary-200 group-hover:to-primary-100 group-hover:text-primary-700 group-hover:scale-110 group-hover:shadow-lg group-hover:ring-1 group-hover:ring-primary-500/20'
+                    }`}
+                    style={{
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                    >
+                      {/* Icon shine effect */}
+                      {pathname === item.href && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent rounded-xl" />
+                      )}
+                      <MaterialIcon 
+                        name={item.icon} 
+                        className="material-transition relative z-10"
+                        size="md" 
+                      />
+                    </div>
+                    
+                    {/* Label - Enhanced */}
+                    <span className={`truncate flex-1 relative z-10 material-transition ${
+                      pathname === item.href 
+                        ? 'font-bold text-primary-800' 
+                        : 'font-semibold group-hover:font-bold'
+                    }`}>
+                      {item.label}
+                    </span>
+                    
+                    {/* Active glow effect */}
+                    {pathname === item.href && (
+                      <div className="absolute inset-0 rounded-xl bg-primary-500/10 blur-xl -z-0" />
+                    )}
                   </Link>
                 </li>
               ))}
@@ -477,17 +627,67 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </nav>
         </aside>
 
-        {/* Overlay for mobile */}
+        {/* Overlay for mobile - Enhanced */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/40 z-30 lg:hidden animate-fade-in"
+            className="fixed inset-0 z-30 lg:hidden animate-fade-in"
             onClick={() => setSidebarOpen(false)}
+            style={{
+              background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(115, 103, 240, 0.2) 50%, rgba(0, 0, 0, 0.4) 100%)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+            }}
           />
         )}
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto" style={{ background: '#f8f7fa' }}>
-          <div className="min-h-full">
+        {/* Main Content - Enhanced Professional Design */}
+        <main 
+          className="flex-1 overflow-y-auto relative" 
+          style={{ 
+            background: 'linear-gradient(to bottom, #f8f7fa 0%, #f5f4f7 50%, #f0eff2 100%)',
+            backgroundAttachment: 'fixed',
+          }}
+        >
+          {/* Enhanced Background Pattern with Multiple Layers */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Base pattern */}
+            <div className="absolute inset-0 opacity-[0.03]">
+              <Image
+                src={miscMaskLight}
+                alt="Background Pattern"
+                fill
+                className="object-cover"
+                quality={50}
+              />
+            </div>
+            
+            {/* Gradient overlays for depth */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: `
+                  radial-gradient(circle at 20% 30%, rgba(115, 103, 240, 0.04) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 70%, rgba(212, 70, 239, 0.03) 0%, transparent 50%),
+                  radial-gradient(circle at 50% 50%, rgba(40, 199, 111, 0.02) 0%, transparent 50%)
+                `,
+              }}
+            />
+            
+            {/* Subtle grid pattern */}
+            <div 
+              className="absolute inset-0 opacity-[0.02]"
+              style={{
+                backgroundImage: `
+                  linear-gradient(rgba(115, 103, 240, 0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(115, 103, 240, 0.1) 1px, transparent 1px)
+                `,
+                backgroundSize: '50px 50px',
+              }}
+            />
+          </div>
+          
+          {/* Content Container - Enhanced */}
+          <div className="relative min-h-full z-10">
             <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-10">
               {children}
             </div>
@@ -495,20 +695,54 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-white border-t mt-auto flex-shrink-0 shadow-sm" style={{ borderColor: '#dbdade' }}>
-        <div className="px-4 sm:px-6 lg:px-8 py-4">
+      {/* Footer - Enhanced Professional Design */}
+      <footer 
+        className="border-t mt-auto flex-shrink-0 relative" 
+        style={{ 
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          backgroundColor: 'rgba(255, 255, 255, 0.75)',
+          borderTop: '1px solid rgba(226, 232, 240, 0.6)',
+          boxShadow: '0 -1px 0 0 rgba(255, 255, 255, 0.5) inset, 0 -2px 8px 0 rgba(0, 0, 0, 0.04)',
+        }}
+      >
+        {/* Subtle gradient overlay */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-30"
+          style={{
+            background: 'linear-gradient(to top, rgba(115, 103, 240, 0.02) 0%, transparent 100%)',
+          }}
+        />
+        
+        <div className="px-4 sm:px-6 lg:px-8 py-6 relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: '#7367f0', borderRadius: '0.5rem' }}>
-                <MaterialIcon name="dashboard" className="text-white" size="sm" />
+            <div className="flex items-center gap-3 text-sm">
+              <div 
+                className="relative rounded-xl overflow-hidden flex items-center justify-center shadow-md ring-1 ring-primary-500/10 bg-white/90 backdrop-blur-sm p-1" 
+                style={{ 
+                  boxShadow: '0 2px 6px 0 rgba(0, 0, 0, 0.08)',
+                  height: '2rem', // Fixed height for footer
+                }}
+              >
+                <img
+                  src={typeof logoText === 'string' ? logoText : logoText.src}
+                  alt="AssetSight Logo"
+                  style={{
+                    height: '100%',
+                    width: 'auto',
+                    maxHeight: '2rem',
+                    filter: 'none',
+                    display: 'block',
+                    objectFit: 'contain',
+                  }}
+                />
               </div>
-              <span className="font-semibold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">AssetSight</span>
-              <span className="text-gray-400">© {new Date().getFullYear()}</span>
+              <span className="font-bold bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">AssetSight</span>
+              <span className="text-slate-400 font-semibold">© {new Date().getFullYear()}</span>
             </div>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
+            <div className="flex items-center gap-4 text-sm text-slate-600 font-semibold">
               <span>نظام إدارة الأصول</span>
-              <span className="hidden sm:inline text-gray-300">•</span>
+              <span className="hidden sm:inline text-slate-300">•</span>
               <span className="hidden sm:inline">جميع الحقوق محفوظة</span>
             </div>
           </div>

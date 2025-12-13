@@ -16,15 +16,15 @@ export function Badge({
   className = '',
   ...props
 }: BadgeProps) {
-  const baseStyles = 'inline-flex items-center font-semibold rounded-full shadow-sm';
+  const baseStyles = 'inline-flex items-center font-bold rounded-xl shadow-md material-transition hover:shadow-lg hover:scale-105';
   
   const variants = {
-    primary: 'bg-gradient-to-r from-primary-50 to-primary-100/50 text-primary-700 border border-primary-200/60',
-    secondary: 'bg-gradient-to-r from-secondary-50 to-secondary-100/50 text-secondary-700 border border-secondary-200/60',
-    success: 'bg-gradient-to-r from-success-50 to-success-100/50 text-success-700 border border-success-200/60',
-    warning: 'bg-gradient-to-r from-warning-50 to-warning-100/50 text-warning-700 border border-warning-200/60',
-    error: 'bg-gradient-to-r from-error-50 to-error-100/50 text-error-700 border border-error-200/60',
-    accent: 'bg-gradient-to-r from-accent-50 to-accent-100/50 text-accent-700 border border-accent-200/60',
+    primary: 'bg-gradient-to-r from-primary-500 to-primary-600 text-white border-2 border-primary-400 shadow-primary-500/30',
+    secondary: 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-2 border-slate-400 shadow-slate-500/30',
+    success: 'bg-gradient-to-r from-success-500 to-success-600 text-white border-2 border-success-400 shadow-success-500/30',
+    warning: 'bg-gradient-to-r from-warning-500 to-warning-600 text-white border-2 border-warning-400 shadow-warning-500/30',
+    error: 'bg-gradient-to-r from-error-500 to-error-600 text-white border-2 border-error-400 shadow-error-500/30',
+    accent: 'bg-gradient-to-r from-accent-500 to-accent-600 text-white border-2 border-accent-400 shadow-accent-500/30',
   };
 
   const sizes = {
@@ -47,13 +47,16 @@ export function Badge({
   `.trim().replace(/\s+/g, ' ');
 
   return (
-    <span className={combinedClassName} {...props}>
-      {dot && (
-        <span
-          className={`rounded-full ${dotSizes[size]} ${variants[variant].replace('bg-', 'bg-').replace('-100', '-500')}`}
-        />
-      )}
-      {children}
+    <span className={`${combinedClassName} relative overflow-hidden group`} {...props}>
+      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 material-transition"></span>
+      <span className="relative z-10 flex items-center gap-1.5">
+        {dot && (
+          <span
+            className={`rounded-full ${dotSizes[size]} bg-white/80 shadow-sm animate-pulse`}
+          />
+        )}
+        {children}
+      </span>
     </span>
   );
 }

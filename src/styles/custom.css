@@ -154,17 +154,25 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
 
-  /* Shadows (Material Design Elevation) */
+  /* Premium Shadows (Enhanced Material Design Elevation) */
   --shadow-elevation-0: none;
-  --shadow-elevation-1: 0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12);
-  --shadow-elevation-2: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
-  --shadow-elevation-3: 0px 3px 3px -2px rgba(0, 0, 0, 0.2), 0px 3px 4px 0px rgba(0, 0, 0, 0.14), 0px 1px 8px 0px rgba(0, 0, 0, 0.12);
-  --shadow-elevation-4: 0px 2px 4px -1px rgba(0, 0, 0, 0.2), 0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12);
-  --shadow-elevation-6: 0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 6px 10px 0px rgba(0, 0, 0, 0.14), 0px 1px 18px 0px rgba(0, 0, 0, 0.12);
-  --shadow-elevation-8: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
-  --shadow-elevation-12: 0px 7px 8px -4px rgba(0, 0, 0, 0.2), 0px 12px 17px 2px rgba(0, 0, 0, 0.14), 0px 5px 22px 4px rgba(0, 0, 0, 0.12);
-  --shadow-elevation-16: 0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12);
-  --shadow-elevation-24: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12);
+  --shadow-elevation-1: 0px 2px 4px rgba(0, 0, 0, 0.08), 0px 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-elevation-2: 0px 4px 8px rgba(0, 0, 0, 0.1), 0px 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-elevation-3: 0px 6px 12px rgba(0, 0, 0, 0.12), 0px 3px 6px rgba(0, 0, 0, 0.1);
+  --shadow-elevation-4: 0px 8px 16px rgba(0, 0, 0, 0.14), 0px 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-elevation-6: 0px 12px 24px rgba(0, 0, 0, 0.16), 0px 6px 12px rgba(0, 0, 0, 0.14);
+  --shadow-elevation-8: 0px 16px 32px rgba(0, 0, 0, 0.18), 0px 8px 16px rgba(0, 0, 0, 0.16);
+  --shadow-elevation-12: 0px 24px 48px rgba(0, 0, 0, 0.2), 0px 12px 24px rgba(0, 0, 0, 0.18);
+  --shadow-elevation-16: 0px 32px 64px rgba(0, 0, 0, 0.22), 0px 16px 32px rgba(0, 0, 0, 0.2);
+  --shadow-elevation-24: 0px 48px 96px rgba(0, 0, 0, 0.24), 0px 24px 48px rgba(0, 0, 0, 0.22);
+  
+  /* Colored Shadows for Premium Effects */
+  --shadow-primary: 0px 8px 24px rgba(115, 103, 240, 0.3), 0px 4px 12px rgba(115, 103, 240, 0.2);
+  --shadow-primary-lg: 0px 16px 48px rgba(115, 103, 240, 0.4), 0px 8px 24px rgba(115, 103, 240, 0.3);
+  --shadow-success: 0px 8px 24px rgba(40, 199, 111, 0.3), 0px 4px 12px rgba(40, 199, 111, 0.2);
+  --shadow-error: 0px 8px 24px rgba(234, 84, 85, 0.3), 0px 4px 12px rgba(234, 84, 85, 0.2);
+  --shadow-warning: 0px 8px 24px rgba(255, 159, 67, 0.3), 0px 4px 12px rgba(255, 159, 67, 0.2);
+  --shadow-accent: 0px 8px 24px rgba(212, 70, 239, 0.3), 0px 4px 12px rgba(212, 70, 239, 0.2);
 
   /* Transitions */
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -399,14 +407,23 @@
 .text-warning-800 { color: var(--color-warning-800); }
 .text-white { color: white; }
 
-/* Shadow */
+/* Premium Shadow System */
 .shadow-sm { box-shadow: var(--shadow-elevation-1); }
 .shadow-md { box-shadow: var(--shadow-elevation-2); }
+.shadow-lg { box-shadow: var(--shadow-elevation-4); }
+.shadow-xl { box-shadow: var(--shadow-elevation-6); }
+.shadow-2xl { box-shadow: var(--shadow-elevation-8); }
 .shadow-elevation-1 { box-shadow: var(--shadow-elevation-1); }
 .shadow-elevation-2 { box-shadow: var(--shadow-elevation-2); }
 .shadow-elevation-4 { box-shadow: var(--shadow-elevation-4); }
 .shadow-elevation-8 { box-shadow: var(--shadow-elevation-8); }
 .shadow-elevation-24 { box-shadow: var(--shadow-elevation-24); }
+.shadow-primary { box-shadow: var(--shadow-primary); }
+.shadow-primary-lg { box-shadow: var(--shadow-primary-lg); }
+.shadow-success { box-shadow: var(--shadow-success); }
+.shadow-error { box-shadow: var(--shadow-error); }
+.shadow-warning { box-shadow: var(--shadow-warning); }
+.shadow-accent { box-shadow: var(--shadow-accent); }
 
 /* Overflow */
 .overflow-hidden { overflow: hidden; }

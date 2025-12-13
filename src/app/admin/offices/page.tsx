@@ -8,18 +8,20 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { Select } from "@/components/ui/Select";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Textarea } from "@/components/ui/Textarea";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { useToast } from "@/contexts/ToastContext";
 
 function OfficesPageContent() {
   const pathname = usePathname();
   const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/offices');
+  const { showSuccess, showError, showWarning } = useToast();
   const [offices, setOffices] = useState<BaseModel[]>([]);
   const [departments, setDepartments] = useState<BaseModel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,11 +79,11 @@ function OfficesPageContent() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     const deptId = formData.get('department_id');
     if (!deptId) {
-      alert("يرجى اختيار الإدارة");
+      showWarning("يرجى اختيار الإدارة");
       return;
     }
     
@@ -98,6 +100,7 @@ function OfficesPageContent() {
           officeId
         );
         await firestoreApi.updateData(docRef, data);
+        showSuccess("تم تحديث المكتب بنجاح");
       } else {
         const newId = firestoreApi.getNewId("offices");
         const docRef = firestoreApi.getSubDocument(
@@ -107,6 +110,7 @@ function OfficesPageContent() {
           newId
         );
         await firestoreApi.setData(docRef, data);
+        showSuccess("تم إضافة المكتب بنجاح");
       }
       setIsModalOpen(false);
       setEditingOffice(null);
@@ -114,9 +118,9 @@ function OfficesPageContent() {
       loadData();
     } catch (error) {
       console.error("Error saving office:", error);
-      alert("حدث خطأ أثناء الحفظ");
+      showError("حدث خطأ أثناء الحفظ");
     }
-  };
+  }, [formData, editingOffice, showSuccess, showError, showWarning]);
 
   const handleEdit = (office: BaseModel) => {
     setEditingOffice(office);
@@ -144,12 +148,13 @@ function OfficesPageContent() {
         id
       );
       await firestoreApi.deleteData(docRef);
+      showSuccess("تم حذف المكتب بنجاح");
       loadData();
       setIsConfirmModalOpen(false);
       setDeletingOffice(null);
     } catch (error) {
       console.error("Error deleting office:", error);
-      alert("حدث خطأ أثناء الحذف");
+      showError("حدث خطأ أثناء الحذف");
     } finally {
       setDeleteLoading(false);
     }
@@ -254,9 +259,9 @@ function OfficesPageContent() {
       if (errorCount > 0) {
         const errorMessage = errors.slice(0, 10).join('\n');
         const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
-        alert(`تم استيراد ${successCount} مكتب بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
+        showWarning(`تم استيراد ${successCount} مكتب بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
       } else {
-        alert(`تم استيراد ${successCount} مكتب بنجاح`);
+        showSuccess(`تم استيراد ${successCount} مكتب بنجاح`);
       }
 
       loadData();
@@ -279,38 +284,52 @@ function OfficesPageContent() {
       key: 'department_id', 
       label: 'الإدارة',
       render: (item: BaseModel) => getDepartmentName(item.get('department_id')),
+      sortable: true,
     },
     { 
       key: 'name', 
       label: 'اسم المكتب',
-      render: (item: BaseModel) => item.get('name'),
+      sortable: true,
     },
     { 
       key: 'floor', 
       label: 'الطابق',
-      render: (item: BaseModel) => item.get('floor'),
+      sortable: true,
     },
     { 
       key: 'room', 
       label: 'الغرفة',
-      render: (item: BaseModel) => item.get('room'),
+      sortable: true,
     },
   ];
 
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10">
+      <div className="mb-10 relative">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <span className="text-3xl relative z-10">🚪</span>
+                <MaterialIcon name="meeting_room" className="text-white relative z-10" size="3xl" />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
               </div>
               <div className="flex-1">
-                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">المكاتب</h1>
-                <p className="text-slate-600 text-lg font-semibold">إدارة وإضافة المكاتب في النظام</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
+                    المكاتب
+                  </h1>
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
+                    <MaterialIcon name="meeting_room" className="text-primary-600" size="sm" />
+                    <span className="text-xs font-semibold text-primary-700">{offices.length}</span>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
+                  <span>إدارة وإضافة المكاتب في النظام</span>
+                </p>
               </div>
             </div>
           </div>
@@ -368,21 +387,48 @@ function OfficesPageContent() {
           }}
           title={editingOffice ? "تعديل مكتب" : "إضافة مكتب جديد"}
           size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingOffice(null);
+                  setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                form="office-form"
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+              >
+                {editingOffice ? "تحديث" : "حفظ"}
+              </Button>
+            </div>
+          }
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Select
+          <form id="office-form" onSubmit={handleSubmit} className="space-y-6">
+            <SearchableSelect
               label="الإدارة"
               required
               value={formData.get('department_id')}
-              onChange={(e) => {
+              onChange={(value) => {
                 const newData = new BaseModel(formData.getData());
-                newData.put('department_id', e.target.value);
+                newData.put('department_id', value);
                 setFormData(newData);
               }}
               options={departments.map((dept) => ({
                 value: dept.get('id'),
                 label: dept.get('name'),
               }))}
+              placeholder="اختر الإدارة"
             />
 
             <Input
@@ -398,7 +444,7 @@ function OfficesPageContent() {
               placeholder="أدخل اسم المكتب"
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label="الطابق"
                 type="text"
@@ -431,31 +477,9 @@ function OfficesPageContent() {
                 newData.put('notes', e.target.value);
                 setFormData(newData);
               }}
-              rows={3}
+              rows={1}
               placeholder="أدخل أي ملاحظات إضافية"
             />
-
-            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setEditingOffice(null);
-                  setFormData(new BaseModel({ department_id: '', name: '', floor: '', room: '', notes: '' }));
-                }}
-                size="lg"
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-              >
-                {editingOffice ? "تحديث" : "حفظ"}
-              </Button>
-            </div>
           </form>
         </Modal>
 

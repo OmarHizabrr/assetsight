@@ -2,23 +2,25 @@
 
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
+import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
-import { MaterialIcon } from "@/components/icons/MaterialIcon";
 
 function AssetTypesPageContent() {
   const pathname = usePathname();
   const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/asset-types');
+  const { showSuccess, showError, showWarning } = useToast();
   const [assetTypes, setAssetTypes] = useState<BaseModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,10 +69,11 @@ function AssetTypesPageContent() {
       setIsModalOpen(false);
       setEditingAssetType(null);
       setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
+      showSuccess(editingAssetType ? "تم تحديث نوع الأصل بنجاح" : "تم إضافة نوع الأصل بنجاح");
       loadAssetTypes();
     } catch (error) {
       console.error("Error saving asset type:", error);
-      alert("حدث خطأ أثناء الحفظ");
+      showError("حدث خطأ أثناء الحفظ");
     }
   };
 
@@ -94,12 +97,13 @@ function AssetTypesPageContent() {
       setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("assetTypes", id);
       await firestoreApi.deleteData(docRef);
+      showSuccess("تم حذف نوع الأصل بنجاح");
       loadAssetTypes();
       setIsConfirmModalOpen(false);
       setDeletingAssetType(null);
     } catch (error) {
       console.error("Error deleting asset type:", error);
-      alert("حدث خطأ أثناء الحذف");
+      showError("حدث خطأ أثناء الحذف");
     } finally {
       setDeleteLoading(false);
     }
@@ -163,9 +167,9 @@ function AssetTypesPageContent() {
       if (errorCount > 0) {
         const errorMessage = errors.slice(0, 10).join('\n');
         const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
-        alert(`تم استيراد ${successCount} نوع بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
+        showWarning(`تم استيراد ${successCount} نوع بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
       } else {
-        alert(`تم استيراد ${successCount} نوع بنجاح`);
+        showSuccess(`تم استيراد ${successCount} نوع بنجاح`);
       }
 
       loadAssetTypes();
@@ -181,34 +185,48 @@ function AssetTypesPageContent() {
     { 
       key: 'name', 
       label: 'اسم نوع الأصل',
-      render: (item: BaseModel) => item.get('name'),
+      sortable: true,
     },
     { 
       key: 'category', 
       label: 'الفئة',
-      render: (item: BaseModel) => item.get('category'),
+      sortable: true,
     },
     { 
       key: 'description', 
       label: 'الوصف',
-      render: (item: BaseModel) => item.get('description'),
+      sortable: true,
     },
   ];
 
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10">
+      <div className="mb-10 relative">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <span className="text-3xl relative z-10">📦</span>
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/50 overflow-hidden group hover:scale-110 hover:rotate-3 material-transition">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition animate-gradient"></div>
+                <MaterialIcon name="category" className="text-white relative z-10 drop-shadow-lg" size="3xl" />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/30 rounded-full blur-md animate-pulse-glow"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/20 rounded-full blur-md animate-pulse-glow" style={{ animationDelay: '0.5s' }}></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition" style={{ transform: 'translateX(-100%)', transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
               </div>
               <div className="flex-1">
-                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">أنواع الأصول</h1>
-                <p className="text-slate-600 text-lg font-semibold">إدارة وإضافة أنواع الأصول في النظام</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent drop-shadow-sm animate-fade-in">
+                    أنواع الأصول
+                  </h1>
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
+                    <MaterialIcon name="category" className="text-primary-600" size="sm" />
+                    <span className="text-xs font-semibold text-primary-700">{assetTypes.length}</span>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
+                  <span>إدارة وإضافة أنواع الأصول في النظام</span>
+                </p>
               </div>
             </div>
           </div>
@@ -266,8 +284,34 @@ function AssetTypesPageContent() {
           }}
           title={editingAssetType ? "تعديل نوع الأصل" : "إضافة نوع جديد"}
           size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingAssetType(null);
+                  setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                form="asset-type-form"
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+              >
+                {editingAssetType ? "تحديث" : "حفظ"}
+              </Button>
+            </div>
+          }
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id="asset-type-form" onSubmit={handleSubmit} className="space-y-6">
             <Input
               label="اسم نوع الأصل"
               type="text"
@@ -301,7 +345,7 @@ function AssetTypesPageContent() {
                 newData.put('description', e.target.value);
                 setFormData(newData);
               }}
-              rows={4}
+              rows={1}
               placeholder="أدخل وصف نوع الأصل"
             />
 
@@ -313,31 +357,9 @@ function AssetTypesPageContent() {
                 newData.put('notes', e.target.value);
                 setFormData(newData);
               }}
-              rows={3}
+              rows={1}
               placeholder="أدخل أي ملاحظات إضافية"
             />
-
-            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setEditingAssetType(null);
-                  setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
-                }}
-                size="lg"
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-              >
-                {editingAssetType ? "تحديث" : "حفظ"}
-              </Button>
-            </div>
           </form>
         </Modal>
 

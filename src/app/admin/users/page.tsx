@@ -1,7 +1,6 @@
 'use client';
 
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
-import { PlusIcon, UserIcon } from "@/components/icons";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/Badge";
@@ -11,8 +10,9 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { Select } from "@/components/ui/Select";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname, useRouter } from "next/navigation";
@@ -22,6 +22,7 @@ function UsersPageContent() {
   const pathname = usePathname();
   const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/users');
   const router = useRouter();
+  const { showSuccess, showError, showWarning } = useToast();
   const [users, setUsers] = useState<BaseModel[]>([]);
   const [allOffices, setAllOffices] = useState<BaseModel[]>([]);
   const [offices, setOffices] = useState<BaseModel[]>([]);
@@ -115,7 +116,7 @@ function UsersPageContent() {
       // التحقق من تكرار رقم الموظف
       const employeeNumber = submitData.employee_number?.trim();
       if (!employeeNumber) {
-        alert("يجب إدخال رقم الموظف");
+        showWarning("يجب إدخال رقم الموظف");
         return;
       }
       
@@ -127,7 +128,7 @@ function UsersPageContent() {
       });
       
       if (existingUser) {
-        alert("رقم الموظف موجود بالفعل. يرجى استخدام رقم آخر");
+        showWarning("رقم الموظف موجود بالفعل. يرجى استخدام رقم آخر");
         return;
       }
       
@@ -147,7 +148,7 @@ function UsersPageContent() {
       } else if (editingUser && submitData.password) {
         // التحقق من تطابق كلمة المرور عند التعديل
         if (submitData.password !== submitData.confirm_password) {
-          alert("كلمة المرور وتأكيد كلمة المرور غير متطابقين");
+          showWarning("كلمة المرور وتأكيد كلمة المرور غير متطابقين");
           return;
         }
       }
@@ -166,13 +167,13 @@ function UsersPageContent() {
       } else {
         // إضافة مستخدم جديد - كلمة المرور مطلوبة
         if (!submitData.password) {
-          alert("يجب إدخال كلمة المرور للمستخدم الجديد");
+          showWarning("يجب إدخال كلمة المرور للمستخدم الجديد");
           return;
         }
         
         // التحقق من تطابق كلمة المرور
         if (submitData.password !== submitData.confirm_password) {
-          alert("كلمة المرور وتأكيد كلمة المرور غير متطابقين");
+          showWarning("كلمة المرور وتأكيد كلمة المرور غير متطابقين");
           return;
         }
         const newId = firestoreApi.getNewId("users");
@@ -246,10 +247,11 @@ function UsersPageContent() {
       setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
       setShowPassword(false);
       setShowConfirmPassword(false);
+      showSuccess(editingUser ? "تم تحديث المستخدم بنجاح" : "تم إضافة المستخدم بنجاح");
       loadData();
     } catch (error) {
       console.error("Error saving user:", error);
-      alert("حدث خطأ أثناء الحفظ");
+      showError("حدث خطأ أثناء الحفظ");
     }
   };
 
@@ -329,12 +331,13 @@ function UsersPageContent() {
       setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("users", id);
       await firestoreApi.deleteData(docRef);
+      showSuccess("تم حذف المستخدم بنجاح");
       loadData();
       setIsConfirmModalOpen(false);
       setDeletingUser(null);
     } catch (error) {
       console.error("Error deleting user:", error);
-      alert("حدث خطأ أثناء الحذف");
+      showError("حدث خطأ أثناء الحذف");
     } finally {
       setDeleteLoading(false);
     }
@@ -374,42 +377,44 @@ function UsersPageContent() {
     { 
       key: 'employee_number', 
       label: 'رقم الموظف',
-      render: (item: BaseModel) => item.get('employee_number'),
+      sortable: true,
     },
     { 
       key: 'username', 
       label: 'اسم المستخدم',
-      render: (item: BaseModel) => item.get('username'),
+      sortable: true,
     },
     { 
       key: 'full_name', 
       label: 'الاسم الكامل',
-      render: (item: BaseModel) => item.get('full_name'),
+      sortable: true,
     },
     { 
       key: 'email', 
       label: 'البريد الإلكتروني',
-      render: (item: BaseModel) => item.get('email'),
+      sortable: true,
     },
     { 
       key: 'phone', 
       label: 'الهاتف',
-      render: (item: BaseModel) => item.get('phone'),
+      sortable: true,
     },
     { 
       key: 'department_id', 
       label: 'الإدارة',
       render: (item: BaseModel) => getDepartmentName(item.get('department_id')),
+      sortable: true,
     },
     { 
       key: 'office_id', 
       label: 'المكتب',
       render: (item: BaseModel) => getOfficeName(item.get('office_id')),
+      sortable: true,
     },
     { 
       key: 'role', 
       label: 'الدور',
-      render: (item: BaseModel) => item.get('role'),
+      sortable: true,
     },
     { 
       key: 'is_active', 
@@ -446,17 +451,30 @@ function UsersPageContent() {
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10">
+      <div className="mb-10 relative">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <UserIcon className="w-7 h-7 text-white relative z-10" />
+                <MaterialIcon name="people" className="text-white relative z-10" size="3xl" />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
               </div>
               <div className="flex-1">
-                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">المستخدمون</h1>
-                <p className="text-slate-600 text-lg font-semibold">إدارة وإضافة المستخدمين في النظام</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
+                    المستخدمون
+                  </h1>
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
+                    <MaterialIcon name="people" className="text-primary-600" size="sm" />
+                    <span className="text-xs font-semibold text-primary-700">{users.length}</span>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
+                  <span>إدارة وإضافة المستخدمين في النظام</span>
+                </p>
               </div>
             </div>
           </div>
@@ -471,15 +489,20 @@ function UsersPageContent() {
           setShowConfirmPassword(false);
                 setIsModalOpen(true);
               }}
-              leftIcon={<PlusIcon className="w-5 h-5" />}
               size="lg"
               variant="primary"
               className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
             >
-              إضافة مستخدم جديد
+              <span className="flex items-center gap-2">
+                <MaterialIcon name="add" className="w-5 h-5" size="lg" />
+                <span>إضافة مستخدم جديد</span>
+              </span>
             </Button>
           )}
         </div>
+        
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/5 to-accent-500/5 rounded-full blur-3xl -z-10"></div>
       </div>
 
       {/* Data Table */}
@@ -518,9 +541,39 @@ function UsersPageContent() {
           setShowConfirmPassword(false);
           }}
           title={editingUser ? "تعديل مستخدم" : "إضافة مستخدم جديد"}
-          size="lg"
+          size="xl"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingUser(null);
+                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+                  setSelectedDepartmentId('');
+                  setOffices([]);
+                  setShowPassword(false);
+                  setShowConfirmPassword(false);
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                form="user-form"
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+              >
+                {editingUser ? "تحديث" : "حفظ"}
+              </Button>
+            </div>
+          }
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id="user-form" onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="رقم الموظف"
@@ -533,6 +586,7 @@ function UsersPageContent() {
                   setFormData(newData);
                 }}
                 placeholder="أدخل رقم الموظف"
+                fullWidth={false}
               />
               <Input
                 label="اسم المستخدم"
@@ -545,10 +599,11 @@ function UsersPageContent() {
                   setFormData(newData);
                 }}
                 placeholder="مثال: قائد زيد"
+                fullWidth={false}
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <Input
                 label="الاسم الكامل"
                 type="text"
@@ -560,10 +615,8 @@ function UsersPageContent() {
                   setFormData(newData);
                 }}
                 placeholder="مثال: قائد محمد زيد الشميري"
+                fullWidth={false}
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <Input
                 label="البريد الإلكتروني"
                 type="email"
@@ -574,7 +627,11 @@ function UsersPageContent() {
                   setFormData(newData);
                 }}
                 placeholder="example@email.com"
+                fullWidth={false}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <Input
                 label="الهاتف"
                 type="tel"
@@ -585,51 +642,18 @@ function UsersPageContent() {
                   setFormData(newData);
                 }}
                 placeholder="أدخل رقم الهاتف"
+                fullWidth={false}
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Select
-                label="الإدارة"
-                value={formData.get('department_id')}
-                onChange={(e) => {
-                  handleDepartmentChange(e.target.value);
-                }}
-                options={[
-                  { value: '', label: '-- اختر الإدارة --' },
-                  ...departments.map((dept) => ({
-                    value: dept.get('id'),
-                    label: dept.get('name'),
-                  })),
-                ]}
-              />
-              <Select
-                label="المكتب"
-                value={formData.get('office_id')}
-                onChange={(e) => {
-                  const newData = new BaseModel(formData.getData());
-                  newData.put('office_id', e.target.value);
-                  setFormData(newData);
-                }}
-                disabled={!selectedDepartmentId}
-                options={[
-                  { value: '', label: selectedDepartmentId ? '-- اختر المكتب --' : '-- اختر الإدارة أولاً --' },
-                  ...offices.map((office) => ({
-                    value: office.get('id'),
-                    label: office.get('name'),
-                  })),
-                ]}
-              />
-              <Select
+              <SearchableSelect
                 label="الدور"
                 value={formData.get('role')}
-                onChange={(e) => {
+                onChange={(value) => {
                   const newData = new BaseModel(formData.getData());
-                  newData.put('role', e.target.value);
+                  newData.put('role', value);
                   // إذا تم اختيار "مدير"، إعطاء صلاحية لجميع الصفحات
-                  if (e.target.value === 'مدير') {
+                  if (value === 'مدير') {
                     newData.put('permissions', allPages.map(page => page.path));
-                  } else if (e.target.value === 'غير المدير') {
+                  } else if (value === 'غير المدير') {
                     // إذا تم تغيير الدور من مدير إلى غير مدير، إعادة تعيين الصلاحيات
                     newData.put('permissions', []);
                   }
@@ -639,65 +663,77 @@ function UsersPageContent() {
                   { value: 'مدير', label: 'مدير' },
                   { value: 'غير المدير', label: 'غير المدير' },
                 ]}
+                placeholder="اختر الدور"
+                fullWidth={false}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="relative">
+              <SearchableSelect
+                label="الإدارة"
+                value={formData.get('department_id')}
+                onChange={(value) => {
+                  handleDepartmentChange(value);
+                }}
+                options={departments.map((dept) => ({
+                  value: dept.get('id'),
+                  label: dept.get('name'),
+                }))}
+                placeholder="اختر الإدارة"
+                fullWidth={false}
+              />
+              <SearchableSelect
+                label="المكتب"
+                value={formData.get('office_id')}
+                onChange={(value) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('office_id', value);
+                  setFormData(newData);
+                }}
+                disabled={!selectedDepartmentId}
+                options={offices.map((office) => ({
+                  value: office.get('id'),
+                  label: office.get('name'),
+                }))}
+                placeholder={!selectedDepartmentId ? "اختر الإدارة أولاً" : "اختر المكتب"}
+                fullWidth={false}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label={editingUser ? "كلمة المرور (اتركها فارغة للحفاظ على الكلمة الحالية)" : "كلمة المرور"}
+                type="password"
+                required={!editingUser}
+                value={formData.get('password')}
+                onChange={(e) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('password', e.target.value);
+                  setFormData(newData);
+                }}
+                placeholder="أدخل كلمة المرور"
+                fullWidth={false}
+                showPasswordToggle={true}
+                isPasswordVisible={showPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+              />
+              {(formData.get('password') || !editingUser) && (
                 <Input
-                  label={editingUser ? "كلمة المرور (اتركها فارغة للحفاظ على الكلمة الحالية)" : "كلمة المرور"}
-                  type={showPassword ? "text" : "password"}
-                  required={!editingUser}
-                  value={formData.get('password')}
+                  label="تأكيد كلمة المرور"
+                  type="password"
+                  required={!editingUser || !!formData.get('password')}
+                  value={formData.get('confirm_password')}
                   onChange={(e) => {
                     const newData = new BaseModel(formData.getData());
-                    newData.put('password', e.target.value);
+                    newData.put('confirm_password', e.target.value);
                     setFormData(newData);
                   }}
-                  placeholder="أدخل كلمة المرور"
-                  rightIcon={
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-slate-500 hover:text-slate-700 material-transition cursor-pointer"
-                      tabIndex={-1}
-                    >
-                      <MaterialIcon 
-                        name={showPassword ? "visibility_off" : "visibility"} 
-                        size="md" 
-                      />
-                    </button>
-                  }
+                  placeholder="أعد إدخال كلمة المرور"
+                  fullWidth={false}
+                  showPasswordToggle={true}
+                  isPasswordVisible={showConfirmPassword}
+                  onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
                 />
-              </div>
-              {(formData.get('password') || !editingUser) && (
-                <div className="relative">
-                  <Input
-                    label="تأكيد كلمة المرور"
-                    type={showConfirmPassword ? "text" : "password"}
-                    required={!editingUser || !!formData.get('password')}
-                    value={formData.get('confirm_password')}
-                    onChange={(e) => {
-                      const newData = new BaseModel(formData.getData());
-                      newData.put('confirm_password', e.target.value);
-                      setFormData(newData);
-                    }}
-                    placeholder="أعد إدخال كلمة المرور"
-                    rightIcon={
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="text-slate-500 hover:text-slate-700 material-transition cursor-pointer"
-                        tabIndex={-1}
-                      >
-                        <MaterialIcon 
-                          name={showConfirmPassword ? "visibility_off" : "visibility"} 
-                          size="md" 
-                        />
-                      </button>
-                    }
-                  />
-                </div>
               )}
             </div>
 
@@ -834,35 +870,9 @@ function UsersPageContent() {
                 newData.put('notes', e.target.value);
                 setFormData(newData);
               }}
-              rows={3}
+              rows={1}
               placeholder="أدخل أي ملاحظات إضافية"
             />
-
-            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setEditingUser(null);
-                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
-          setSelectedDepartmentId('');
-          setOffices([]);
-          setShowPassword(false);
-          setShowConfirmPassword(false);
-                }}
-                size="lg"
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-              >
-                {editingUser ? "تحديث" : "حفظ"}
-              </Button>
-            </div>
           </form>
         </Modal>
 

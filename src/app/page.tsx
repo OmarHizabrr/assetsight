@@ -81,10 +81,10 @@ export default function HomePage() {
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10">
+      <div className="mb-10 relative">
         <div className="space-y-3">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+            <div className="relative w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
               <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
               <MaterialIcon name="dashboard" className="text-white relative z-10" size="3xl" />
             </div>
@@ -94,6 +94,9 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+        
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-full blur-3xl -z-10"></div>
       </div>
 
         {!user && (
@@ -115,66 +118,70 @@ export default function HomePage() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Departments Card */}
-          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-primary-50/30 border-primary-200/40">
+          <Card hover variant="elevated" className="bg-white/95 border border-slate-200/80 relative overflow-hidden group animate-fade-in shadow-md hover:shadow-xl hover:shadow-primary/20 backdrop-blur-sm">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 shadow-lg shadow-primary-500/50"></div>
             <CardBody padding="lg">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">الإدارات</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">الإدارات</p>
                   <p className="text-4xl font-bold text-slate-900 mb-1">{stats.departments}</p>
-                  <p className="text-xs text-slate-500 font-medium">إدارة نشطة</p>
+                  <p className="text-sm text-slate-600 font-medium">إدارة نشطة</p>
                 </div>
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30">
-                  <MaterialIcon name="business" className="text-white" size="3xl" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center shadow-md shadow-primary-500/20 group-hover:bg-gradient-to-br group-hover:from-primary-200 group-hover:to-primary-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary-500/30 material-transition">
+                  <MaterialIcon name="business" className="text-primary-600 group-hover:text-primary-700" size="lg" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Offices Card */}
-          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-accent-50/30 border-accent-200/40">
+          <Card hover variant="elevated" className="bg-white/95 border border-slate-200/80 relative overflow-hidden group animate-fade-in shadow-md hover:shadow-xl hover:shadow-accent/20 backdrop-blur-sm" style={{ animationDelay: '0.1s' }}>
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-500 via-accent-600 to-accent-700 shadow-lg shadow-accent-500/50"></div>
             <CardBody padding="lg">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">المكاتب</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">المكاتب</p>
                   <p className="text-4xl font-bold text-slate-900 mb-1">{stats.offices}</p>
-                  <p className="text-xs text-slate-500 font-medium">مكتب متاح</p>
+                  <p className="text-sm text-slate-600 font-medium">مكتب متاح</p>
                 </div>
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-accent-500 to-accent-700 flex items-center justify-center shadow-lg shadow-accent-500/30">
-                  <MaterialIcon name="meeting_room" className="text-white" size="3xl" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-100 to-accent-200 flex items-center justify-center shadow-md shadow-accent-500/20 group-hover:bg-gradient-to-br group-hover:from-accent-200 group-hover:to-accent-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-accent-500/30 material-transition">
+                  <MaterialIcon name="meeting_room" className="text-accent-600 group-hover:text-accent-700" size="lg" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Assets Card */}
-          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-success-50/30 border-success-200/40">
+          <Card hover variant="elevated" className="bg-white/95 border border-slate-200/80 relative overflow-hidden group animate-fade-in shadow-md hover:shadow-xl hover:shadow-success/20 backdrop-blur-sm" style={{ animationDelay: '0.2s' }}>
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-success-500 via-success-600 to-success-700 shadow-lg shadow-success-500/50"></div>
             <CardBody padding="lg">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">الأصول</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">الأصول</p>
                   <p className="text-4xl font-bold text-slate-900 mb-1">{stats.assets}</p>
-                  <p className="text-xs text-slate-500 font-medium">أصل مسجل</p>
+                  <p className="text-sm text-slate-600 font-medium">أصل مسجل</p>
                 </div>
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-success-500 to-success-700 flex items-center justify-center shadow-lg shadow-success-500/30">
-                  <MaterialIcon name="inventory" className="text-white" size="3xl" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-success-100 to-success-200 flex items-center justify-center shadow-md shadow-success-500/20 group-hover:bg-gradient-to-br group-hover:from-success-200 group-hover:to-success-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-success-500/30 material-transition">
+                  <MaterialIcon name="inventory" className="text-success-600 group-hover:text-success-700" size="lg" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Users Card */}
-          <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-warning-50/30 border-warning-200/40">
+          <Card hover variant="elevated" className="bg-white/95 border border-slate-200/80 relative overflow-hidden group animate-fade-in shadow-md hover:shadow-xl hover:shadow-warning/20 backdrop-blur-sm" style={{ animationDelay: '0.3s' }}>
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-warning-500 via-warning-600 to-warning-700 shadow-lg shadow-warning-500/50"></div>
             <CardBody padding="lg">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">المستخدمون</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">المستخدمون</p>
                   <p className="text-4xl font-bold text-slate-900 mb-1">{stats.users}</p>
-                  <p className="text-xs text-slate-500 font-medium">مستخدم نشط</p>
+                  <p className="text-sm text-slate-600 font-medium">مستخدم نشط</p>
                 </div>
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-warning-500 to-warning-700 flex items-center justify-center shadow-lg shadow-warning-500/30">
-                  <MaterialIcon name="people" className="text-white" size="3xl" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-warning-100 to-warning-200 flex items-center justify-center shadow-md shadow-warning-500/20 group-hover:bg-gradient-to-br group-hover:from-warning-200 group-hover:to-warning-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-warning-500/30 material-transition">
+                  <MaterialIcon name="people" className="text-warning-600 group-hover:text-warning-700" size="lg" />
                 </div>
               </div>
             </CardBody>

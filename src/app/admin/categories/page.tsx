@@ -2,23 +2,25 @@
 
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
+import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
-import { MaterialIcon } from "@/components/icons/MaterialIcon";
 
 function CategoriesPageContent() {
   const pathname = usePathname();
   const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/categories');
+  const { showSuccess, showError, showWarning } = useToast();
   const [categories, setCategories] = useState<BaseModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,10 +68,11 @@ function CategoriesPageContent() {
       setIsModalOpen(false);
       setEditingCategory(null);
       setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+      showSuccess(editingCategory ? "تم تحديث الفئة بنجاح" : "تم إضافة الفئة بنجاح");
       loadCategories();
     } catch (error) {
       console.error("Error saving category:", error);
-      alert("حدث خطأ أثناء الحفظ");
+      showError("حدث خطأ أثناء الحفظ");
     }
   };
 
@@ -93,12 +96,13 @@ function CategoriesPageContent() {
       setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("categories", id);
       await firestoreApi.deleteData(docRef);
+      showSuccess("تم حذف الفئة بنجاح");
       loadCategories();
       setIsConfirmModalOpen(false);
       setDeletingCategory(null);
     } catch (error) {
       console.error("Error deleting category:", error);
-      alert("حدث خطأ أثناء الحذف");
+      showError("حدث خطأ أثناء الحذف");
     } finally {
       setDeleteLoading(false);
     }
@@ -160,9 +164,9 @@ function CategoriesPageContent() {
       if (errorCount > 0) {
         const errorMessage = errors.slice(0, 10).join('\n');
         const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
-        alert(`تم استيراد ${successCount} فئة بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
+        showWarning(`تم استيراد ${successCount} فئة بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
       } else {
-        alert(`تم استيراد ${successCount} فئة بنجاح`);
+        showSuccess(`تم استيراد ${successCount} فئة بنجاح`);
       }
 
       loadCategories();
@@ -178,29 +182,42 @@ function CategoriesPageContent() {
     { 
       key: 'name', 
       label: 'اسم الفئة',
-      render: (item: BaseModel) => item.get('name'),
+      sortable: true,
     },
     { 
       key: 'description', 
       label: 'الوصف',
-      render: (item: BaseModel) => item.get('description'),
+      sortable: true,
     },
   ];
 
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10">
+      <div className="mb-10 relative">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <span className="text-3xl relative z-10">📁</span>
+                <MaterialIcon name="folder" className="text-white relative z-10" size="3xl" />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
               </div>
               <div className="flex-1">
-                <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">الفئات</h1>
-                <p className="text-slate-600 text-lg font-semibold">إدارة وإضافة الفئات في النظام</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
+                    الفئات
+                  </h1>
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
+                    <MaterialIcon name="folder" className="text-primary-600" size="sm" />
+                    <span className="text-xs font-semibold text-primary-700">{categories.length}</span>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
+                  <span>إدارة وإضافة الفئات في النظام</span>
+                </p>
               </div>
             </div>
           </div>
@@ -258,8 +275,34 @@ function CategoriesPageContent() {
           }}
           title={editingCategory ? "تعديل فئة" : "إضافة فئة جديدة"}
           size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingCategory(null);
+                  setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                form="category-form"
+                variant="primary"
+                size="lg"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+              >
+                {editingCategory ? "تحديث" : "حفظ"}
+              </Button>
+            </div>
+          }
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id="category-form" onSubmit={handleSubmit} className="space-y-6">
             <Input
               label="اسم الفئة"
               type="text"
@@ -281,7 +324,7 @@ function CategoriesPageContent() {
                 newData.put('description', e.target.value);
                 setFormData(newData);
               }}
-              rows={4}
+              rows={1}
               placeholder="أدخل وصف الفئة"
             />
 
@@ -293,31 +336,9 @@ function CategoriesPageContent() {
                 newData.put('notes', e.target.value);
                 setFormData(newData);
               }}
-              rows={3}
+              rows={1}
               placeholder="أدخل أي ملاحظات إضافية"
             />
-
-            <div className="flex justify-end gap-4 pt-6 border-t-2 border-slate-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setEditingCategory(null);
-                  setFormData(new BaseModel({ name: '', description: '', notes: '' }));
-                }}
-                size="lg"
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-              >
-                {editingCategory ? "تحديث" : "حفظ"}
-              </Button>
-            </div>
           </form>
         </Modal>
 

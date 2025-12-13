@@ -1,7 +1,8 @@
 "use client";
 
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
-import { useEffect, useRef, useState } from "react";
+import { Input } from "@/components/ui/Input";
+import { memo, useEffect, useRef, useState } from "react";
 
 interface SearchableSelectProps {
   label?: string;
@@ -17,7 +18,7 @@ interface SearchableSelectProps {
   className?: string;
 }
 
-export function SearchableSelect({
+function SearchableSelectComponent({
   label,
   value,
   onChange,
@@ -36,6 +37,7 @@ export function SearchableSelect({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputComponentRef = useRef<HTMLInputElement>(null);
 
   const hasError = !!error;
   const selectedOption = options.find((opt) => opt.value === value);
@@ -68,8 +70,8 @@ export function SearchableSelect({
 
   // التركيز على حقل البحث عند فتح القائمة
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (isOpen && inputComponentRef.current) {
+      inputComponentRef.current.focus();
     }
   }, [isOpen]);
 
@@ -136,13 +138,13 @@ export function SearchableSelect({
   };
 
   const baseStyles =
-    "block w-full rounded-full border-2 bg-white px-4 py-3.5 pr-12 text-sm font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm hover:shadow-md transition-all duration-200";
+    "block w-full rounded-xl border-2 bg-white px-3.5 py-2.5 pr-12 text-base font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md hover:shadow-lg transition-all duration-200";
 
   const selectStyles = hasError
-    ? "border-error-300 text-error-900 placeholder-error-400 focus:border-error-500 focus:ring-error-500/20 bg-gradient-to-r from-error-50 to-error-50/70 shadow-error-200/50"
+    ? "border-error-400 text-error-900 placeholder-error-400 focus:border-error-500 focus:ring-error-500/30 bg-gradient-to-r from-error-50 to-error-50/70 shadow-error-200/50 hover:border-error-500"
     : isOpen
-    ? "border-primary-500 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:bg-white focus:shadow-xl focus:shadow-primary-500/20 bg-white"
-    : "border-slate-200 text-slate-900 placeholder-slate-400 focus:border-primary-500 focus:bg-white focus:shadow-lg focus:shadow-primary-500/15 hover:border-primary-300 hover:shadow-md";
+    ? "border-primary-500 text-slate-800 placeholder-slate-400 focus:border-primary-500 focus:bg-white focus:shadow-xl focus:shadow-primary-500/20 bg-white scale-[1.01]"
+    : "border-slate-300 text-slate-800 placeholder-slate-400 focus:border-primary-500 focus:bg-white focus:shadow-xl focus:shadow-primary-500/20 hover:border-primary-400 hover:shadow-lg hover:scale-[1.01]";
 
   const combinedClassName = `
     ${baseStyles}
@@ -155,9 +157,9 @@ export function SearchableSelect({
   return (
     <div className={fullWidth ? "w-full" : ""} ref={containerRef}>
       {label && (
-        <label className="block text-sm font-bold text-slate-800 mb-2.5">
-          {label}
-          {required && <span className="text-error-500 mr-1 font-bold">*</span>}
+        <label className="block text-sm font-bold text-slate-700 mb-2.5 flex items-center gap-1.5">
+          <span>{label}</span>
+          {required && <span className="text-error-500 text-base">*</span>}
         </label>
       )}
       <div className="relative">
@@ -168,7 +170,7 @@ export function SearchableSelect({
           disabled={disabled}
           onKeyDown={handleKeyDown}
         >
-          <span className={`${value ? "text-slate-900 font-medium" : "text-slate-400"} truncate block`}>
+          <span className={`${value ? "text-slate-800 font-medium" : "text-slate-400"} truncate block text-right`}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
         </button>
@@ -198,46 +200,46 @@ export function SearchableSelect({
         {isOpen && !disabled && (
           <div
             ref={dropdownRef}
-            className="absolute z-50 w-full mt-2 bg-white border-2 border-primary-200/60 rounded-xl shadow-2xl shadow-primary-500/20 max-h-64 overflow-hidden animate-scale-in backdrop-blur-sm"
-            style={{ top: "100%" }}
+            className="absolute z-50 w-full mt-2 bg-white border-2 border-primary-200/60 rounded-2xl shadow-2xl shadow-primary-500/25 max-h-80 overflow-hidden animate-scale-in backdrop-blur-sm"
+            style={{ 
+              top: "100%",
+              boxShadow: '0 20px 25px -5px rgba(115, 103, 240, 0.15), 0 10px 10px -5px rgba(115, 103, 240, 0.1)'
+            }}
           >
             {/* حقل البحث */}
-            <div className="p-3 border-b-2 border-slate-100 bg-gradient-to-br from-primary-50/40 via-white to-primary-50/20 sticky top-0 z-10 backdrop-blur-sm">
-              <div className="relative">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setHighlightedIndex(-1);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="ابحث..."
-                  className="w-full px-4 py-2.5 pr-10 border-2 border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 bg-white shadow-sm hover:shadow-md hover:border-primary-300 transition-all duration-200 placeholder:text-slate-400"
-                />
-                <MaterialIcon
-                  name="search"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary-500 pointer-events-none"
-                  size="sm"
-                />
-              </div>
+            <div className="p-3 border-b-2 border-slate-100 bg-gradient-to-br from-primary-50/50 via-white to-primary-50/30 sticky top-0 z-10 backdrop-blur-sm">
+              <Input
+                ref={inputComponentRef}
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setHighlightedIndex(-1);
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="ابحث..."
+                leftIcon={<MaterialIcon name="search" className="text-primary-500" size="md" />}
+                className="w-full"
+                fullWidth={true}
+              />
             </div>
 
             {/* قائمة الخيارات */}
-            <div className="overflow-y-auto max-h-56 scrollbar-thin scrollbar-thumb-primary-200 scrollbar-track-slate-100 py-2">
+            <div className="overflow-y-auto max-h-72 scrollbar-thin scrollbar-thumb-primary-200 scrollbar-track-slate-100 py-3 px-2">
               {filteredOptions.length === 0 ? (
-                <div className="px-4 py-12 text-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center shadow-inner">
+                <div className="px-4 py-16 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100 flex items-center justify-center shadow-lg animate-pulse">
                       <MaterialIcon
-                        name="search"
+                        name="search_off"
                         className="text-slate-400"
-                        size="xl"
+                        size="2xl"
                       />
                     </div>
-                    <p className="text-slate-600 text-sm font-semibold">لا توجد نتائج</p>
-                    <p className="text-slate-400 text-xs">جرب البحث بكلمات مختلفة</p>
+                    <div className="space-y-1">
+                      <p className="text-slate-700 text-base font-bold">لا توجد نتائج</p>
+                      <p className="text-slate-500 text-sm">جرب البحث بكلمات مختلفة</p>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -246,26 +248,26 @@ export function SearchableSelect({
                     key={option.value}
                     type="button"
                     onClick={() => handleSelect(option.value)}
-                    className={`w-full text-right px-5 py-3.5 text-sm font-medium material-transition relative group mx-2 rounded-xl ${
+                    className={`w-full text-right px-4 py-2.5 text-base font-medium material-transition relative group mx-1 rounded-xl mb-1 ${
                       value === option.value
-                        ? "bg-gradient-to-r from-primary-500 via-primary-600 to-primary-500 text-white font-semibold shadow-lg shadow-primary-500/40 transform scale-[1.02]"
+                        ? "bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 text-white font-bold shadow-xl shadow-primary-500/50 transform scale-[1.02] border-2 border-primary-400"
                         : highlightedIndex === index
-                        ? "bg-gradient-to-r from-primary-50 via-primary-100/70 to-primary-50 text-primary-700 font-semibold shadow-md border border-primary-200/50"
-                        : "text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:via-primary-50/20 hover:to-slate-50 hover:text-slate-900 hover:shadow-sm border border-transparent hover:border-primary-100"
+                        ? "bg-gradient-to-r from-primary-50 via-primary-100/80 to-primary-50 text-primary-800 font-semibold shadow-lg border-2 border-primary-300/60 transform scale-[1.01]"
+                        : "text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:via-primary-50/30 hover:to-slate-50 hover:text-slate-900 hover:shadow-md border-2 border-transparent hover:border-primary-200 hover:scale-[1.01]"
                     }`}
                     onMouseEnter={() => setHighlightedIndex(index)}
                   >
                     <div className="flex items-center justify-between relative z-10">
-                      <span className={`flex-1 text-right ${
-                        value === option.value ? "text-white" : ""
+                      <span className={`flex-1 text-right text-base ${
+                        value === option.value ? "text-white font-bold" : "font-semibold"
                       }`}>
                         {option.label}
                       </span>
                       {value === option.value && (
-                        <div className="mr-2 flex items-center">
-                          <div className="w-6 h-6 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                        <div className="mr-3 flex items-center">
+                          <div className="w-7 h-7 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center shadow-lg animate-scale-in">
                             <svg
-                              className="w-3.5 h-3.5 text-white"
+                              className="w-4 h-4 text-white"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -273,7 +275,7 @@ export function SearchableSelect({
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                strokeWidth={3}
+                                strokeWidth={3.5}
                                 d="M5 13l4 4L19 7"
                               />
                             </svg>
@@ -281,18 +283,18 @@ export function SearchableSelect({
                         </div>
                       )}
                       {value !== option.value && highlightedIndex === index && (
-                        <div className="mr-2 flex items-center">
-                          <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></div>
+                        <div className="mr-3 flex items-center">
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary-500 animate-pulse shadow-md"></div>
                         </div>
                       )}
                     </div>
                     {/* تأثير hover */}
                     {value !== option.value && (
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-primary-500/5 to-transparent opacity-0 group-hover:opacity-100 material-transition pointer-events-none"></div>
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-primary-500/8 to-transparent opacity-0 group-hover:opacity-100 material-transition pointer-events-none"></div>
                     )}
                     {/* خط تحت العنصر المحدد */}
                     {value === option.value && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/30 rounded-b-xl"></div>
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/40 rounded-b-xl"></div>
                     )}
                   </button>
                 ))
@@ -313,3 +315,5 @@ export function SearchableSelect({
     </div>
   );
 }
+
+export const SearchableSelect = memo(SearchableSelectComponent);
