@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
+import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Textarea";
@@ -29,6 +30,8 @@ function DepartmentsPageContent() {
     description: '',
     notes: '',
   }));
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
 
   useEffect(() => {
     loadDepartments();
@@ -100,6 +103,85 @@ function DepartmentsPageContent() {
     }
   };
 
+  const handleImportData = async (data: Array<Record<string, any>>) => {
+    setImportLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    try {
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        try {
+          // البحث عن اسم الإدارة
+          let name = '';
+          for (const key of Object.keys(row)) {
+            const keyLower = key.toLowerCase().trim();
+            if (keyLower.includes('اسم') || keyLower === 'name') {
+              name = row[key]?.toString().trim() || '';
+              break;
+            }
+          }
+          if (!name) {
+            name = (row['اسم الإدارة'] || row['الاسم'] || row['name'] || row['Name'] || '').toString().trim();
+          }
+
+          if (!name) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: اسم الإدارة فارغ`);
+            continue;
+          }
+
+          // قراءة الحقول الأخرى
+          const description = (
+            row['الوصف'] || row['description'] || row['Description'] || ''
+          ).toString().trim();
+
+          const notes = (
+            row['الملاحظات'] || row['notes'] || row['Notes'] || ''
+          ).toString().trim();
+
+          // التحقق من عدم التكرار
+          const existing = departments.find(d => d.get('name') === name);
+          if (existing) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: الإدارة "${name}" موجودة مسبقاً`);
+            continue;
+          }
+
+          // إضافة إدارة جديدة
+          const newId = firestoreApi.getNewId("departments");
+          const docRef = firestoreApi.getDocument("departments", newId);
+          await firestoreApi.setData(docRef, {
+            name,
+            description: description || '',
+            notes: notes || '',
+          });
+
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          errors.push(`سطر ${i + 2}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+        }
+      }
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 10).join('\n');
+        const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
+        alert(`تم استيراد ${successCount} إدارة بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
+      } else {
+        alert(`تم استيراد ${successCount} إدارة بنجاح`);
+      }
+
+      loadDepartments();
+    } catch (error) {
+      console.error("Error importing data:", error);
+      throw error;
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const columns = [
     { 
       key: 'name', 
@@ -131,19 +213,30 @@ function DepartmentsPageContent() {
             </div>
           </div>
           {canAdd && (
-            <Button
-              onClick={() => {
-                setEditingDepartment(null);
-                setFormData(new BaseModel({ name: '', description: '', notes: '' }));
-                setIsModalOpen(true);
-              }}
-              leftIcon={<MaterialIcon name="add" className="w-5 h-5" size="lg" />}
-              size="lg"
-              variant="primary"
-              className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
-            >
-              إضافة إدارة جديدة
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                onClick={() => setIsImportModalOpen(true)}
+                leftIcon={<MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />}
+                size="lg"
+                variant="outline"
+                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold"
+              >
+                استيراد من Excel
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditingDepartment(null);
+                  setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+                  setIsModalOpen(true);
+                }}
+                leftIcon={<MaterialIcon name="add" className="w-5 h-5" size="lg" />}
+                size="lg"
+                variant="primary"
+                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+              >
+                إضافة إدارة جديدة
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -250,6 +343,16 @@ function DepartmentsPageContent() {
           cancelText="إلغاء"
           variant="danger"
           loading={deleteLoading}
+        />
+
+        {/* Import Excel Modal */}
+        <ImportExcelModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={handleImportData}
+          title="استيراد الإدارات من Excel"
+          description="اختر ملف Excel لعرض البيانات ومعاينتها وتعديلها قبل الحفظ"
+          loading={importLoading}
         />
     </MainLayout>
   );

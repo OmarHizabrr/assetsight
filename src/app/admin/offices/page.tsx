@@ -14,6 +14,8 @@ import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 
 function OfficesPageContent() {
   const pathname = usePathname();
@@ -33,6 +35,8 @@ function OfficesPageContent() {
     room: '',
     notes: '',
   }));
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -151,6 +155,119 @@ function OfficesPageContent() {
     }
   };
 
+  const handleImportData = async (data: Array<Record<string, any>>) => {
+    setImportLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    try {
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        try {
+          let name = '';
+          let departmentName = '';
+          
+          for (const key of Object.keys(row)) {
+            const keyLower = key.toLowerCase().trim();
+            if (keyLower.includes('اسم') && !keyLower.includes('إدارة') || keyLower === 'name') {
+              name = row[key]?.toString().trim() || '';
+            } else if (keyLower.includes('إدارة') || keyLower.includes('department')) {
+              departmentName = row[key]?.toString().trim() || '';
+            }
+          }
+          
+          if (!name) {
+            name = (row['اسم المكتب'] || row['الاسم'] || row['name'] || row['Name'] || '').toString().trim();
+          }
+          if (!departmentName) {
+            departmentName = (row['الإدارة'] || row['department'] || row['Department'] || '').toString().trim();
+          }
+
+          if (!name) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: اسم المكتب فارغ`);
+            continue;
+          }
+
+          if (!departmentName) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: اسم الإدارة فارغ`);
+            continue;
+          }
+
+          // البحث عن الإدارة
+          const department = departments.find(d => 
+            d.get('name')?.toLowerCase().includes(departmentName.toLowerCase()) ||
+            departmentName.toLowerCase().includes(d.get('name')?.toLowerCase() || '')
+          );
+
+          if (!department) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: الإدارة "${departmentName}" غير موجودة`);
+            continue;
+          }
+
+          const deptId = department.get('id');
+          if (!deptId) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: خطأ في معرف الإدارة`);
+            continue;
+          }
+
+          const floor = (row['الطابق'] || row['floor'] || row['Floor'] || '').toString().trim();
+          const room = (row['الغرفة'] || row['room'] || row['Room'] || '').toString().trim();
+          const notes = (row['الملاحظات'] || row['notes'] || row['Notes'] || '').toString().trim();
+
+          // التحقق من عدم التكرار
+          const existing = offices.find(o => 
+            o.get('name') === name && o.get('department_id') === deptId
+          );
+          if (existing) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: المكتب "${name}" موجود مسبقاً في هذه الإدارة`);
+            continue;
+          }
+
+          const newId = firestoreApi.getNewId("offices");
+          const docRef = firestoreApi.getSubDocument(
+            "departments",
+            deptId,
+            "departments",
+            newId
+          );
+          await firestoreApi.setData(docRef, {
+            name,
+            department_id: deptId,
+            floor: floor || '',
+            room: room || '',
+            notes: notes || '',
+          });
+
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          errors.push(`سطر ${i + 2}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+        }
+      }
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 10).join('\n');
+        const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
+        alert(`تم استيراد ${successCount} مكتب بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
+      } else {
+        alert(`تم استيراد ${successCount} مكتب بنجاح`);
+      }
+
+      loadData();
+    } catch (error) {
+      console.error("Error importing data:", error);
+      throw error;
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const getDepartmentName = (deptId?: string) => {
     if (!deptId) return '-';
     const dept = departments.find(d => d.get('id') === deptId);
@@ -198,19 +315,30 @@ function OfficesPageContent() {
             </div>
           </div>
           {canAdd && (
-            <Button
-              onClick={() => {
-                setEditingOffice(null);
-                setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
-                setIsModalOpen(true);
-              }}
-              leftIcon={<PlusIcon className="w-5 h-5" />}
-              size="lg"
-              variant="primary"
-              className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
-            >
-              إضافة مكتب جديد
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                onClick={() => setIsImportModalOpen(true)}
+                leftIcon={<MaterialIcon name="upload_file" size="md" />}
+                size="lg"
+                variant="outline"
+                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold"
+              >
+                استيراد من Excel
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditingOffice(null);
+                  setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
+                  setIsModalOpen(true);
+                }}
+                leftIcon={<PlusIcon className="w-5 h-5" />}
+                size="lg"
+                variant="primary"
+                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+              >
+                إضافة مكتب جديد
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -345,6 +473,16 @@ function OfficesPageContent() {
           cancelText="إلغاء"
           variant="danger"
           loading={deleteLoading}
+        />
+
+        {/* Import Excel Modal */}
+        <ImportExcelModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={handleImportData}
+          title="استيراد المكاتب من Excel"
+          description="اختر ملف Excel لعرض البيانات ومعاينتها وتعديلها قبل الحفظ. يجب أن يحتوي الملف على: اسم المكتب، الإدارة، الطابق (اختياري)، الغرفة (اختياري)"
+          loading={importLoading}
         />
     </MainLayout>
   );

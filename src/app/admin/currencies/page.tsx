@@ -14,6 +14,8 @@ import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 
 function CurrenciesPageContent() {
   const pathname = usePathname();
@@ -32,6 +34,8 @@ function CurrenciesPageContent() {
     is_default: false,
     notes: '',
   }));
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
 
   useEffect(() => {
     loadCurrencies();
@@ -117,6 +121,94 @@ function CurrenciesPageContent() {
     }
   };
 
+  const handleImportData = async (data: Array<Record<string, any>>) => {
+    setImportLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    try {
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        try {
+          let name = '';
+          let code = '';
+          let symbol = '';
+          
+          for (const key of Object.keys(row)) {
+            const keyLower = key.toLowerCase().trim();
+            if (keyLower.includes('اسم') || keyLower === 'name') {
+              name = row[key]?.toString().trim() || '';
+            } else if (keyLower.includes('رمز') && (keyLower.includes('عملة') || keyLower.includes('كود')) || keyLower === 'code') {
+              code = row[key]?.toString().trim() || '';
+            } else if (keyLower.includes('رمز') && !keyLower.includes('عملة') && !keyLower.includes('كود') || keyLower === 'symbol') {
+              symbol = row[key]?.toString().trim() || '';
+            }
+          }
+          
+          if (!name) {
+            name = (row['اسم العملة'] || row['الاسم'] || row['name'] || row['Name'] || '').toString().trim();
+          }
+          if (!code) {
+            code = (row['رمز العملة'] || row['الكود'] || row['code'] || row['Code'] || '').toString().trim();
+          }
+          if (!symbol) {
+            symbol = (row['الرمز'] || row['symbol'] || row['Symbol'] || '').toString().trim();
+          }
+
+          if (!name) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: اسم العملة فارغ`);
+            continue;
+          }
+
+          const isDefault = (
+            row['افتراضي'] || row['is_default'] || row['Is Default'] || 
+            row['default'] || row['Default'] || false
+          );
+          const notes = (row['الملاحظات'] || row['notes'] || row['Notes'] || '').toString().trim();
+
+          const existing = currencies.find(c => c.get('name') === name || c.get('code') === code);
+          if (existing) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: العملة "${name}" أو الرمز "${code}" موجود مسبقاً`);
+            continue;
+          }
+
+          const newId = firestoreApi.getNewId("currencies");
+          const docRef = firestoreApi.getDocument("currencies", newId);
+          await firestoreApi.setData(docRef, {
+            name,
+            code: code || '',
+            symbol: symbol || '',
+            is_default: isDefault ? 1 : 0,
+            notes: notes || '',
+          });
+
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          errors.push(`سطر ${i + 2}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+        }
+      }
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 10).join('\n');
+        const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
+        alert(`تم استيراد ${successCount} عملة بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
+      } else {
+        alert(`تم استيراد ${successCount} عملة بنجاح`);
+      }
+
+      loadCurrencies();
+    } catch (error) {
+      console.error("Error importing data:", error);
+      throw error;
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const columns = [
     { 
       key: 'name', 
@@ -171,19 +263,30 @@ function CurrenciesPageContent() {
             </div>
           </div>
           {canAdd && (
-            <Button
-              onClick={() => {
-                setEditingCurrency(null);
-                setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
-                setIsModalOpen(true);
-              }}
-              leftIcon={<PlusIcon className="w-5 h-5" />}
-              size="lg"
-              variant="primary"
-              className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
-            >
-              إضافة عملة جديدة
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                onClick={() => setIsImportModalOpen(true)}
+                leftIcon={<MaterialIcon name="upload_file" size="md" />}
+                size="lg"
+                variant="outline"
+                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold"
+              >
+                استيراد من Excel
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditingCurrency(null);
+                  setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
+                  setIsModalOpen(true);
+                }}
+                leftIcon={<PlusIcon className="w-5 h-5" />}
+                size="lg"
+                variant="primary"
+                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+              >
+                إضافة عملة جديدة
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -316,6 +419,16 @@ function CurrenciesPageContent() {
           cancelText="إلغاء"
           variant="danger"
           loading={deleteLoading}
+        />
+
+        {/* Import Excel Modal */}
+        <ImportExcelModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={handleImportData}
+          title="استيراد العملات من Excel"
+          description="اختر ملف Excel لعرض البيانات ومعاينتها وتعديلها قبل الحفظ"
+          loading={importLoading}
         />
     </MainLayout>
   );

@@ -13,6 +13,8 @@ import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 
 function AssetStatusesPageContent() {
   const pathname = usePathname();
@@ -29,6 +31,8 @@ function AssetStatusesPageContent() {
     description: '',
     notes: '',
   }));
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
 
   useEffect(() => {
     loadAssetStatuses();
@@ -100,6 +104,76 @@ function AssetStatusesPageContent() {
     }
   };
 
+  const handleImportData = async (data: Array<Record<string, any>>) => {
+    setImportLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    try {
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        try {
+          let name = '';
+          for (const key of Object.keys(row)) {
+            const keyLower = key.toLowerCase().trim();
+            if (keyLower.includes('اسم') || keyLower === 'name') {
+              name = row[key]?.toString().trim() || '';
+              break;
+            }
+          }
+          if (!name) {
+            name = (row['اسم الحالة'] || row['الاسم'] || row['name'] || row['Name'] || '').toString().trim();
+          }
+
+          if (!name) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: اسم الحالة فارغ`);
+            continue;
+          }
+
+          const description = (row['الوصف'] || row['description'] || row['Description'] || '').toString().trim();
+          const notes = (row['الملاحظات'] || row['notes'] || row['Notes'] || '').toString().trim();
+
+          const existing = assetStatuses.find(as => as.get('name') === name);
+          if (existing) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: الحالة "${name}" موجودة مسبقاً`);
+            continue;
+          }
+
+          const newId = firestoreApi.getNewId("assetStatuses");
+          const docRef = firestoreApi.getDocument("assetStatuses", newId);
+          await firestoreApi.setData(docRef, {
+            name,
+            description: description || '',
+            notes: notes || '',
+          });
+
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          errors.push(`سطر ${i + 2}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+        }
+      }
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 10).join('\n');
+        const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
+        alert(`تم استيراد ${successCount} حالة بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
+      } else {
+        alert(`تم استيراد ${successCount} حالة بنجاح`);
+      }
+
+      loadAssetStatuses();
+    } catch (error) {
+      console.error("Error importing data:", error);
+      throw error;
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const columns = [
     { 
       key: 'name', 
@@ -131,19 +205,30 @@ function AssetStatusesPageContent() {
             </div>
           </div>
           {canAdd && (
-            <Button
-              onClick={() => {
-                setEditingStatus(null);
-                setFormData(new BaseModel({ name: '', description: '', notes: '' }));
-                setIsModalOpen(true);
-              }}
-              leftIcon={<PlusIcon className="w-5 h-5" />}
-              size="lg"
-              variant="primary"
-              className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
-            >
-              إضافة حالة جديدة
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                onClick={() => setIsImportModalOpen(true)}
+                leftIcon={<MaterialIcon name="upload_file" size="md" />}
+                size="lg"
+                variant="outline"
+                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold"
+              >
+                استيراد من Excel
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditingStatus(null);
+                  setFormData(new BaseModel({ name: '', description: '', notes: '' }));
+                  setIsModalOpen(true);
+                }}
+                leftIcon={<PlusIcon className="w-5 h-5" />}
+                size="lg"
+                variant="primary"
+                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+              >
+                إضافة حالة جديدة
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -250,6 +335,16 @@ function AssetStatusesPageContent() {
           cancelText="إلغاء"
           variant="danger"
           loading={deleteLoading}
+        />
+
+        {/* Import Excel Modal */}
+        <ImportExcelModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={handleImportData}
+          title="استيراد حالات الأصول من Excel"
+          description="اختر ملف Excel لعرض البيانات ومعاينتها وتعديلها قبل الحفظ"
+          loading={importLoading}
         />
     </MainLayout>
   );
