@@ -105,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     if (typeof window !== "undefined") {
       window.localStorage.removeItem("user");
+      window.localStorage.removeItem("userData");
     }
   }, []);
 

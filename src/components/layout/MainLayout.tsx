@@ -474,7 +474,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         onConfirm={() => {
           setIsLogoutConfirmOpen(false);
           logout();
-          router.push('/login');
+          // استخدام window.location.href لإعادة تحميل كاملة للتأكد من مسح جميع البيانات
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 50);
         }}
         title="تأكيد تسجيل الخروج"
         message="هل أنت متأكد من تسجيل الخروج؟"
