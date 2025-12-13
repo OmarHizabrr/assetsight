@@ -154,7 +154,7 @@ function AssetNamesPageContent() {
           }
 
           // تحويل إلى JSON
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' }) as Record<string, any>[];
           
           if (jsonData.length === 0) {
             reject(new Error('الملف فارغ'));
