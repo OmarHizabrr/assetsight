@@ -156,11 +156,13 @@ function UsersPageContent() {
       delete submitData.confirm_password;
       
       const userId = editingUser?.get('id');
+      let finalUserId = userId;
       
       if (userId) {
         // تحديث مستخدم موجود
         const docRef = firestoreApi.getDocument("users", userId);
         await firestoreApi.updateData(docRef, submitData);
+        finalUserId = userId;
       } else {
         // إضافة مستخدم جديد - كلمة المرور مطلوبة
         if (!submitData.password) {
@@ -176,7 +178,69 @@ function UsersPageContent() {
         const newId = firestoreApi.getNewId("users");
         const docRef = firestoreApi.getDocument("users", newId);
         await firestoreApi.setData(docRef, submitData);
+        finalUserId = newId;
       }
+      
+      // حفظ الصلاحيات في subcollection powers/{userId}/powers (فقط للمستخدمين غير المديرين)
+      if (finalUserId && submitData.role !== 'مدير') {
+        try {
+          // حذف جميع الصلاحيات القديمة أولاً (عند التعديل)
+          if (userId) {
+            const subCollectionRef = firestoreApi.getSubCollection("powers", finalUserId, "powers");
+            const existingPermissions = await firestoreApi.getDocuments(subCollectionRef);
+            for (const perm of existingPermissions) {
+              const permId = perm.id;
+              if (permId) {
+                const permDocRef = firestoreApi.getSubDocument("powers", finalUserId, "powers", permId);
+                await firestoreApi.deleteData(permDocRef);
+              }
+            }
+          }
+          
+          // دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
+          const normalizePath = (path: string): string => {
+            if (!path || path === '/') return '/';
+            return path.replace(/\/+$/, ''); // إزالة جميع الشرطات المائلة في النهاية
+          };
+          
+          // حفظ الصلاحيات الجديدة (فقط الصفحات المحددة)
+          const permissionsToSave = submitData.permissions || [];
+          for (const pagePath of permissionsToSave) {
+            if (pagePath && pagePath !== '/') { // لا نحفظ الصفحة الرئيسية
+              const normalizedPath = normalizePath(pagePath);
+              const permissionId = firestoreApi.getNewId("powers");
+              const permissionDocRef = firestoreApi.getSubDocument("powers", finalUserId, "powers", permissionId);
+              await firestoreApi.setData(permissionDocRef, {
+                page_path: normalizedPath,
+                can_view: 1,
+                can_add: 0,
+                can_edit: 0,
+                can_delete: 0,
+              });
+            }
+          }
+          console.log(`Saved ${permissionsToSave.length} permissions for user ${finalUserId}`);
+        } catch (error) {
+          console.error("Error saving permissions:", error);
+          // لا نوقف العملية إذا فشل حفظ الصلاحيات
+        }
+      } else if (finalUserId && submitData.role === 'مدير') {
+        // حذف جميع الصلاحيات القديمة للمدير (لأن المدير لا يحتاج صلاحيات محددة)
+        try {
+          const subCollectionRef = firestoreApi.getSubCollection("powers", finalUserId, "powers");
+          const existingPermissions = await firestoreApi.getDocuments(subCollectionRef);
+          for (const perm of existingPermissions) {
+            const permId = perm.id;
+            if (permId) {
+              const permDocRef = firestoreApi.getSubDocument("powers", finalUserId, "powers", permId);
+              await firestoreApi.deleteData(permDocRef);
+            }
+          }
+        } catch (error) {
+          console.error("Error deleting permissions for admin:", error);
+        }
+      }
+      
       setIsModalOpen(false);
       setEditingUser(null);
       setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
@@ -189,19 +253,50 @@ function UsersPageContent() {
     }
   };
 
-  const handleEdit = (user: BaseModel) => {
+  const handleEdit = async (user: BaseModel) => {
     setEditingUser(user);
     const userData = user.getData();
     userData.is_active = user.getValue<number>('is_active') === 1 || user.getValue<boolean>('is_active') === true;
     // عدم إظهار كلمة المرور عند التعديل
     userData.password = '';
     userData.confirm_password = '';
-    // التأكد من وجود permissions وإزالة التكرارات
-    if (!userData.permissions) {
-      userData.permissions = [];
+    
+    // دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
+    const normalizePath = (path: string): string => {
+      if (!path || path === '/') return '/';
+      return path.replace(/\/+$/, ''); // إزالة جميع الشرطات المائلة في النهاية
+    };
+    
+    // تحميل الصلاحيات من subcollection powers/{userId}/powers
+    const userId = user.get('id');
+    if (userId) {
+      try {
+        const subCollectionRef = firestoreApi.getSubCollection("powers", userId, "powers");
+        const permissionDocs = await firestoreApi.getDocuments(subCollectionRef);
+        const pagePaths = permissionDocs.map(doc => {
+          const data = doc.data();
+          return normalizePath(data.page_path || '');
+        }).filter(path => path && path !== '/'); // إزالة القيم الفارغة والصفحة الرئيسية
+        
+        userData.permissions = Array.from(new Set(pagePaths));
+        console.log(`Loaded ${userData.permissions.length} permissions from subcollection for user ${userId}`);
+      } catch (error) {
+        console.error("Error loading permissions:", error);
+        // إذا فشل التحميل، نستخدم permissions من بيانات المستخدم
+        if (!userData.permissions) {
+          userData.permissions = [];
+        } else {
+          userData.permissions = Array.from(new Set(userData.permissions.map((p: string) => normalizePath(p))));
+        }
+      }
     } else {
-      // إزالة التكرارات من الصلاحيات
-      userData.permissions = Array.from(new Set(userData.permissions));
+      // التأكد من وجود permissions وإزالة التكرارات
+      if (!userData.permissions) {
+        userData.permissions = [];
+      } else {
+        // إزالة التكرارات من الصلاحيات
+        userData.permissions = Array.from(new Set(userData.permissions));
+      }
     }
     
     // تعيين الإدارة المختارة وتصفية المكاتب

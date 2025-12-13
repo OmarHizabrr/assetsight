@@ -6,7 +6,49 @@ import { useEffect, useState } from "react";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { BaseModel } from "@/lib/BaseModel";
 
-// دالة للتحقق من صلاحية المستخدم على صفحة معينة
+// دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
+function normalizePath(path: string): string {
+  if (!path || path === '/') return '/';
+  return path.replace(/\/+$/, ''); // إزالة جميع الشرطات المائلة في النهاية
+}
+
+// دالة للتحقق من صلاحية المستخدم على صفحة معينة (async)
+export async function hasPermissionAsync(user: BaseModel | null, path: string): Promise<boolean> {
+  if (!user) return false;
+  
+  // تطبيع المسار
+  const normalizedPath = normalizePath(path);
+  
+  // الصفحة الرئيسية متاحة دائماً
+  if (normalizedPath === '/') {
+    return true;
+  }
+  
+  const role = user.get('role');
+  
+  // المدير لديه صلاحية على جميع الصفحات
+  if (role === 'مدير') {
+    return true;
+  }
+  
+  // التحقق من الصلاحيات للمستخدمين غير المديرين من subcollection
+  const userId = user.get('id');
+  if (!userId) return false;
+  
+  try {
+    const permission = await getUserPermissions(userId, normalizedPath);
+    if (!permission) return false;
+    
+    // التحقق من can_view
+    const canView = permission.getValue('can_view');
+    return (canView as number) === 1 || (canView as boolean) === true;
+  } catch (error) {
+    console.error("Error checking permission:", error);
+    return false;
+  }
+}
+
+// دالة للتحقق من صلاحية المستخدم على صفحة معينة (sync - للتوافق مع الكود القديم)
 export function hasPermission(user: BaseModel | null, path: string): boolean {
   if (!user) return false;
   
@@ -16,29 +58,63 @@ export function hasPermission(user: BaseModel | null, path: string): boolean {
   }
   
   const role = user.get('role');
-  const permissions = (user.getValue('permissions') as string[]) || [];
   
   // المدير لديه صلاحية على جميع الصفحات
   if (role === 'مدير') {
     return true;
   }
   
-  // التحقق من الصلاحيات للمستخدمين غير المديرين
-  return permissions.includes(path);
+  // للمستخدمين غير المديرين، نستخدم hasPermissionAsync
+  // لكن هذه الدالة sync، لذا نعيد false مؤقتاً وسيتم التحقق في useEffect
+  return false;
 }
 
 // دالة لجلب صلاحيات المستخدم على صفحة معينة
 export async function getUserPermissions(userId: string, pagePath: string): Promise<BaseModel | null> {
   try {
+    // تطبيع المسار
+    const normalizedPath = normalizePath(pagePath);
+    
     const subCollectionRef = firestoreApi.getSubCollection("powers", userId, "powers");
+    
+    // جلب جميع الصلاحيات أولاً للتحقق
+    const allPermissionDocs = await firestoreApi.getDocuments(subCollectionRef);
+    console.log(`All permissions for user ${userId}:`, allPermissionDocs.length, "total permissions");
+    
+    // البحث عن الصلاحية المحددة باستخدام المسار المطبيع
     const permissionDocs = await firestoreApi.getDocuments(subCollectionRef, {
       whereField: "page_path",
-      isEqualTo: pagePath
+      isEqualTo: normalizedPath
     });
     
+    console.log(`Checking permissions for user ${userId} on path "${normalizedPath}":`, permissionDocs.length, "permissions found");
+    
     if (permissionDocs.length > 0) {
-      return BaseModel.fromFirestore(permissionDocs[0]);
+      const permission = BaseModel.fromFirestore(permissionDocs[0]);
+      const permData = permission.getData();
+      console.log("Permission data:", permData);
+      console.log("Permission can_view:", permData.can_view);
+      return permission;
     }
+    
+    // إذا لم نجد باستخدام whereField، نبحث يدوياً (مع تطبيع المسارات)
+    const manualMatch = allPermissionDocs.find(doc => {
+      const data = doc.data();
+      const storedPath = normalizePath(data.page_path || '');
+      const matches = storedPath === normalizedPath;
+      if (matches) {
+        console.log(`Found manual match: stored="${storedPath}", requested="${normalizedPath}"`);
+      }
+      return matches;
+    });
+    
+    if (manualMatch) {
+      console.log("Found permission manually:", manualMatch.data());
+      return BaseModel.fromFirestore(manualMatch);
+    }
+    
+    console.log(`No permission found for path: "${normalizedPath}"`);
+    console.log("Available paths:", allPermissionDocs.map(doc => normalizePath(doc.data().page_path)));
     return null;
   } catch (error) {
     console.error("Error loading user permissions:", error);
@@ -157,6 +233,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -165,15 +242,40 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     }
 
     // التحقق من الصلاحيات إذا كان المستخدم مسجل دخول
-    if (!loading && user && pathname && pathname !== '/') {
-      if (!hasPermission(user, pathname)) {
-        // إعادة التوجيه إلى الصفحة الرئيسية إذا لم يكن لديه صلاحية
-        router.push('/');
+    if (!loading && user && pathname) {
+      // الصفحة الرئيسية متاحة دائماً
+      if (pathname === '/') {
+        setHasAccess(true);
+        return;
       }
+      
+      // إعادة تعيين hasAccess عند تغيير pathname
+      setHasAccess(null);
+      
+      const checkPermission = async () => {
+        try {
+          console.log(`Checking permission for path: ${pathname}, user: ${user.get('id')}, role: ${user.get('role')}`);
+          const hasPerm = await hasPermissionAsync(user, pathname);
+          console.log(`Permission result for ${pathname}:`, hasPerm);
+          setHasAccess(hasPerm);
+          
+          if (!hasPerm) {
+            // إعادة التوجيه إلى الصفحة الرئيسية إذا لم يكن لديه صلاحية
+            console.log(`No permission for ${pathname}, redirecting to home`);
+            router.push('/');
+          }
+        } catch (error) {
+          console.error("Error checking permission:", error);
+          setHasAccess(false);
+          router.push('/');
+        }
+      };
+      
+      checkPermission();
     }
   }, [user, loading, router, pathname]);
 
-  if (loading) {
+  if (loading || (user && pathname && pathname !== '/' && hasAccess === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-secondary-50">
         <div className="flex flex-col items-center gap-4">
@@ -189,7 +291,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   // التحقق من الصلاحيات قبل عرض المحتوى (الصفحة الرئيسية متاحة دائماً)
-  if (pathname && pathname !== '/' && !hasPermission(user, pathname)) {
+  if (pathname && pathname !== '/' && hasAccess === false) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-secondary-50">
         <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-lg shadow-lg border border-gray-200">

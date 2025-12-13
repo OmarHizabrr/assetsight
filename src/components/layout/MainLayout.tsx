@@ -1,10 +1,12 @@
 'use client';
 
-import { hasPermission } from "@/components/auth/ProtectedRoute";
+import { hasPermissionAsync } from "@/components/auth/ProtectedRoute";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { ProfileModal } from "@/components/profile/ProfileModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { firestoreApi } from "@/lib/FirestoreApi";
+import { BaseModel } from "@/lib/BaseModel";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -20,6 +22,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const isOpeningProfileRef = useRef(false);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
 
   // إغلاق القائمة المنسدلة عند النقر خارجها
   useEffect(() => {
@@ -66,6 +70,61 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     { href: '/admin/reports', label: 'التقارير', icon: 'bar_chart' },
   ];
 
+  // دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
+  const normalizePath = (path: string): string => {
+    if (!path || path === '/') return '/';
+    return path.replace(/\/+$/, ''); // إزالة جميع الشرطات المائلة في النهاية
+  };
+
+  // تحميل صلاحيات المستخدم من subcollection
+  useEffect(() => {
+    const loadUserPermissions = async () => {
+      if (!user) {
+        setUserPermissions([]);
+        return;
+      }
+
+      const role = user.get('role');
+      // المدير لديه صلاحية على جميع الصفحات
+      if (role === 'مدير') {
+        setUserPermissions(allMenuItems.map(item => normalizePath(item.href)));
+        return;
+      }
+
+      const userId = user.get('id');
+      if (!userId) {
+        setUserPermissions([]);
+        return;
+      }
+
+      try {
+        setPermissionsLoading(true);
+        const subCollectionRef = firestoreApi.getSubCollection("powers", userId, "powers");
+        const permissionDocs = await firestoreApi.getDocuments(subCollectionRef);
+        const pagePaths = permissionDocs
+          .map(doc => {
+            const data = doc.data();
+            const canView = data.can_view === 1 || data.can_view === true;
+            if (canView) {
+              return normalizePath(data.page_path || '');
+            }
+            return null;
+          })
+          .filter(path => path !== null && path !== undefined) as string[];
+        
+        setUserPermissions(pagePaths);
+        console.log("Loaded user permissions for sidebar:", pagePaths);
+      } catch (error) {
+        console.error("Error loading user permissions for sidebar:", error);
+        setUserPermissions([]);
+      } finally {
+        setPermissionsLoading(false);
+      }
+    };
+
+    loadUserPermissions();
+  }, [user]);
+
   // تصفية عناصر القائمة حسب الصلاحيات
   const menuItems = useMemo(() => {
     // الصفحة الرئيسية متاحة للجميع
@@ -73,14 +132,21 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       return allMenuItems.filter(item => item.href === '/');
     }
     
+    const role = user.get('role');
+    // المدير لديه صلاحية على جميع الصفحات
+    if (role === 'مدير') {
+      return allMenuItems;
+    }
+    
     return allMenuItems.filter(item => {
       // الصفحة الرئيسية متاحة للجميع
       if (item.href === '/') return true;
       
-      // التحقق من الصلاحيات
-      return hasPermission(user, item.href);
+      // تطبيع المسار قبل المقارنة
+      const normalizedItemPath = normalizePath(item.href);
+      return userPermissions.includes(normalizedItemPath);
     });
-  }, [user]);
+  }, [user, userPermissions]);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#f8f7fa' }}>

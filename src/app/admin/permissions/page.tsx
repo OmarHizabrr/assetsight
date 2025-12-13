@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Select } from "@/components/ui/Select";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { useEffect, useState, Suspense } from "react";
@@ -81,16 +82,22 @@ function PermissionsPageContent() {
   };
 
   const loadPermissions = async () => {
-    if (!selectedUserId) return;
+    if (!selectedUserId) {
+      setPermissions([]);
+      return;
+    }
     
     try {
       setLoading(true);
       const subCollectionRef = firestoreApi.getSubCollection("powers", selectedUserId, "powers");
       const permissionDocs = await firestoreApi.getDocuments(subCollectionRef);
       const permissionsData = BaseModel.fromFirestoreArray(permissionDocs);
+      console.log("Loaded permissions:", permissionsData.length, permissionsData);
       setPermissions(permissionsData);
     } catch (error) {
       console.error("Error loading permissions:", error);
+      alert("حدث خطأ أثناء تحميل الصلاحيات");
+      setPermissions([]);
     } finally {
       setLoading(false);
     }
@@ -104,11 +111,22 @@ function PermissionsPageContent() {
     }
 
     try {
+      // دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
+      const normalizePath = (path: string): string => {
+        if (!path || path === '/') return '/';
+        return path.replace(/\/+$/, ''); // إزالة جميع الشرطات المائلة في النهاية
+      };
+      
       const submitData = formData.getData();
       submitData.can_view = formData.getValue<boolean>('can_view') ? 1 : 0;
       submitData.can_add = formData.getValue<boolean>('can_add') ? 1 : 0;
       submitData.can_edit = formData.getValue<boolean>('can_edit') ? 1 : 0;
       submitData.can_delete = formData.getValue<boolean>('can_delete') ? 1 : 0;
+      
+      // تطبيع المسار قبل الحفظ
+      if (submitData.page_path) {
+        submitData.page_path = normalizePath(submitData.page_path);
+      }
 
       const permissionId = editingPermission?.get('id');
       
@@ -120,7 +138,7 @@ function PermissionsPageContent() {
         // إضافة صلاحية جديدة - التحقق من عدم تكرار الصفحة
         const pagePath = submitData.page_path;
         const existingPermission = permissions.find(p => {
-          const existingPath = p.get('page_path');
+          const existingPath = normalizePath(p.get('page_path') || '');
           return existingPath === pagePath;
         });
         
@@ -131,7 +149,9 @@ function PermissionsPageContent() {
         
         const newId = firestoreApi.getNewId("powers");
         const docRef = firestoreApi.getSubDocument("powers", selectedUserId, "powers", newId);
+        console.log("Saving permission:", submitData, "to:", docRef.path);
         await firestoreApi.setData(docRef, submitData);
+        console.log("Permission saved successfully");
       }
       
       setIsModalOpen(false);
@@ -143,7 +163,8 @@ function PermissionsPageContent() {
         can_edit: false,
         can_delete: false,
       }));
-      loadPermissions();
+      // إعادة تحميل الصلاحيات بعد الحفظ
+      await loadPermissions();
     } catch (error) {
       console.error("Error saving permission:", error);
       alert("حدث خطأ أثناء الحفظ");
@@ -279,12 +300,16 @@ function PermissionsPageContent() {
         <Select
           label="اختر المستخدم"
           value={selectedUserId}
-          onChange={(e) => setSelectedUserId(e.target.value)}
+          onChange={(e) => {
+            const userId = e.target.value;
+            console.log("User selected:", userId);
+            setSelectedUserId(userId);
+          }}
           options={[
             { value: '', label: '-- اختر مستخدم --' },
             ...users.map((user) => ({
               value: user.get('id'),
-              label: `${user.get('full_name')} (${user.get('username')})`,
+              label: `${user.get('full_name') || user.get('username')} (${user.get('username') || user.get('employee_number')})`,
             })),
           ]}
         />
@@ -314,6 +339,19 @@ function PermissionsPageContent() {
               إضافة صلاحية جديدة
             </Button>
           </div>
+
+          {/* Info Message */}
+          {!loading && permissions.length === 0 && (
+            <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="flex items-start gap-4">
+                <MaterialIcon name="info" className="text-blue-600 text-2xl mt-1" />
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900 mb-1">لا توجد صلاحيات</h3>
+                  <p className="text-blue-700">لم يتم إضافة أي صلاحيات لهذا المستخدم بعد. اضغط على زر "إضافة صلاحية جديدة" لإضافة صلاحيات.</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Data Table */}
           <DataTable
