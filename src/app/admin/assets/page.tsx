@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Textarea } from "@/components/ui/Textarea";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
@@ -23,8 +24,12 @@ function AssetsPageContent() {
   const [assetNames, setAssetNames] = useState<BaseModel[]>([]);
   const [assetTypes, setAssetTypes] = useState<BaseModel[]>([]);
   const [assetStatuses, setAssetStatuses] = useState<BaseModel[]>([]);
+  const [departments, setDepartments] = useState<BaseModel[]>([]);
+  const [allOffices, setAllOffices] = useState<BaseModel[]>([]);
   const [offices, setOffices] = useState<BaseModel[]>([]);
   const [users, setUsers] = useState<BaseModel[]>([]);
+  const [currencies, setCurrencies] = useState<BaseModel[]>([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -32,6 +37,7 @@ function AssetsPageContent() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editingAsset, setEditingAsset] = useState<BaseModel | null>(null);
   const [formData, setFormData] = useState<BaseModel>(new BaseModel({
+    department_id: '',
     asset_name_id: '',
     asset_tag: '',
     serial_number: '',
@@ -41,6 +47,7 @@ function AssetsPageContent() {
     description: '',
     purchase_date: '',
     purchase_value: 0,
+    currency_id: '',
     current_value: 0,
     location_office_id: '',
     custodian_user_id: '',
@@ -82,10 +89,13 @@ function AssetsPageContent() {
       setAssetTypes(BaseModel.fromFirestoreArray(assetTypeDocs));
       setAssetStatuses(BaseModel.fromFirestoreArray(assetStatusDocs));
       
-      // جلب جميع المكاتب من جميع الإدارات
-      const allOffices: BaseModel[] = [];
+      const departmentsData = BaseModel.fromFirestoreArray(deptDocs);
+      setDepartments(departmentsData);
       
-      for (const dept of BaseModel.fromFirestoreArray(deptDocs)) {
+      // جلب جميع المكاتب من جميع الإدارات
+      const officesList: BaseModel[] = [];
+      
+      for (const dept of departmentsData) {
         const deptId = dept.get('id');
         if (deptId) {
           // جلب المكاتب
@@ -94,17 +104,23 @@ function AssetsPageContent() {
           const offices = BaseModel.fromFirestoreArray(officeDocs);
           offices.forEach(office => {
             office.put('department_id', deptId);
-            allOffices.push(office);
+            officesList.push(office);
           });
         }
       }
       
-      setOffices(allOffices);
+      setAllOffices(officesList);
+      setOffices([]); // لا تظهر المكاتب حتى يتم اختيار الإدارة
       
       // جلب جميع المستخدمين من الجدول المستقل users/userId/
       const userDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("users"));
       const usersData = BaseModel.fromFirestoreArray(userDocs);
       setUsers(usersData);
+      
+      // جلب جميع العملات
+      const currencyDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("currencies"));
+      const currenciesData = BaseModel.fromFirestoreArray(currencyDocs);
+      setCurrencies(currenciesData);
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -153,6 +169,7 @@ function AssetsPageContent() {
 
   const resetForm = () => {
     setFormData(new BaseModel({
+      department_id: '',
       asset_name_id: '',
       asset_tag: '',
       serial_number: '',
@@ -165,6 +182,7 @@ function AssetsPageContent() {
       current_value: 0,
       location_office_id: '',
       custodian_user_id: '',
+      currency_id: '',
       warranty_end: '',
       depreciation_method: '',
       expected_lifetime_years: 0,
@@ -175,14 +193,60 @@ function AssetsPageContent() {
       is_active: true,
       notes: '',
     }));
+    setSelectedDepartmentId('');
+    setOffices([]);
   };
+  
+  // تعيين العملة الافتراضية عند فتح النموذج
+  useEffect(() => {
+    if (isModalOpen && !editingAsset && currencies.length > 0) {
+      const defaultCurrency = currencies.find(c => 
+        c.getValue<number>('is_default') === 1 || c.getValue<boolean>('is_default') === true
+      );
+      if (defaultCurrency && !formData.get('currency_id')) {
+        updateField('currency_id', defaultCurrency.get('id'));
+      }
+    }
+  }, [isModalOpen, currencies, editingAsset]);
 
-  const handleEdit = (asset: BaseModel) => {
+  const handleEdit = async (asset: BaseModel) => {
     setEditingAsset(asset);
     const assetData = asset.getData();
     assetData.is_active = asset.getValue<number>('is_active') === 1 || asset.getValue<boolean>('is_active') === true;
+    
+    // البحث عن الإدارة من خلال المكتب
+    const officeId = asset.get('location_office_id');
+    if (officeId) {
+      const office = allOffices.find(o => o.get('id') === officeId);
+      if (office) {
+        const deptId = office.get('department_id');
+        if (deptId) {
+          assetData.department_id = deptId;
+          setSelectedDepartmentId(deptId);
+          // تصفية المكاتب حسب الإدارة
+          const filteredOffices = allOffices.filter(o => o.get('department_id') === deptId);
+          setOffices(filteredOffices);
+        }
+      }
+    }
+    
     setFormData(new BaseModel(assetData));
     setIsModalOpen(true);
+  };
+  
+  // عند تغيير الإدارة، تصفية المكاتب
+  const handleDepartmentChange = (departmentId: string) => {
+    setSelectedDepartmentId(departmentId);
+    updateField('department_id', departmentId);
+    updateField('location_office_id', ''); // مسح اختيار المكتب عند تغيير الإدارة
+    
+    if (departmentId) {
+      // تصفية المكاتب حسب الإدارة المختارة
+      const filteredOffices = allOffices.filter(office => office.get('department_id') === departmentId);
+      setOffices(filteredOffices);
+    } else {
+      setOffices([]);
+    }
   };
 
   const handleDelete = (asset: BaseModel) => {
@@ -240,6 +304,28 @@ function AssetsPageContent() {
     return user?.get('full_name') || '-';
   };
 
+  const getCurrencyName = (id?: string) => {
+    if (!id) return '-';
+    const currency = currencies.find(c => c.get('id') === id);
+    return currency ? `${currency.get('name')} (${currency.get('code')})` : '-';
+  };
+
+  const getCurrencySymbol = (id?: string) => {
+    if (!id) return 'ر.س';
+    const currency = currencies.find(c => c.get('id') === id);
+    return currency?.get('symbol') || currency?.get('code') || 'ر.س';
+  };
+
+  const getDepartmentName = (officeId?: string) => {
+    if (!officeId) return '-';
+    const office = allOffices.find(o => o.get('id') === officeId);
+    if (!office) return '-';
+    const deptId = office.get('department_id');
+    if (!deptId) return '-';
+    const dept = departments.find(d => d.get('id') === deptId);
+    return dept?.get('name') || '-';
+  };
+
   const updateField = (key: string, value: any) => {
     const newData = new BaseModel(formData.getData());
     newData.put(key, value);
@@ -268,6 +354,11 @@ function AssetsPageContent() {
       render: (item: BaseModel) => getAssetStatus(item.get('status_id')),
     },
     { 
+      key: 'department', 
+      label: 'الإدارة',
+      render: (item: BaseModel) => getDepartmentName(item.get('location_office_id')),
+    },
+    { 
       key: 'location_office_id', 
       label: 'المكتب',
       render: (item: BaseModel) => getOfficeName(item.get('location_office_id')),
@@ -282,12 +373,19 @@ function AssetsPageContent() {
       label: 'قيمة الشراء',
       render: (item: BaseModel) => {
         const value = item.getValue<number>('purchase_value') || 0;
+        const currencyId = item.get('currency_id');
+        const symbol = getCurrencySymbol(currencyId);
         return (
           <span className="font-semibold text-secondary-900">
-            {value.toLocaleString('ar-SA')} <span className="text-xs text-secondary-500 font-normal">ر.س</span>
+            {value.toLocaleString('ar-SA')} <span className="text-xs text-secondary-500 font-normal">{symbol}</span>
           </span>
         );
       },
+    },
+    { 
+      key: 'currency_id', 
+      label: 'العملة',
+      render: (item: BaseModel) => getCurrencyName(item.get('currency_id')),
     },
   ];
 
@@ -346,16 +444,40 @@ function AssetsPageContent() {
           size="xl"
         >
           <form onSubmit={handleSubmit} className="space-y-6 max-h-[80vh] overflow-y-auto pr-2">
+            <SearchableSelect
+              label="الإدارة"
+              required
+              value={formData.get('department_id') || selectedDepartmentId}
+              onChange={(value) => handleDepartmentChange(value)}
+              options={departments.map((dept) => ({
+                value: dept.get('id'),
+                label: dept.get('name'),
+              }))}
+              placeholder="اختر الإدارة"
+            />
+            <SearchableSelect
+              label="المكتب الحالي"
+              required
+              value={formData.get('location_office_id')}
+              onChange={(value) => updateField('location_office_id', value)}
+              disabled={!selectedDepartmentId || offices.length === 0}
+              options={offices.map((office) => ({
+                value: office.get('id'),
+                label: office.get('name'),
+              }))}
+              placeholder={!selectedDepartmentId ? "اختر الإدارة أولاً" : offices.length === 0 ? "لا توجد مكاتب في هذه الإدارة" : "اختر المكتب"}
+            />
             <div className="grid grid-cols-2 gap-4">
-              <Select
+              <SearchableSelect
                 label="اسم الأصل"
                 required
                 value={formData.get('asset_name_id')}
-                onChange={(e) => updateField('asset_name_id', e.target.value)}
+                onChange={(value) => updateField('asset_name_id', value)}
                 options={assetNames.map((name) => ({
                   value: name.get('id'),
                   label: name.get('name'),
                 }))}
+                placeholder="اختر اسم الأصل"
               />
               <div>
                 <Input
@@ -382,48 +504,39 @@ function AssetsPageContent() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Select
+              <SearchableSelect
                 label="نوع الأصل"
                 required
                 value={formData.get('type_id')}
-                onChange={(e) => updateField('type_id', e.target.value)}
+                onChange={(value) => updateField('type_id', value)}
                 options={assetTypes.map((type) => ({
                   value: type.get('id'),
                   label: type.get('name'),
                 }))}
+                placeholder="اختر نوع الأصل"
               />
-              <Select
+              <SearchableSelect
                 label="حالة الأصل"
                 required
                 value={formData.get('status_id')}
-                onChange={(e) => updateField('status_id', e.target.value)}
+                onChange={(value) => updateField('status_id', value)}
                 options={assetStatuses.map((status) => ({
                   value: status.get('id'),
                   label: status.get('name'),
                 }))}
+                placeholder="اختر حالة الأصل"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Select
-                label="المكتب الحالي"
-                required
-                value={formData.get('location_office_id')}
-                onChange={(e) => updateField('location_office_id', e.target.value)}
-                options={offices.map((office) => ({
-                  value: office.get('id'),
-                  label: office.get('name'),
-                }))}
-              />
-              <Select
-                label="حامل الأصل"
-                value={formData.get('custodian_user_id')}
-                onChange={(e) => updateField('custodian_user_id', e.target.value)}
-                options={users.map((user) => ({
-                  value: user.get('id'),
-                  label: user.get('full_name'),
-                }))}
-              />
-            </div>
+            <SearchableSelect
+              label="حامل الأصل"
+              value={formData.get('custodian_user_id')}
+              onChange={(value) => updateField('custodian_user_id', value)}
+              options={users.map((user) => ({
+                value: user.get('id'),
+                label: user.get('full_name'),
+              }))}
+              placeholder="اختر حامل الأصل"
+            />
             <Input
               label="الرقم التسلسلي"
               type="text"
@@ -446,21 +559,33 @@ function AssetsPageContent() {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="قيمة الشراء"
-                type="number"
-                step="0.01"
-                value={formData.getValue<number>('purchase_value') || 0}
-                onChange={(e) => updateField('purchase_value', parseFloat(e.target.value) || 0)}
-              />
-              <Input
-                label="القيمة الحالية"
-                type="number"
-                step="0.01"
-                value={formData.getValue<number>('current_value') || 0}
-                onChange={(e) => updateField('current_value', parseFloat(e.target.value) || 0)}
+              <div>
+                <Input
+                  label="قيمة الشراء"
+                  type="number"
+                  step="0.01"
+                  value={formData.getValue<number>('purchase_value') || 0}
+                  onChange={(e) => updateField('purchase_value', parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <SearchableSelect
+                label="العملة"
+                value={formData.get('currency_id')}
+                onChange={(value) => updateField('currency_id', value)}
+                options={currencies.map((currency) => ({
+                  value: currency.get('id'),
+                  label: `${currency.get('name')} (${currency.get('code')})`,
+                }))}
+                placeholder="اختر العملة"
               />
             </div>
+            <Input
+              label="القيمة الحالية"
+              type="number"
+              step="0.01"
+              value={formData.getValue<number>('current_value') || 0}
+              onChange={(e) => updateField('current_value', parseFloat(e.target.value) || 0)}
+            />
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="الفئة"

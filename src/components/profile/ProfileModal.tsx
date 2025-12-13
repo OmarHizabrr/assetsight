@@ -22,6 +22,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -255,23 +257,53 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         <div className="space-y-4 pt-4 border-t-2 border-slate-200">
           <h3 className="text-sm font-semibold text-slate-700 mb-4">تغيير كلمة المرور</h3>
           
-          <Input
-            label="كلمة المرور الجديدة"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="اتركها فارغة للحفاظ على الكلمة الحالية"
-          />
+          <div className="relative">
+            <Input
+              label="كلمة المرور الجديدة"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="اتركها فارغة للحفاظ على الكلمة الحالية"
+              rightIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-slate-500 hover:text-slate-700 material-transition cursor-pointer"
+                  tabIndex={-1}
+                >
+                  <MaterialIcon 
+                    name={showPassword ? "visibility_off" : "visibility"} 
+                    size="md" 
+                  />
+                </button>
+              }
+            />
+          </div>
           
           {password && (
-            <Input
-              label="تأكيد كلمة المرور"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="أعد إدخال كلمة المرور"
-              required={!!password}
-            />
+            <div className="relative">
+              <Input
+                label="تأكيد كلمة المرور"
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="أعد إدخال كلمة المرور"
+                required={!!password}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-slate-500 hover:text-slate-700 material-transition cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    <MaterialIcon 
+                      name={showConfirmPassword ? "visibility_off" : "visibility"} 
+                      size="md" 
+                    />
+                  </button>
+                }
+              />
+            </div>
           )}
         </div>
 

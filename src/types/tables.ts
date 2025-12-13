@@ -89,6 +89,7 @@ export interface Asset {
   description?: string;
   purchase_date?: string;
   purchase_value?: number;
+  currency_id?: string;
   current_value?: number;
   location_office_id: string;
   custodian_user_id?: string;
@@ -157,6 +158,18 @@ export interface InventoryItem {
   note?: string;
   scanned_by?: string;
   scanned_at?: string;
+  notes?: string;
+  timestamp?: string;
+}
+
+export interface Currency {
+  id?: string;
+  name: string;
+  code: string;
+  symbol?: string;
+  is_default?: number | boolean;
+  created_at?: string;
+  updated_at?: string;
   notes?: string;
   timestamp?: string;
 }

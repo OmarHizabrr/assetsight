@@ -58,6 +58,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     { href: '/admin/asset-statuses', label: 'حالات الأصول', icon: 'assessment' },
     { href: '/admin/asset-names', label: 'أسماء الأصول', icon: 'label' },
     { href: '/admin/categories', label: 'الفئات', icon: 'folder' },
+    { href: '/admin/currencies', label: 'العملات', icon: 'attach_money' },
     { href: '/admin/users', label: 'المستخدمون', icon: 'people' },
     { href: '/admin/permissions', label: 'الصلاحيات', icon: 'settings' },
     { href: '/admin/assets', label: 'الأصول', icon: 'inventory' },
