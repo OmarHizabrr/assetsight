@@ -7,7 +7,7 @@ import { firestoreApi } from "@/lib/FirestoreApi";
 import { BaseModel } from "@/lib/BaseModel";
 
 // دالة للتحقق من صلاحية المستخدم على صفحة معينة
-export function hasPermission(user: any, path: string): boolean {
+export function hasPermission(user: BaseModel | null, path: string): boolean {
   if (!user) return false;
   
   // الصفحة الرئيسية متاحة دائماً
@@ -16,7 +16,7 @@ export function hasPermission(user: any, path: string): boolean {
   }
   
   const role = user.get('role');
-  const permissions = user.getValue<string[]>('permissions') || [];
+  const permissions = (user.getValue('permissions') as string[]) || [];
   
   // المدير لديه صلاحية على جميع الصفحات
   if (role === 'مدير') {
@@ -47,7 +47,7 @@ export async function getUserPermissions(userId: string, pagePath: string): Prom
 }
 
 // دالة للتحقق من صلاحية إضافة
-export async function canAdd(user: any, pagePath: string): Promise<boolean> {
+export async function canAdd(user: BaseModel | null, pagePath: string): Promise<boolean> {
   if (!user) return false;
   
   const role = user.get('role');
@@ -59,11 +59,12 @@ export async function canAdd(user: any, pagePath: string): Promise<boolean> {
   const permission = await getUserPermissions(userId, pagePath);
   if (!permission) return false;
   
-  return permission.getValue<number>('can_add') === 1 || permission.getValue<boolean>('can_add') === true;
+  const canAddValue = permission.getValue('can_add');
+  return (canAddValue as number) === 1 || (canAddValue as boolean) === true;
 }
 
 // دالة للتحقق من صلاحية تعديل
-export async function canEdit(user: any, pagePath: string): Promise<boolean> {
+export async function canEdit(user: BaseModel | null, pagePath: string): Promise<boolean> {
   if (!user) return false;
   
   const role = user.get('role');
@@ -75,11 +76,12 @@ export async function canEdit(user: any, pagePath: string): Promise<boolean> {
   const permission = await getUserPermissions(userId, pagePath);
   if (!permission) return false;
   
-  return permission.getValue<number>('can_edit') === 1 || permission.getValue<boolean>('can_edit') === true;
+  const canEditValue = permission.getValue('can_edit');
+  return (canEditValue as number) === 1 || (canEditValue as boolean) === true;
 }
 
 // دالة للتحقق من صلاحية حذف
-export async function canDelete(user: any, pagePath: string): Promise<boolean> {
+export async function canDelete(user: BaseModel | null, pagePath: string): Promise<boolean> {
   if (!user) return false;
   
   const role = user.get('role');
@@ -91,7 +93,8 @@ export async function canDelete(user: any, pagePath: string): Promise<boolean> {
   const permission = await getUserPermissions(userId, pagePath);
   if (!permission) return false;
   
-  return permission.getValue<number>('can_delete') === 1 || permission.getValue<boolean>('can_delete') === true;
+  const canDeleteValue = permission.getValue('can_delete');
+  return (canDeleteValue as number) === 1 || (canDeleteValue as boolean) === true;
 }
 
 // Hook للتحقق من الصلاحيات في المكونات
@@ -126,10 +129,13 @@ export function usePermissions(pagePath: string) {
       try {
         const permission = await getUserPermissions(userId, pagePath);
         if (permission) {
+          const canAddValue = permission.getValue('can_add');
+          const canEditValue = permission.getValue('can_edit');
+          const canDeleteValue = permission.getValue('can_delete');
           setPermissions({
-            canAdd: permission.getValue<number>('can_add') === 1 || permission.getValue<boolean>('can_add') === true,
-            canEdit: permission.getValue<number>('can_edit') === 1 || permission.getValue<boolean>('can_edit') === true,
-            canDelete: permission.getValue<number>('can_delete') === 1 || permission.getValue<boolean>('can_delete') === true,
+            canAdd: (canAddValue as number) === 1 || (canAddValue as boolean) === true,
+            canEdit: (canEditValue as number) === 1 || (canEditValue as boolean) === true,
+            canDelete: (canDeleteValue as number) === 1 || (canDeleteValue as boolean) === true,
             loading: false,
           });
         } else {

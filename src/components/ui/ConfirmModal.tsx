@@ -116,11 +116,12 @@ export function ConfirmModal({
                 margin: '0 auto 1.5rem',
               }}
             >
-              <MaterialIcon
-                name={style.icon}
-                size="3xl"
-                style={{ color: style.iconColor }}
-              />
+              <div style={{ color: style.iconColor }}>
+                <MaterialIcon
+                  name={style.icon}
+                  size="3xl"
+                />
+              </div>
             </div>
 
             {/* Title */}

@@ -18,7 +18,7 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -136,10 +136,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           window.localStorage.setItem("userData", JSON.stringify(updatedUserData));
         }
 
-        // تحديث المستخدم في الـ context
-        if (updateUser) {
-          updateUser(new BaseModel(updatedUserData));
-        }
+        // إعادة تحميل الصفحة لتحديث بيانات المستخدم في الـ context
+        window.location.reload();
       }
 
       // إعادة تعيين النموذج
