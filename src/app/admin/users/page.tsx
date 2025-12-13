@@ -23,8 +23,10 @@ function UsersPageContent() {
   const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/users');
   const router = useRouter();
   const [users, setUsers] = useState<BaseModel[]>([]);
+  const [allOffices, setAllOffices] = useState<BaseModel[]>([]);
   const [offices, setOffices] = useState<BaseModel[]>([]);
   const [departments, setDepartments] = useState<BaseModel[]>([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -52,6 +54,7 @@ function UsersPageContent() {
     full_name: '',
     email: '',
     phone: '',
+    department_id: '',
     office_id: '',
     role: '',
     password: '',
@@ -76,7 +79,7 @@ function UsersPageContent() {
       setDepartments(departmentsData);
       
       // جلب جميع المكاتب من جميع الإدارات
-      const allOffices: BaseModel[] = [];
+      const officesList: BaseModel[] = [];
       for (const dept of departmentsData) {
         const deptId = dept.get('id');
         if (deptId) {
@@ -85,11 +88,12 @@ function UsersPageContent() {
           const offices = BaseModel.fromFirestoreArray(officeDocs);
           offices.forEach(office => {
             office.put('department_id', deptId);
-            allOffices.push(office);
+            officesList.push(office);
           });
         }
       }
-      setOffices(allOffices);
+      setAllOffices(officesList);
+      setOffices([]); // لا تظهر المكاتب حتى يتم اختيار الإدارة
       
       // جلب جميع المستخدمين من الجدول المستقل users/userId/
       const userDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("users"));
@@ -199,6 +203,17 @@ function UsersPageContent() {
       // إزالة التكرارات من الصلاحيات
       userData.permissions = Array.from(new Set(userData.permissions));
     }
+    
+    // تعيين الإدارة المختارة وتصفية المكاتب
+    const departmentId = userData.department_id || '';
+    setSelectedDepartmentId(departmentId);
+    if (departmentId) {
+      const filteredOffices = allOffices.filter(office => office.get('department_id') === departmentId);
+      setOffices(filteredOffices);
+    } else {
+      setOffices([]);
+    }
+    
     setFormData(new BaseModel(userData));
     setShowPassword(false);
     setShowConfirmPassword(false);
@@ -232,8 +247,32 @@ function UsersPageContent() {
 
   const getOfficeName = (officeId?: string) => {
     if (!officeId) return '-';
-    const office = offices.find(o => o.get('id') === officeId);
+    const office = allOffices.find(o => o.get('id') === officeId);
     return office?.get('name') || '-';
+  };
+
+  const getDepartmentName = (departmentId?: string) => {
+    if (!departmentId) return '-';
+    const department = departments.find(d => d.get('id') === departmentId);
+    return department?.get('name') || '-';
+  };
+
+  const handleDepartmentChange = (departmentId: string) => {
+    setSelectedDepartmentId(departmentId);
+    const newData = new BaseModel(formData.getData());
+    newData.put('department_id', departmentId);
+    // إعادة تعيين المكتب عند تغيير الإدارة
+    newData.put('office_id', '');
+    setFormData(newData);
+    
+    if (departmentId) {
+      // تصفية المكاتب بناءً على الإدارة المختارة
+      const filteredOffices = allOffices.filter(office => office.get('department_id') === departmentId);
+      setOffices(filteredOffices);
+    } else {
+      // إذا لم يتم اختيار إدارة، لا تظهر أي مكاتب
+      setOffices([]);
+    }
   };
 
   const columns = [
@@ -261,6 +300,11 @@ function UsersPageContent() {
       key: 'phone', 
       label: 'الهاتف',
       render: (item: BaseModel) => item.get('phone'),
+    },
+    { 
+      key: 'department_id', 
+      label: 'الإدارة',
+      render: (item: BaseModel) => getDepartmentName(item.get('department_id')),
     },
     { 
       key: 'office_id', 
@@ -325,7 +369,9 @@ function UsersPageContent() {
             <Button
               onClick={() => {
                 setEditingUser(null);
-                setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+                setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setSelectedDepartmentId('');
+          setOffices([]);
           setShowPassword(false);
           setShowConfirmPassword(false);
                 setIsModalOpen(true);
@@ -349,7 +395,9 @@ function UsersPageContent() {
         onDelete={canDelete ? handleDelete : undefined}
         onAddNew={canAdd ? () => {
           setEditingUser(null);
-          setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setSelectedDepartmentId('');
+          setOffices([]);
           setShowPassword(false);
           setShowConfirmPassword(false);
           setIsModalOpen(true);
@@ -368,7 +416,9 @@ function UsersPageContent() {
           onClose={() => {
             setIsModalOpen(false);
             setEditingUser(null);
-            setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+            setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setSelectedDepartmentId('');
+          setOffices([]);
           setShowPassword(false);
           setShowConfirmPassword(false);
           }}
@@ -445,6 +495,20 @@ function UsersPageContent() {
 
             <div className="grid grid-cols-2 gap-4">
               <Select
+                label="الإدارة"
+                value={formData.get('department_id')}
+                onChange={(e) => {
+                  handleDepartmentChange(e.target.value);
+                }}
+                options={[
+                  { value: '', label: '-- اختر الإدارة --' },
+                  ...departments.map((dept) => ({
+                    value: dept.get('id'),
+                    label: dept.get('name'),
+                  })),
+                ]}
+              />
+              <Select
                 label="المكتب"
                 value={formData.get('office_id')}
                 onChange={(e) => {
@@ -452,10 +516,14 @@ function UsersPageContent() {
                   newData.put('office_id', e.target.value);
                   setFormData(newData);
                 }}
-                options={offices.map((office) => ({
-                  value: office.get('id'),
-                  label: office.get('name'),
-                }))}
+                disabled={!selectedDepartmentId}
+                options={[
+                  { value: '', label: selectedDepartmentId ? '-- اختر المكتب --' : '-- اختر الإدارة أولاً --' },
+                  ...offices.map((office) => ({
+                    value: office.get('id'),
+                    label: office.get('name'),
+                  })),
+                ]}
               />
               <Select
                 label="الدور"
@@ -682,7 +750,9 @@ function UsersPageContent() {
                 onClick={() => {
                   setIsModalOpen(false);
                   setEditingUser(null);
-                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setSelectedDepartmentId('');
+          setOffices([]);
           setShowPassword(false);
           setShowConfirmPassword(false);
                 }}
