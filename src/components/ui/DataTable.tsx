@@ -314,7 +314,7 @@ export function DataTable({
   }
 
   return (
-    <div className="card" style={{ border: '1px solid #dbdade', borderRadius: '1.5rem', boxShadow: '0 0.25rem 1rem rgba(165, 163, 174, 0.45)', overflow: 'hidden' }}>
+    <div className="card" style={{ border: '1px solid #dbdade', borderRadius: '1.5rem', boxShadow: '0 0.25rem 1rem rgba(165, 163, 174, 0.45)', overflow: 'visible' }}>
       <div className="card-header" style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #dbdade', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           {title && (
@@ -487,7 +487,7 @@ export function DataTable({
           </div>
         </div>
       </div>
-      <div className="card-datatable table-responsive" style={{ paddingTop: 0, overflow: 'visible' }}>
+      <div className="card-datatable table-responsive" style={{ paddingTop: 0, overflowX: 'auto', overflowY: 'visible', maxWidth: '100%' }}>
         {/* Desktop Table */}
         <table className="table datatables-basic" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
           <thead>

@@ -190,7 +190,7 @@ function UsersPageContent() {
   const columns = [
     { 
       key: 'username', 
-      label: 'اسم المستخدم',
+      label: 'رقم المستخدم',
       render: (item: BaseModel) => item.get('username'),
     },
     { 
