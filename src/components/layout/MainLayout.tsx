@@ -30,20 +30,22 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       }
       
       const target = event.target as Node;
+      // التحقق من أن النقر ليس داخل القائمة المنسدلة
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(target)) {
         setIsProfileDropdownOpen(false);
       }
     };
 
     if (isProfileDropdownOpen) {
-      // استخدام setTimeout لإضافة event listener بعد أن يتم معالجة click event
+      // استخدام click بدون capture لتجنب إغلاق القائمة قبل النقر على الأزرار
+      // زيادة timeout لإعطاء الوقت للأزرار للاستجابة
       const timeoutId = setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-      }, 0);
+        document.addEventListener('click', handleClickOutside);
+      }, 100);
 
       return () => {
         clearTimeout(timeoutId);
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('click', handleClickOutside);
       };
     }
   }, [isProfileDropdownOpen]);
@@ -210,10 +212,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       <div className="py-1">
                         <button
                           type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -222,12 +220,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             setIsProfileModalOpen(true);
                             console.log('Profile modal state set to true');
                             // إغلاق القائمة بعد فتح الـ modal
-                            requestAnimationFrame(() => {
-                              setTimeout(() => {
-                                setIsProfileDropdownOpen(false);
-                                isOpeningProfileRef.current = false;
-                              }, 200);
-                            });
+                            setTimeout(() => {
+                              setIsProfileDropdownOpen(false);
+                              isOpeningProfileRef.current = false;
+                            }, 100);
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition cursor-pointer rounded-lg mx-1"
                         >
@@ -324,10 +320,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       <div className="py-1">
                         <button
                           type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -336,12 +328,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             setIsProfileModalOpen(true);
                             console.log('Profile modal state set to true');
                             // إغلاق القائمة بعد فتح الـ modal
-                            requestAnimationFrame(() => {
-                              setTimeout(() => {
-                                setIsProfileDropdownOpen(false);
-                                isOpeningProfileRef.current = false;
-                              }, 200);
-                            });
+                            setTimeout(() => {
+                              setIsProfileDropdownOpen(false);
+                              isOpeningProfileRef.current = false;
+                            }, 100);
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition cursor-pointer rounded-lg mx-1"
                         >
