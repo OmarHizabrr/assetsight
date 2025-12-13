@@ -475,7 +475,7 @@ export function DataTable({
             <div className="flex-1 sm:flex-initial min-w-[200px] sm:min-w-[280px]">
               <DebouncedInput
                 value={searchTerm}
-                onChange={setDebouncedSearchTerm}
+                onChange={(value) => setDebouncedSearchTerm(String(value))}
                 placeholder="بحث في الجدول..."
                 debounce={300}
                 fullWidth
