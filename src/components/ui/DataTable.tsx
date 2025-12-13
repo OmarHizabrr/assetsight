@@ -11,6 +11,8 @@ import { Select } from "./Select";
 import { Card, CardBody, CardHeader } from "./Card";
 import { DebouncedInput } from "./DebouncedInput";
 import logoText from "@/assets/images/logos/logo-text.png";
+import { PdfSettingsService } from "@/lib/services/PdfSettingsService";
+import { getBothDates } from "@/lib/utils/hijriDate";
 
 // Utility function to format dates
 const formatDate = (dateValue: any): string => {
@@ -408,21 +410,24 @@ export function DataTable({
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     
+    // Get PDF settings
+    const settingsService = PdfSettingsService.getInstance();
+    const settings = settingsService.getSettings();
+    
     // Get current date and time
     const now = new Date();
-    const dateStr = now.toLocaleDateString('ar-SA', { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit' 
-    });
+    const { hijri, gregorian } = getBothDates(now);
     const timeStr = now.toLocaleTimeString('ar-SA', { 
       hour: '2-digit', 
       minute: '2-digit', 
       second: '2-digit' 
     });
     
-    // Get logo path (convert import to string if needed)
-    const logoPath = typeof logoText === 'string' ? logoText : (logoText?.src || logoText || '/favicon.png');
+    // Get logo path
+    let logoPath = typeof logoText === 'string' ? logoText : (logoText?.src || logoText || '/favicon.png');
+    if (settings.logoBase64) {
+      logoPath = `data:image/png;base64,${settings.logoBase64}`;
+    }
     
     const tableHTML = `
       <html>
@@ -595,20 +600,24 @@ export function DataTable({
           </style>
         </head>
         <body>
+          ${settings.isHeaderVisible ? `
           <div id="header">
             <div class="header-content">
               <div class="header-right">
                 <img src="${logoPath}" alt="Logo" class="header-logo" onerror="this.style.display='none'" />
                 <div class="header-text">
                   <h1 class="header-title">${title || 'الجدول'}</h1>
-                  <p class="header-subtitle">${exportFileName}</p>
+                  <p class="header-subtitle">${settings.rightHeader || exportFileName}</p>
                 </div>
               </div>
               <div class="header-left">
-                <p class="header-date">التاريخ: ${dateStr}</p>
+                <p class="header-subtitle" style="text-align: left; margin-bottom: 5px;">${settings.leftHeader || ''}</p>
+                <p class="header-date">${hijri}</p>
+                <p class="header-date" style="font-size: 12px; margin-top: 3px;">${gregorian}</p>
               </div>
             </div>
           </div>
+          ` : ''}
           
           <div class="content">
             <table>
@@ -632,12 +641,14 @@ export function DataTable({
             </table>
           </div>
           
+          ${settings.isHeaderVisible ? `
           <div id="footer">
             <div class="footer-content">
-              <div class="footer-right">نظام AssetSight</div>
-              <div class="footer-left">${timeStr} - ${dateStr}</div>
+              <div class="footer-right">${settings.footerText || 'نظام AssetSight'}</div>
+              <div class="footer-left">${timeStr} - ${hijri} / ${gregorian}</div>
             </div>
           </div>
+          ` : ''}
         </body>
       </html>
     `;

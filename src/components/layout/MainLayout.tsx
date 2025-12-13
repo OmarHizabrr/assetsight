@@ -69,6 +69,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     { href: '/admin/assets', label: 'الأصول', icon: 'inventory' },
     { href: '/admin/inventory', label: 'الجرد', icon: 'checklist' },
     { href: '/admin/reports', label: 'التقارير', icon: 'bar_chart' },
+    { href: '/admin/pdf-settings', label: 'إعدادات PDF', icon: 'picture_as_pdf' },
   ];
 
   // دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
