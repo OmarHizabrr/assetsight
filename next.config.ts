@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["firebase"],
   },
+  allowedDevOrigins: ['192.168.0.170'],
   compress: true,
   poweredByHeader: false,
   async headers() {
