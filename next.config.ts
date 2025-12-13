@@ -24,10 +24,16 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["firebase"],
+    optimizeCss: true,
   },
   allowedDevOrigins: ['192.168.0.170'],
   compress: true,
   poweredByHeader: false,
+  swcMinify: true,
+  reactStrictMode: true,
+  // Performance optimizations
+  productionBrowserSourceMaps: false,
+  optimizeFonts: true,
   async headers() {
     return [
       {
@@ -56,6 +62,32 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          },
+        ],
+      },
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate'
+          },
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/'
+          },
+        ],
+      },
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600'
           },
         ],
       },

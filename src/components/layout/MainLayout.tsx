@@ -5,6 +5,7 @@ import miscMaskLight from "@/assets/images/pages/misc-mask-light.png";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { ProfileModal } from "@/components/profile/ProfileModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { InstallButton } from "@/components/ui/InstallButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import Image from "next/image";
@@ -226,9 +227,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 </div>
               </Link>
             </div>
-            {/* Right Section - User Profile */}
+            {/* Right Section - User Profile & Install Button */}
             {user && (
               <div className="flex items-center gap-2 sm:gap-3 relative">
+                {/* Install Button */}
+                <InstallButton />
                 {/* Profile Button - Desktop */}
                 <div className="hidden sm:block relative" ref={profileDropdownRef}>
                   <button

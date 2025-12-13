@@ -1,3 +1,4 @@
+import { PWAProvider } from "@/components/providers/PWAProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import type { Metadata } from "next";
@@ -39,8 +40,13 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="AssetSight" />
         <link rel="icon" type="image/png" href="/favicon.png" />
-        <link rel="apple-touch-icon" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="manifest" href="/manifest.json" />
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
@@ -52,11 +58,13 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
       </head>
       <body className="antialiased" suppressHydrationWarning>
-        <AuthProvider>
-          <ToastProvider>
-            {children}
-          </ToastProvider>
-        </AuthProvider>
+        <PWAProvider>
+          <AuthProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </AuthProvider>
+        </PWAProvider>
       </body>
     </html>
   );
