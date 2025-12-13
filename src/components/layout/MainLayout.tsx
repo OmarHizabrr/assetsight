@@ -3,6 +3,7 @@
 import { hasPermission } from "@/components/auth/ProtectedRoute";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { ProfileModal } from "@/components/profile/ProfileModal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,23 +17,35 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const isOpeningProfileRef = useRef(false);
 
   // إغلاق القائمة المنسدلة عند النقر خارجها
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+      // إذا كنا نفتح البروفايل، لا نغلق القائمة
+      if (isOpeningProfileRef.current) {
+        return;
+      }
+      
+      const target = event.target as Node;
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(target)) {
         setIsProfileDropdownOpen(false);
       }
     };
 
     if (isProfileDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+      // استخدام setTimeout لإضافة event listener بعد أن يتم معالجة click event
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 0);
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
   }, [isProfileDropdownOpen]);
 
   const allMenuItems = [
@@ -196,11 +209,25 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       {/* قائمة الخيارات */}
                       <div className="py-1">
                         <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            console.log('Opening profile modal, current state:', isProfileModalOpen);
+                            isOpeningProfileRef.current = true;
                             setIsProfileModalOpen(true);
-                            setIsProfileDropdownOpen(false);
+                            console.log('Profile modal state set to true');
+                            // إغلاق القائمة بعد فتح الـ modal
+                            requestAnimationFrame(() => {
+                              setTimeout(() => {
+                                setIsProfileDropdownOpen(false);
+                                isOpeningProfileRef.current = false;
+                              }, 200);
+                            });
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition cursor-pointer rounded-lg mx-1"
                         >
@@ -211,12 +238,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         <div className="mx-2 my-1 h-px bg-slate-200"></div>
                         
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             setIsProfileDropdownOpen(false);
-                            logout();
-                            router.push('/login');
+                            setIsLogoutConfirmOpen(true);
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-error-600 hover:bg-error-50 material-transition cursor-pointer rounded-lg mx-1"
                         >
@@ -296,11 +323,25 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       {/* قائمة الخيارات */}
                       <div className="py-1">
                         <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            console.log('Opening profile modal, current state:', isProfileModalOpen);
+                            isOpeningProfileRef.current = true;
                             setIsProfileModalOpen(true);
-                            setIsProfileDropdownOpen(false);
+                            console.log('Profile modal state set to true');
+                            // إغلاق القائمة بعد فتح الـ modal
+                            requestAnimationFrame(() => {
+                              setTimeout(() => {
+                                setIsProfileDropdownOpen(false);
+                                isOpeningProfileRef.current = false;
+                              }, 200);
+                            });
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-slate-700 hover:bg-primary-50 hover:text-primary-700 material-transition cursor-pointer rounded-lg mx-1"
                         >
@@ -311,12 +352,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         <div className="mx-2 my-1 h-px bg-slate-200"></div>
                         
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             setIsProfileDropdownOpen(false);
-                            logout();
-                            router.push('/login');
+                            setIsLogoutConfirmOpen(true);
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-right text-sm font-medium text-error-600 hover:bg-error-50 material-transition cursor-pointer rounded-lg mx-1"
                         >
@@ -420,7 +461,26 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       {/* Profile Modal */}
       <ProfileModal
         isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
+        onClose={() => {
+          console.log('Closing profile modal');
+          setIsProfileModalOpen(false);
+        }}
+      />
+
+      {/* Logout Confirm Modal */}
+      <ConfirmModal
+        isOpen={isLogoutConfirmOpen}
+        onClose={() => setIsLogoutConfirmOpen(false)}
+        onConfirm={() => {
+          setIsLogoutConfirmOpen(false);
+          logout();
+          router.push('/login');
+        }}
+        title="تأكيد تسجيل الخروج"
+        message="هل أنت متأكد من تسجيل الخروج؟"
+        confirmText="تسجيل الخروج"
+        cancelText="إلغاء"
+        variant="warning"
       />
     </div>
   );
