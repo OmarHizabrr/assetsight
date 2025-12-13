@@ -117,7 +117,18 @@ function PermissionsPageContent() {
         const docRef = firestoreApi.getSubDocument("powers", selectedUserId, "powers", permissionId);
         await firestoreApi.updateData(docRef, submitData);
       } else {
-        // إضافة صلاحية جديدة
+        // إضافة صلاحية جديدة - التحقق من عدم تكرار الصفحة
+        const pagePath = submitData.page_path;
+        const existingPermission = permissions.find(p => {
+          const existingPath = p.get('page_path');
+          return existingPath === pagePath;
+        });
+        
+        if (existingPermission) {
+          alert("هذه الصفحة موجودة بالفعل في الصلاحيات. يرجى اختيار صفحة أخرى أو تعديل الصلاحية الموجودة");
+          return;
+        }
+        
         const newId = firestoreApi.getNewId("powers");
         const docRef = firestoreApi.getSubDocument("powers", selectedUserId, "powers", newId);
         await firestoreApi.setData(docRef, submitData);
@@ -342,10 +353,24 @@ function PermissionsPageContent() {
               setFormData(newData);
             }}
             required
-            options={allPages.map((page) => ({
-              value: page.path,
-              label: page.label,
-            }))}
+            options={(() => {
+              // عند التعديل، نعرض جميع الصفحات
+              if (editingPermission) {
+                return allPages.map((page) => ({
+                  value: page.path,
+                  label: page.label,
+                }));
+              }
+              
+              // عند الإضافة، نعرض فقط الصفحات غير المضافة
+              const addedPagePaths = permissions.map(p => p.get('page_path'));
+              const availablePages = allPages.filter(page => !addedPagePaths.includes(page.path));
+              
+              return availablePages.map((page) => ({
+                value: page.path,
+                label: page.label,
+              }));
+            })()}
           />
 
           <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-200">

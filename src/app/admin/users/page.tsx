@@ -131,8 +131,9 @@ function UsersPageContent() {
       if (submitData.role === 'مدير') {
         submitData.permissions = allPages.map(page => page.path);
       } else {
-        // الحفاظ على الصلاحيات المحددة
-        submitData.permissions = formData.getValue<string[]>('permissions') || [];
+        // الحفاظ على الصلاحيات المحددة وإزالة التكرارات
+        const permissions = formData.getValue<string[]>('permissions') || [];
+        submitData.permissions = Array.from(new Set(permissions));
       }
       
       // إذا لم يتم إدخال كلمة مرور جديدة عند التعديل، لا نحدثها
@@ -191,9 +192,12 @@ function UsersPageContent() {
     // عدم إظهار كلمة المرور عند التعديل
     userData.password = '';
     userData.confirm_password = '';
-    // التأكد من وجود permissions
+    // التأكد من وجود permissions وإزالة التكرارات
     if (!userData.permissions) {
       userData.permissions = [];
+    } else {
+      // إزالة التكرارات من الصلاحيات
+      userData.permissions = Array.from(new Set(userData.permissions));
     }
     setFormData(new BaseModel(userData));
     setShowPassword(false);
@@ -541,35 +545,102 @@ function UsersPageContent() {
                   <h3 className="text-lg font-semibold text-gray-900">الصلاحيات</h3>
                   <span className="text-sm text-gray-500">اختر الصفحات التي يمكن للمستخدم الوصول إليها</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-                  {allPages.map((page) => {
-                    const permissions = formData.getValue<string[]>('permissions') || [];
-                    const hasPermission = permissions.includes(page.path);
+                
+                {/* عرض الصفحات المضافة */}
+                {(() => {
+                  const permissions = Array.from(new Set(formData.getValue<string[]>('permissions') || []));
+                  const addedPages = allPages.filter(page => permissions.includes(page.path));
+                  
+                  if (addedPages.length > 0) {
                     return (
-                      <Checkbox
-                        key={page.path}
-                        label={page.label}
-                        checked={hasPermission}
-                        onChange={(e) => {
-                          const newData = new BaseModel(formData.getData());
-                          const currentPermissions = newData.getValue<string[]>('permissions') || [];
-                          if (e.target.checked) {
-                            if (!currentPermissions.includes(page.path)) {
-                              currentPermissions.push(page.path);
-                            }
-                          } else {
-                            const index = currentPermissions.indexOf(page.path);
-                            if (index > -1) {
-                              currentPermissions.splice(index, 1);
-                            }
-                          }
-                          newData.put('permissions', currentPermissions);
-                          setFormData(newData);
-                        }}
-                      />
+                      <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">الصفحات المضافة:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {addedPages.map((page) => (
+                            <div
+                              key={page.path}
+                              className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 border border-primary-200 rounded-lg"
+                            >
+                              <span className="text-sm text-primary-700 font-medium">{page.label}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newData = new BaseModel(formData.getData());
+                                  // الحصول على الصلاحيات الحالية وإزالة التكرارات أولاً
+                                  const currentPermissions = Array.from(new Set(newData.getValue<string[]>('permissions') || []));
+                                  // إزالة الصفحة وإزالة أي تكرارات
+                                  const filteredPermissions = Array.from(new Set(currentPermissions.filter(p => p !== page.path)));
+                                  newData.put('permissions', filteredPermissions);
+                                  setFormData(newData);
+                                }}
+                                className="text-primary-600 hover:text-primary-800 material-transition"
+                                title="إزالة"
+                              >
+                                <MaterialIcon name="close" size="sm" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     );
-                  })}
-                </div>
+                  }
+                  return null;
+                })()}
+                
+                {/* قائمة الصفحات المتاحة (بدون المضافة) */}
+                {(() => {
+                  const permissions = Array.from(new Set(formData.getValue<string[]>('permissions') || []));
+                  const availablePages = allPages.filter(page => !permissions.includes(page.path));
+                  
+                  if (availablePages.length > 0) {
+                    return (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">إضافة صفحة جديدة:</h4>
+                        <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                          {availablePages.map((page) => {
+                            // التحقق مرة أخرى من أن الصفحة غير موجودة في الصلاحيات
+                            const permissions = Array.from(new Set(formData.getValue<string[]>('permissions') || []));
+                            const isAlreadyAdded = permissions.includes(page.path);
+                            
+                            if (isAlreadyAdded) {
+                              return null; // لا تعرض الصفحة إذا كانت موجودة بالفعل
+                            }
+                            
+                            return (
+                              <Checkbox
+                                key={page.path}
+                                label={page.label}
+                                checked={false}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    const newData = new BaseModel(formData.getData());
+                                    // الحصول على الصلاحيات الحالية وإزالة التكرارات أولاً
+                                    const currentPermissions = Array.from(new Set(newData.getValue<string[]>('permissions') || []));
+                                    
+                                    // التأكد مرة أخرى من عدم وجود الصفحة قبل الإضافة
+                                    if (!currentPermissions.includes(page.path)) {
+                                      currentPermissions.push(page.path);
+                                    }
+                                    
+                                    // إزالة التكرارات مرة أخرى للتأكد
+                                    const uniquePermissions = Array.from(new Set(currentPermissions));
+                                    newData.put('permissions', uniquePermissions);
+                                    setFormData(newData);
+                                  }
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                      <p className="text-sm text-blue-700">تم إضافة جميع الصفحات المتاحة</p>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
