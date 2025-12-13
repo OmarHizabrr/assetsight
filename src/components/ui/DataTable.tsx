@@ -417,11 +417,19 @@ export function DataTable({
     // Get current date and time
     const now = new Date();
     const { hijri, gregorian } = getBothDates(now);
-    const timeStr = now.toLocaleTimeString('ar-SA', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit' 
-    });
+    
+    // تنسيق الوقت بنظام 12 ساعة (مثل المرجع)
+    const hour = now.getHours() > 12 ? now.getHours() - 12 : (now.getHours() === 0 ? 12 : now.getHours());
+    const period = now.getHours() < 12 ? 'صباحاً' : 'مساءً';
+    const formattedHour = String(hour).padStart(2, '0');
+    const formattedMinute = String(now.getMinutes()).padStart(2, '0');
+    const formattedSecond = String(now.getSeconds()).padStart(2, '0');
+    const timeStr = `${formattedHour}:${formattedMinute}:${formattedSecond} ${period}`;
+    
+    // تقسيم النصوص إلى سطور
+    const rightHeaderLines = (settings.rightHeader || '').split('\n').filter(line => line.trim());
+    const leftHeaderLines = (settings.leftHeader || '').split('\n').filter(line => line.trim());
+    const footerSignatures = (settings.footerText || '').split('\n').filter(line => line.trim());
     
     // Get logo path
     let logoPath = typeof logoText === 'string' ? logoText : (logoText?.src || logoText || '/favicon.png');
@@ -435,7 +443,7 @@ export function DataTable({
           <title>${exportFileName}</title>
           <style>
             @page {
-              margin: 100px 50px 80px 50px;
+              margin: 120px 50px 100px 50px;
               @top-center {
                 content: element(header);
               }
@@ -454,8 +462,7 @@ export function DataTable({
             #header {
               position: running(header);
               width: 100%;
-              padding: 15px 0;
-              border-bottom: 2px solid #4b465c;
+              padding: 20px;
               background: white;
             }
             
@@ -463,73 +470,112 @@ export function DataTable({
               display: flex;
               justify-content: space-between;
               align-items: center;
-              padding: 0 20px;
+              width: 100%;
             }
             
             .header-right {
-              display: flex;
-              align-items: center;
-              gap: 20px;
-            }
-            
-            .header-logo {
-              height: 60px;
-              width: auto;
-              object-fit: contain;
-            }
-            
-            .header-text {
+              flex: 1;
               text-align: right;
             }
             
-            .header-title {
-              font-size: 20px;
-              font-weight: bold;
+            .header-right-line {
+              font-size: 14px;
               color: #4b465c;
-              margin: 0 0 5px 0;
+              margin: 0;
+              line-height: 1.6;
+              direction: rtl;
             }
             
-            .header-subtitle {
-              font-size: 14px;
-              color: #6f6b7d;
-              margin: 0;
+            .header-logo {
+              width: 75px;
+              height: 75px;
+              border-radius: 50%;
+              object-fit: cover;
+              margin: 0 20px;
+              flex-shrink: 0;
             }
             
             .header-left {
+              flex: 1;
               text-align: left;
             }
             
-            .header-date {
+            .header-left-line {
               font-size: 14px;
-              color: #6f6b7d;
+              color: #4b465c;
               margin: 0;
+              line-height: 1.6;
+              direction: ltr;
+              text-align: left;
             }
             
             #footer {
               position: running(footer);
               width: 100%;
-              padding: 10px 0;
-              border-top: 2px solid #4b465c;
-              background: #f8f7fa;
-              text-align: center;
+              padding: 10px 20px;
+              background: white;
             }
             
             .footer-content {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              padding: 0 20px;
+              width: 100%;
             }
             
             .footer-right {
-              font-size: 14px;
+              font-size: 10px;
               font-weight: bold;
-              color: #4b465c;
+              color: #1976d2;
+              direction: rtl;
+            }
+            
+            .footer-center {
+              padding: 10px 15px;
+              border-radius: 10px;
+              font-size: 12px;
+              color: #2196f3;
+              direction: rtl;
             }
             
             .footer-left {
-              font-size: 12px;
-              color: #6f6b7d;
+              font-size: 10px;
+              color: #4b465c;
+              direction: rtl;
+              text-align: right;
+              line-height: 1.4;
+            }
+            
+            .signatures-section {
+              margin-top: 20px;
+              padding-top: 20px;
+              border-top: 1px solid #dbdade;
+            }
+            
+            .signatures-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 12px;
+            }
+            
+            .signature-item {
+              flex: 1;
+              text-align: center;
+              max-width: 200px;
+            }
+            
+            .signature-line {
+              width: 150px;
+              height: 1px;
+              background: #000;
+              margin: 0 auto 5px;
+            }
+            
+            .signature-text {
+              font-size: 10px;
+              color: #4b465c;
+              direction: rtl;
+              line-height: 1.4;
             }
             
             .content {
@@ -604,16 +650,11 @@ export function DataTable({
           <div id="header">
             <div class="header-content">
               <div class="header-right">
-                <img src="${logoPath}" alt="Logo" class="header-logo" onerror="this.style.display='none'" />
-                <div class="header-text">
-                  <h1 class="header-title">${title || 'الجدول'}</h1>
-                  <p class="header-subtitle">${(settings.rightHeader || exportFileName).replace(/\n/g, '<br>')}</p>
-                </div>
+                ${rightHeaderLines.map(line => `<p class="header-right-line">${line}</p>`).join('')}
               </div>
+              <img src="${logoPath}" alt="Logo" class="header-logo" onerror="this.style.display='none'" />
               <div class="header-left">
-                <p class="header-subtitle" style="text-align: left; margin-bottom: 5px; white-space: pre-line;">${(settings.leftHeader || '').replace(/\n/g, '<br>')}</p>
-                <p class="header-date">${hijri}</p>
-                <p class="header-date" style="font-size: 12px; margin-top: 3px;">${gregorian}</p>
+                ${leftHeaderLines.map(line => `<p class="header-left-line">${line}</p>`).join('')}
               </div>
             </div>
           </div>
@@ -641,11 +682,33 @@ export function DataTable({
             </table>
           </div>
           
+          ${settings.isHeaderVisible && footerSignatures.length > 0 ? `
+          <div class="signatures-section">
+            ${(function() {
+              let html = '';
+              for (let i = 0; i < footerSignatures.length; i += 3) {
+                html += '<div class="signatures-row">';
+                for (let j = i; j < i + 3 && j < footerSignatures.length; j++) {
+                  html += `
+                    <div class="signature-item">
+                      <div class="signature-line"></div>
+                      <div class="signature-text">${footerSignatures[j]}</div>
+                    </div>
+                  `;
+                }
+                html += '</div>';
+              }
+              return html;
+            })()}
+          </div>
+          ` : ''}
+          
           ${settings.isHeaderVisible ? `
           <div id="footer">
             <div class="footer-content">
-              <div class="footer-right" style="white-space: pre-line; text-align: right;">${(settings.footerText || 'نظام AssetSight').replace(/\n/g, '<br>')}</div>
-              <div class="footer-left">${timeStr} - ${hijri} / ${gregorian}</div>
+              <div class="footer-right">${title || 'الجدول'}</div>
+              <div class="footer-center">صفحة <span id="page-num">1</span></div>
+              <div class="footer-left">تاريخ الطباعة: ${gregorian}<br>الوقت: ${timeStr}</div>
             </div>
           </div>
           ` : ''}
