@@ -206,38 +206,40 @@ export function DataTable({
   }, [actionDropdownOpen]);
 
   // Update dropdown position on scroll and resize
-  useEffect(() => {
-    const handleScroll = () => {
-      // Update export dropdown position
-      if (exportDropdownOpen && exportButtonRef.current) {
-        const button = exportButtonRef.current;
-        const rect = button.getBoundingClientRect();
-        setExportDropdownPosition({
-          top: rect.bottom + 8,
-          right: window.innerWidth - rect.right,
-        });
-      }
-      
-      // Update action dropdowns position
-      Object.keys(actionDropdownOpen).forEach((key) => {
-        if (actionDropdownOpen[key] && actionButtonRefs.current[key]) {
-          const button = actionButtonRefs.current[key];
-          if (button) {
-            const rect = button.getBoundingClientRect();
-            // Fixed positioning is relative to viewport, not page
-            setActionDropdownPosition((prevPos) => ({
-              ...prevPos,
-              [key]: {
-                top: rect.bottom + 4,
-                left: rect.left,
-              }
-            }));
-          }
-        }
+  const handleScroll = useCallback(() => {
+    // Update export dropdown position
+    if (exportDropdownOpen && exportButtonRef.current) {
+      const button = exportButtonRef.current;
+      const rect = button.getBoundingClientRect();
+      setExportDropdownPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
       });
-    };
+    }
+    
+    // Update action dropdowns position
+    Object.keys(actionDropdownOpen).forEach((key) => {
+      if (actionDropdownOpen[key] && actionButtonRefs.current[key]) {
+        const button = actionButtonRefs.current[key];
+        if (button) {
+          const rect = button.getBoundingClientRect();
+          // Fixed positioning is relative to viewport, not page
+          setActionDropdownPosition((prevPos) => ({
+            ...prevPos,
+            [key]: {
+              top: rect.bottom + 4,
+              left: rect.left,
+            }
+          }));
+        }
+      }
+    });
+  }, [exportDropdownOpen, actionDropdownOpen]);
 
-    if (exportDropdownOpen || Object.keys(actionDropdownOpen).length > 0) {
+  useEffect(() => {
+    const hasOpenDropdowns = exportDropdownOpen || Object.keys(actionDropdownOpen).length > 0;
+    
+    if (hasOpenDropdowns) {
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', handleScroll);
       return () => {
@@ -245,7 +247,7 @@ export function DataTable({
         window.removeEventListener('resize', handleScroll);
       };
     }
-  }, [actionDropdownOpen, exportDropdownOpen]);
+  }, [exportDropdownOpen, actionDropdownOpen, handleScroll]);
 
   // Filter data using debounced search term - memoized for performance
   const filteredData = useMemo(() => {
