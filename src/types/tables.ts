@@ -63,6 +63,7 @@ export interface Category {
 
 export interface User {
   id?: string;
+  employee_number: string;
   username: string;
   full_name: string;
   email?: string;

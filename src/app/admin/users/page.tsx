@@ -2,6 +2,7 @@
 
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon, UserIcon } from "@/components/icons";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -46,6 +47,7 @@ function UsersPageContent() {
   ];
 
   const [formData, setFormData] = useState<BaseModel>(new BaseModel({
+    employee_number: '',
     username: '',
     full_name: '',
     email: '',
@@ -53,10 +55,13 @@ function UsersPageContent() {
     office_id: '',
     role: '',
     password: '',
+    confirm_password: '',
     permissions: [] as string[],
     is_active: true,
     notes: '',
   }));
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -103,6 +108,25 @@ function UsersPageContent() {
       const submitData = formData.getData();
       submitData.is_active = formData.getValue<boolean>('is_active') ? 1 : 0;
       
+      // التحقق من تكرار رقم الموظف
+      const employeeNumber = submitData.employee_number?.trim();
+      if (!employeeNumber) {
+        alert("يجب إدخال رقم الموظف");
+        return;
+      }
+      
+      // التحقق من عدم تكرار رقم الموظف
+      const existingUser = users.find(u => {
+        const userEmpNum = u.get('employee_number')?.trim();
+        const isSameUser = editingUser?.get('id') === u.get('id');
+        return userEmpNum === employeeNumber && !isSameUser;
+      });
+      
+      if (existingUser) {
+        alert("رقم الموظف موجود بالفعل. يرجى استخدام رقم آخر");
+        return;
+      }
+      
       // إذا كان الدور "مدير"، إعطاء صلاحية لجميع الصفحات
       if (submitData.role === 'مدير') {
         submitData.permissions = allPages.map(page => page.path);
@@ -114,7 +138,17 @@ function UsersPageContent() {
       // إذا لم يتم إدخال كلمة مرور جديدة عند التعديل، لا نحدثها
       if (editingUser && !submitData.password) {
         delete submitData.password;
+        delete submitData.confirm_password;
+      } else if (editingUser && submitData.password) {
+        // التحقق من تطابق كلمة المرور عند التعديل
+        if (submitData.password !== submitData.confirm_password) {
+          alert("كلمة المرور وتأكيد كلمة المرور غير متطابقين");
+          return;
+        }
       }
+      
+      // حذف confirm_password قبل الحفظ
+      delete submitData.confirm_password;
       
       const userId = editingUser?.get('id');
       
@@ -128,13 +162,21 @@ function UsersPageContent() {
           alert("يجب إدخال كلمة المرور للمستخدم الجديد");
           return;
         }
+        
+        // التحقق من تطابق كلمة المرور
+        if (submitData.password !== submitData.confirm_password) {
+          alert("كلمة المرور وتأكيد كلمة المرور غير متطابقين");
+          return;
+        }
         const newId = firestoreApi.getNewId("users");
         const docRef = firestoreApi.getDocument("users", newId);
         await firestoreApi.setData(docRef, submitData);
       }
       setIsModalOpen(false);
       setEditingUser(null);
-      setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', permissions: [], is_active: true, notes: '' }));
+      setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+      setShowPassword(false);
+      setShowConfirmPassword(false);
       loadData();
     } catch (error) {
       console.error("Error saving user:", error);
@@ -148,11 +190,14 @@ function UsersPageContent() {
     userData.is_active = user.getValue<number>('is_active') === 1 || user.getValue<boolean>('is_active') === true;
     // عدم إظهار كلمة المرور عند التعديل
     userData.password = '';
+    userData.confirm_password = '';
     // التأكد من وجود permissions
     if (!userData.permissions) {
       userData.permissions = [];
     }
     setFormData(new BaseModel(userData));
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setIsModalOpen(true);
   };
 
@@ -189,8 +234,13 @@ function UsersPageContent() {
 
   const columns = [
     { 
+      key: 'employee_number', 
+      label: 'رقم الموظف',
+      render: (item: BaseModel) => item.get('employee_number'),
+    },
+    { 
       key: 'username', 
-      label: 'رقم المستخدم',
+      label: 'اسم المستخدم',
       render: (item: BaseModel) => item.get('username'),
     },
     { 
@@ -271,7 +321,9 @@ function UsersPageContent() {
             <Button
               onClick={() => {
                 setEditingUser(null);
-                setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', permissions: [], is_active: true, notes: '' }));
+                setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setShowPassword(false);
+          setShowConfirmPassword(false);
                 setIsModalOpen(true);
               }}
               leftIcon={<PlusIcon className="w-5 h-5" />}
@@ -293,7 +345,9 @@ function UsersPageContent() {
         onDelete={canDelete ? handleDelete : undefined}
         onAddNew={canAdd ? () => {
           setEditingUser(null);
-          setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', permissions: [], is_active: true, notes: '' }));
+          setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setShowPassword(false);
+          setShowConfirmPassword(false);
           setIsModalOpen(true);
         } : undefined}
         onView={(item) => {
@@ -310,13 +364,27 @@ function UsersPageContent() {
           onClose={() => {
             setIsModalOpen(false);
             setEditingUser(null);
-            setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', permissions: [], is_active: true, notes: '' }));
+            setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setShowPassword(false);
+          setShowConfirmPassword(false);
           }}
           title={editingUser ? "تعديل مستخدم" : "إضافة مستخدم جديد"}
           size="lg"
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="رقم الموظف"
+                type="text"
+                required
+                value={formData.get('employee_number')}
+                onChange={(e) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('employee_number', e.target.value);
+                  setFormData(newData);
+                }}
+                placeholder="أدخل رقم الموظف"
+              />
               <Input
                 label="اسم المستخدم"
                 type="text"
@@ -327,8 +395,11 @@ function UsersPageContent() {
                   newData.put('username', e.target.value);
                   setFormData(newData);
                 }}
-                placeholder="أدخل اسم المستخدم"
+                placeholder="مثال: قائد زيد"
               />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
               <Input
                 label="الاسم الكامل"
                 type="text"
@@ -339,7 +410,7 @@ function UsersPageContent() {
                   newData.put('full_name', e.target.value);
                   setFormData(newData);
                 }}
-                placeholder="أدخل الاسم الكامل"
+                placeholder="مثال: قائد محمد زيد الشميري"
               />
             </div>
 
@@ -405,18 +476,62 @@ function UsersPageContent() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Input
-                label={editingUser ? "كلمة المرور (اتركها فارغة للحفاظ على الكلمة الحالية)" : "كلمة المرور"}
-                type="text"
-                required={!editingUser}
-                value={formData.get('password')}
-                onChange={(e) => {
-                  const newData = new BaseModel(formData.getData());
-                  newData.put('password', e.target.value);
-                  setFormData(newData);
-                }}
-                placeholder="أدخل كلمة المرور"
-              />
+              <div className="relative">
+                <Input
+                  label={editingUser ? "كلمة المرور (اتركها فارغة للحفاظ على الكلمة الحالية)" : "كلمة المرور"}
+                  type={showPassword ? "text" : "password"}
+                  required={!editingUser}
+                  value={formData.get('password')}
+                  onChange={(e) => {
+                    const newData = new BaseModel(formData.getData());
+                    newData.put('password', e.target.value);
+                    setFormData(newData);
+                  }}
+                  placeholder="أدخل كلمة المرور"
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-slate-500 hover:text-slate-700 material-transition cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      <MaterialIcon 
+                        name={showPassword ? "visibility_off" : "visibility"} 
+                        size="md" 
+                      />
+                    </button>
+                  }
+                />
+              </div>
+              {(formData.get('password') || !editingUser) && (
+                <div className="relative">
+                  <Input
+                    label="تأكيد كلمة المرور"
+                    type={showConfirmPassword ? "text" : "password"}
+                    required={!editingUser || !!formData.get('password')}
+                    value={formData.get('confirm_password')}
+                    onChange={(e) => {
+                      const newData = new BaseModel(formData.getData());
+                      newData.put('confirm_password', e.target.value);
+                      setFormData(newData);
+                    }}
+                    placeholder="أعد إدخال كلمة المرور"
+                    rightIcon={
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="text-slate-500 hover:text-slate-700 material-transition cursor-pointer"
+                        tabIndex={-1}
+                      >
+                        <MaterialIcon 
+                          name={showConfirmPassword ? "visibility_off" : "visibility"} 
+                          size="md" 
+                        />
+                      </button>
+                    }
+                  />
+                </div>
+              )}
             </div>
 
             {/* قسم الصلاحيات - يظهر فقط عندما يكون الدور "غير المدير" */}
@@ -496,7 +611,9 @@ function UsersPageContent() {
                 onClick={() => {
                   setIsModalOpen(false);
                   setEditingUser(null);
-                  setFormData(new BaseModel({ username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', permissions: [], is_active: true, notes: '' }));
+                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setShowPassword(false);
+          setShowConfirmPassword(false);
                 }}
                 size="lg"
               >

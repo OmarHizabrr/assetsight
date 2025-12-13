@@ -10,7 +10,7 @@ import { useState } from "react";
 export default function LoginPage() {
   const { login, loading } = useAuth();
   const router = useRouter();
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [credentials, setCredentials] = useState({ employee_number: '', password: '' });
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,13 +42,13 @@ export default function LoginPage() {
             )}
             
             <Input
-              label="اسم المستخدم"
+              label="رقم الموظف"
               type="text"
               required
-              value={credentials.username}
-              onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-              placeholder="أدخل اسم المستخدم"
-              error={error && !credentials.username ? 'اسم المستخدم مطلوب' : undefined}
+              value={credentials.employee_number}
+              onChange={(e) => setCredentials({ ...credentials, employee_number: e.target.value })}
+              placeholder="أدخل رقم الموظف"
+              error={error && !credentials.employee_number ? 'رقم الموظف مطلوب' : undefined}
             />
             
             <Input

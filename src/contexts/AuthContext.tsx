@@ -15,7 +15,7 @@ interface AuthUser extends BaseModel {
 }
 
 interface LoginCredentials {
-  username: string;
+  employee_number: string;
   password: string;
 }
 
@@ -68,13 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
 
-      // البحث عن المستخدم في الجدول المستقل users/userId/
-      const username = credentials.username.trim();
+      // البحث عن المستخدم في الجدول المستقل users/userId/ باستخدام رقم الموظف
+      const employeeNumber = credentials.employee_number.trim();
       const userDocs = await firestoreApi.getDocuments(
         firestoreApi.getCollection("users"),
         {
-          whereField: "username",
-          isEqualTo: username
+          whereField: "employee_number",
+          isEqualTo: employeeNumber
         }
       );
       
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!foundUser) {
-        throw new Error("اسم المستخدم أو كلمة المرور غير صحيحة");
+        throw new Error("رقم الموظف أو كلمة المرور غير صحيحة");
       }
 
       const matchingUser = BaseModel.fromFirestore(foundUser);
