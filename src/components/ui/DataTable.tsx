@@ -116,6 +116,9 @@ export function DataTable({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(pageSize || 10);
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [isSelectAll, setIsSelectAll] = useState(false);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
   const actionDropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -346,6 +349,96 @@ export function DataTable({
     setCurrentPage(1);
   }, [debouncedSearchTerm]);
 
+  // Reset selection when data changes
+  useEffect(() => {
+    setSelectedRows(new Set());
+    setIsSelectAll(false);
+    setLastSelectedIndex(null);
+  }, [data]);
+
+  // Handle row selection with Shift and Ctrl support
+  const handleRowToggle = (itemId: string, rowIndex: number, event?: React.MouseEvent) => {
+    if (!itemId) return;
+    
+    const newSelected = new Set(selectedRows);
+    const isShiftPressed = event?.shiftKey;
+    const isCtrlPressed = event?.ctrlKey || event?.metaKey;
+
+    if (isShiftPressed && lastSelectedIndex !== null) {
+      // Select range of rows
+      const start = Math.min(lastSelectedIndex, rowIndex);
+      const end = Math.max(lastSelectedIndex, rowIndex);
+      for (let i = start; i <= end; i++) {
+        const item = paginatedData[i];
+        if (item) {
+          const id = item.get('id');
+          if (id) {
+            const idString = String(id);
+            newSelected.add(idString);
+          }
+        }
+      }
+    } else if (isCtrlPressed) {
+      // Toggle single row (Ctrl + Click)
+      if (newSelected.has(itemId)) {
+        newSelected.delete(itemId);
+      } else {
+        newSelected.add(itemId);
+      }
+    } else {
+      // Toggle single row (normal click)
+      if (newSelected.has(itemId)) {
+        newSelected.delete(itemId);
+      } else {
+        newSelected.add(itemId);
+      }
+    }
+
+    setSelectedRows(newSelected);
+    setIsSelectAll(newSelected.size === paginatedData.length && paginatedData.length > 0);
+    setLastSelectedIndex(rowIndex);
+  };
+
+  const handleSelectAll = () => {
+    if (isSelectAll) {
+      setSelectedRows(new Set());
+      setIsSelectAll(false);
+      setLastSelectedIndex(null);
+    } else {
+      const allIds = new Set(
+        paginatedData
+          .map(item => {
+            const id = item.get('id');
+            return id ? String(id) : null;
+          })
+          .filter(Boolean) as string[]
+      );
+      setSelectedRows(allIds);
+      setIsSelectAll(allIds.size === paginatedData.length && paginatedData.length > 0);
+      setLastSelectedIndex(null);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (!onDelete || selectedRows.size === 0) return;
+    
+    const selectedItems = paginatedData.filter(item => {
+      const id = item.get('id');
+      return id && selectedRows.has(id);
+    });
+
+    // Delete all selected items
+    selectedItems.forEach(item => {
+      if (onDelete) {
+        onDelete(item);
+      }
+    });
+
+    setSelectedRows(new Set());
+    setIsSelectAll(false);
+    setLastSelectedIndex(null);
+  };
+
   // Reset to first page when items per page changes
   useEffect(() => {
     setCurrentPage(1);
@@ -443,6 +536,7 @@ export function DataTable({
           <title>${exportFileName}</title>
           <style>
             @page {
+              size: A4;
               margin: 120px 50px 100px 50px;
               @top-center {
                 content: element(header);
@@ -582,6 +676,17 @@ export function DataTable({
               margin-top: 20px;
             }
             
+            /* منع تقسيم التوقيعات */
+            .signatures-section {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+            
+            .signatures-row {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+            
             h2 {
               text-align: center;
               color: #4b465c;
@@ -594,6 +699,19 @@ export function DataTable({
               border-collapse: collapse; 
               margin: 20px 0;
               font-size: 12px;
+            }
+            
+            thead {
+              display: table-header-group;
+            }
+            
+            tbody {
+              display: table-row-group;
+            }
+            
+            tr {
+              page-break-inside: avoid;
+              break-inside: avoid;
             }
             
             th, td { 
@@ -615,6 +733,26 @@ export function DataTable({
             
             tr:nth-child(even) {
               background-color: #fafafa;
+            }
+            
+            /* تحسين الطباعة */
+            @media print {
+              table {
+                page-break-inside: auto;
+              }
+              
+              thead {
+                display: table-header-group;
+              }
+              
+              tfoot {
+                display: table-footer-group;
+              }
+              
+              tbody tr {
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
             }
             
             @media print {
@@ -768,9 +906,39 @@ export function DataTable({
     <>
     <Card variant="elevated" className="overflow-visible animate-scale-in border-primary-200/30 shadow-primary/10">
       <CardHeader className="pb-4 group">
-        {title && (
-          <h5 className="text-lg font-semibold text-slate-800 mb-4">{title}</h5>
-        )}
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          {title && (
+            <h5 className="text-lg font-semibold text-slate-800">{title}</h5>
+          )}
+          {onDelete && selectedRows.size > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-600">
+                {selectedRows.size} عنصر محدد
+              </span>
+              <Button
+                onClick={handleDeleteSelected}
+                variant="outline"
+                size="sm"
+                className="text-error-600 hover:text-error-700 hover:bg-error-50"
+                leftIcon={<MaterialIcon name="delete" size="sm" />}
+              >
+                حذف المحدد ({selectedRows.size})
+              </Button>
+              <Button
+                onClick={() => {
+                  setSelectedRows(new Set());
+                  setIsSelectAll(false);
+                  setLastSelectedIndex(null);
+                }}
+                variant="outline"
+                size="sm"
+                leftIcon={<MaterialIcon name="clear" size="sm" />}
+              >
+                إلغاء التحديد
+              </Button>
+            </div>
+          )}
+        </div>
         
         {/* Search and Controls Row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -832,10 +1000,33 @@ export function DataTable({
         <table className="table datatables-basic" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
           <thead className="sticky top-0 z-10">
             <tr style={{ backgroundColor: '#f8f7fa' }}>
+              {onDelete && (
+                <th
+                  style={{ 
+                    padding: '1rem 1.5rem',
+                    textAlign: 'center',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#5d596c',
+                    borderBottom: '2px solid #dbdade',
+                    background: 'linear-gradient(to bottom, #f8f7fa 0%, #f0eff2 100%)',
+                    width: '60px',
+                    borderTopRightRadius: '1.5rem'
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelectAll}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 cursor-pointer"
+                    title="تحديد الكل"
+                  />
+                </th>
+              )}
               {columns.map((col, colIndex) => {
                 const isSortable = col.sortable !== false;
                 const isSorted = sortColumn === col.key;
-                const isFirstColumn = colIndex === 0;
+                const isFirstColumn = colIndex === 0 && !onDelete;
                 const isLastColumn = colIndex === columns.length - 1 && !(onEdit || onDelete || onView || onArchive);
                 return (
                   <th
@@ -941,7 +1132,7 @@ export function DataTable({
             {sortedData.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length + (onEdit || onDelete || onView || onArchive ? 1 : 0)}
+                  colSpan={columns.length + (onDelete ? 1 : 0) + (onEdit || onDelete || onView || onArchive ? 1 : 0)}
                   style={{ padding: '4rem 1.5rem', textAlign: 'center' }}
                   className="animate-fade-in"
                 >
@@ -970,36 +1161,86 @@ export function DataTable({
                 </td>
               </tr>
             ) : (
-              paginatedData.map((item, index) => (
+              paginatedData.map((item, index) => {
+                const itemId = item.get('id');
+                const itemIdString = itemId ? String(itemId) : '';
+                const isSelected = itemIdString && selectedRows.has(itemIdString);
+                return (
                 <tr
-                  key={item.get('id')}
-                  className="material-transition animate-fade-in"
+                  key={itemIdString || `row-${index}`}
+                  className={`material-transition animate-fade-in cursor-pointer ${isSelected ? 'bg-primary-50' : ''}`}
                   style={{
                     borderBottom: '1px solid #f0eff2',
                     transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    backgroundColor: 'transparent',
+                    backgroundColor: isSelected ? '#f0f4ff' : 'transparent',
                     animationDelay: `${index * 0.02}s`,
-                    animationFillMode: 'both'
+                    animationFillMode: 'both',
+                    borderLeft: isSelected ? '4px solid #7367f0' : 'none'
+                  }}
+                  onClick={(e) => {
+                    // إذا لم يكن النقر على checkbox أو زر الحذف أو زر الإجراءات
+                    const target = e.target as HTMLElement;
+                    const isInput = target.tagName === 'INPUT';
+                    const isButton = target.closest('button') !== null;
+                    const isActionDropdown = target.closest('[data-action-dropdown]') !== null;
+                    const isTableCell = target.tagName === 'TD' && target.querySelector('input[type="checkbox"]');
+                    
+                    if (!isInput && !isButton && !isActionDropdown && !isTableCell && itemIdString) {
+                      handleRowToggle(itemIdString, index, e);
+                    }
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(to right, #f8f7fa 0%, #f0eff2 50%, #f8f7fa 100%)';
+                    if (!isSelected) {
+                      e.currentTarget.style.background = 'linear-gradient(to right, #f8f7fa 0%, #f0eff2 50%, #f8f7fa 100%)';
+                    }
                     e.currentTarget.style.boxShadow = '0 6px 20px rgba(115, 103, 240, 0.2), 0 2px 8px rgba(115, 103, 240, 0.1)';
                     e.currentTarget.style.transform = 'translateY(-2px) scale(1.002)';
-                    e.currentTarget.style.borderLeft = '3px solid #7367f0';
+                    if (!isSelected) {
+                      e.currentTarget.style.borderLeft = '3px solid #7367f0';
+                    }
                     Array.from(e.currentTarget.children).forEach((cell) => {
                       (cell as HTMLElement).style.borderBottomColor = '#e8e6ea';
                     });
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
+                    if (!isSelected) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderLeft = 'none';
+                    } else {
+                      e.currentTarget.style.background = '#f0f4ff';
+                      e.currentTarget.style.borderLeft = '4px solid #7367f0';
+                    }
                     e.currentTarget.style.boxShadow = 'none';
                     e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                    e.currentTarget.style.borderLeft = 'none';
                     Array.from(e.currentTarget.children).forEach((cell) => {
                       (cell as HTMLElement).style.borderBottomColor = '#f0eff2';
                     });
                   }}
                 >
+                  {onDelete && (
+                    <td
+                      style={{ padding: '1rem 1.5rem', textAlign: 'center' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (itemIdString) {
+                          handleRowToggle(itemIdString, index, e);
+                        }
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          if (itemIdString) {
+                            handleRowToggle(itemIdString, index, e.nativeEvent);
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-4 h-4 cursor-pointer"
+                      />
+                    </td>
+                  )}
                   {columns.map((col) => {
                     const rawValue = item.get(col.key);
                     const isDate = isDateValue(rawValue);
@@ -1146,7 +1387,8 @@ export function DataTable({
                     </td>
                   )}
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

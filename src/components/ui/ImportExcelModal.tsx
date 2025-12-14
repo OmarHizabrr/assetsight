@@ -30,6 +30,7 @@ export function ImportExcelModal({
   const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [isSelectAll, setIsSelectAll] = useState(false);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function ImportExcelModal({
       setColumns([]);
       setSelectedRows(new Set());
       setIsSelectAll(false);
+      setLastSelectedIndex(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -107,6 +109,7 @@ export function ImportExcelModal({
           // تحديد جميع الصفوف افتراضياً
           setSelectedRows(new Set(jsonData.map((_, index) => index)));
           setIsSelectAll(true);
+          setLastSelectedIndex(null);
 
           resolve();
         } catch (error) {
@@ -133,24 +136,49 @@ export function ImportExcelModal({
     setEditingCell(null);
   };
 
-  const handleRowToggle = (rowIndex: number) => {
+  const handleRowToggle = (rowIndex: number, event?: React.MouseEvent) => {
     const newSelected = new Set(selectedRows);
-    if (newSelected.has(rowIndex)) {
-      newSelected.delete(rowIndex);
+    const isShiftPressed = event?.shiftKey;
+    const isCtrlPressed = event?.ctrlKey || event?.metaKey;
+
+    if (isShiftPressed && lastSelectedIndex !== null) {
+      // تحديد نطاق من الصفوف
+      const start = Math.min(lastSelectedIndex, rowIndex);
+      const end = Math.max(lastSelectedIndex, rowIndex);
+      for (let i = start; i <= end; i++) {
+        newSelected.add(i);
+      }
+    } else if (isCtrlPressed) {
+      // تحديد/إلغاء تحديد صف واحد فقط
+      if (newSelected.has(rowIndex)) {
+        newSelected.delete(rowIndex);
+      } else {
+        newSelected.add(rowIndex);
+      }
     } else {
-      newSelected.add(rowIndex);
+      // تحديد/إلغاء تحديد صف واحد
+      if (newSelected.has(rowIndex)) {
+        newSelected.delete(rowIndex);
+      } else {
+        newSelected.add(rowIndex);
+      }
     }
+
     setSelectedRows(newSelected);
     setIsSelectAll(newSelected.size === previewData.length);
+    setLastSelectedIndex(rowIndex);
   };
 
   const handleSelectAll = () => {
     if (isSelectAll) {
       setSelectedRows(new Set());
       setIsSelectAll(false);
+      setLastSelectedIndex(null);
     } else {
-      setSelectedRows(new Set(previewData.map((_, index) => index)));
+      const allIndices = new Set(previewData.map((_, index) => index));
+      setSelectedRows(allIndices);
       setIsSelectAll(true);
+      setLastSelectedIndex(null);
     }
   };
 
@@ -159,6 +187,7 @@ export function ImportExcelModal({
     setPreviewData(newData);
     setSelectedRows(new Set());
     setIsSelectAll(false);
+    setLastSelectedIndex(null);
   };
 
   const handleDeleteRow = (rowIndex: number) => {
@@ -176,6 +205,12 @@ export function ImportExcelModal({
       }
     });
     setSelectedRows(updatedSelected);
+    // إعادة تعيين lastSelectedIndex إذا كان الصف المحذوف هو آخر صف محدد
+    if (lastSelectedIndex === rowIndex) {
+      setLastSelectedIndex(null);
+    } else if (lastSelectedIndex !== null && lastSelectedIndex > rowIndex) {
+      setLastSelectedIndex(lastSelectedIndex - 1);
+    }
   };
 
   const handleImport = async () => {
@@ -237,31 +272,52 @@ export function ImportExcelModal({
 
         {file && previewData.length > 0 && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-4 flex-wrap">
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={isSelectAll}
                     onChange={handleSelectAll}
-                    className="w-4 h-4"
+                    className="w-4 h-4 cursor-pointer"
                   />
                   <span className="text-sm font-medium">تحديد الكل</span>
                 </div>
                 <span className="text-sm text-slate-600">
                   {selectedRows.size} من {previewData.length} صف محدد
                 </span>
+                <div className="text-xs text-slate-500 flex items-center gap-2">
+                  <MaterialIcon name="info" size="sm" />
+                  <span>Shift للنطاق | Ctrl للتحديد المتعدد</span>
+                </div>
               </div>
-              {selectedRows.size > 0 && (
-                <Button
-                  onClick={handleDeleteSelected}
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<MaterialIcon name="delete" size="sm" />}
-                >
-                  حذف المحدد ({selectedRows.size})
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {selectedRows.size > 0 && (
+                  <>
+                    <Button
+                      onClick={() => {
+                        setSelectedRows(new Set());
+                        setIsSelectAll(false);
+                        setLastSelectedIndex(null);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      leftIcon={<MaterialIcon name="clear" size="sm" />}
+                    >
+                      إلغاء التحديد
+                    </Button>
+                    <Button
+                      onClick={handleDeleteSelected}
+                      variant="outline"
+                      size="sm"
+                      className="text-error-600 hover:text-error-700 hover:bg-error-50"
+                      leftIcon={<MaterialIcon name="delete" size="sm" />}
+                    >
+                      حذف المحدد ({selectedRows.size})
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="border border-slate-200 rounded-lg overflow-hidden">
@@ -293,16 +349,32 @@ export function ImportExcelModal({
                     {previewData.map((row, rowIndex) => (
                       <tr
                         key={rowIndex}
-                        className={`hover:bg-slate-50 ${
-                          selectedRows.has(rowIndex) ? 'bg-primary-50' : ''
+                        className={`hover:bg-slate-50 cursor-pointer ${
+                          selectedRows.has(rowIndex) ? 'bg-primary-50 border-l-4 border-l-primary-500' : ''
                         }`}
+                        onClick={(e) => {
+                          // إذا لم يكن النقر على checkbox أو زر الحذف
+                          const target = e.target as HTMLElement;
+                          if (target.tagName !== 'INPUT' && !target.closest('button')) {
+                            handleRowToggle(rowIndex, e);
+                          }
+                        }}
                       >
-                        <td className="px-3 py-2 border-b border-slate-100">
+                        <td 
+                          className="px-3 py-2 border-b border-slate-100 cursor-pointer"
+                          onClick={(e) => {
+                            // إذا تم النقر على الخلية نفسها وليس على checkbox
+                            if (e.target !== e.currentTarget && (e.target as HTMLElement).tagName !== 'INPUT') {
+                              handleRowToggle(rowIndex, e);
+                            }
+                          }}
+                        >
                           <input
                             type="checkbox"
                             checked={selectedRows.has(rowIndex)}
-                            onChange={() => handleRowToggle(rowIndex)}
-                            className="w-4 h-4"
+                            onChange={(e) => handleRowToggle(rowIndex, e.nativeEvent)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 h-4 cursor-pointer"
                           />
                         </td>
                         <td className="px-3 py-2 border-b border-slate-100 text-slate-500">
@@ -355,9 +427,11 @@ export function ImportExcelModal({
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg flex-wrap gap-3">
               <div className="text-sm text-slate-600">
-                <span className="font-semibold">ملاحظة:</span> انقر نقراً مزدوجاً على أي خلية لتعديلها
+                <span className="font-semibold">ملاحظة:</span> انقر نقراً مزدوجاً على أي خلية لتعديلها | 
+                <span className="mx-2">Shift للنطاق</span> | 
+                <span className="mx-2">Ctrl للتحديد المتعدد</span>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -367,6 +441,7 @@ export function ImportExcelModal({
                     setColumns([]);
                     setSelectedRows(new Set());
                     setIsSelectAll(false);
+                    setLastSelectedIndex(null);
                     if (fileInputRef.current) {
                       fileInputRef.current.value = '';
                     }

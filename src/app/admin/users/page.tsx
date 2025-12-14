@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
+import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
@@ -66,6 +67,8 @@ function UsersPageContent() {
   }));
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -355,6 +358,188 @@ function UsersPageContent() {
     return department?.get('name') || '-';
   };
 
+  const handleImportData = async (data: Array<Record<string, any>>) => {
+    setImportLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    try {
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        try {
+          // دالة مساعدة لاستخراج القيمة من الصف بأسماء مختلفة
+          const getValue = (keys: string[]): string => {
+            for (const key of keys) {
+              const value = row[key];
+              if (value !== undefined && value !== null && value !== '') {
+                return value.toString().trim();
+              }
+            }
+            return '';
+          };
+
+          // استخراج البيانات من الصف
+          const employeeNumber = getValue(['رقم الموظف', 'employee_number', 'Employee Number', 'رقم_الموظف', 'user_id', 'User ID', 'USER_ID']);
+          const username = getValue(['اسم المستخدم', 'username', 'Username', 'اسم_المستخدم', 'user_name', 'User Name', 'USER_NAME']);
+          const fullName = getValue(['الاسم الكامل', 'full_name', 'Full Name', 'الاسم_الكامل', 'name', 'Name', 'NAME']);
+          const email = getValue(['البريد الإلكتروني', 'email', 'Email', 'البريد_الإلكتروني', 'EMAIL']);
+          const phone = getValue(['الهاتف', 'phone', 'Phone']);
+          const departmentName = getValue(['الإدارة', 'department', 'Department']);
+          const officeName = getValue(['المكتب', 'office', 'Office']);
+          const role = getValue(['الدور', 'role', 'Role']) || 'غير المدير';
+          // كلمة المرور تساوي رقم الموظف
+          const password = employeeNumber || '';
+          const isActive = getValue(['نشط', 'is_active', 'Is Active', 'active']) || '1';
+          const notes = getValue(['الملاحظات', 'notes', 'Notes']);
+
+          // طباعة البيانات المستخرجة للمساعدة في التصحيح
+          console.log(`سطر ${i + 2} - البيانات المستخرجة:`, {
+            employeeNumber,
+            username,
+            fullName,
+            email,
+            rowKeys: Object.keys(row),
+            rowData: row
+          });
+
+          // التحقق من الحقول المطلوبة
+          if (!employeeNumber) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: رقم الموظف فارغ. الأعمدة المتاحة: ${Object.keys(row).join(', ')}`);
+            continue;
+          }
+
+          if (!username) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: اسم المستخدم فارغ. الأعمدة المتاحة: ${Object.keys(row).join(', ')}`);
+            continue;
+          }
+
+          if (!fullName) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: الاسم الكامل فارغ. الأعمدة المتاحة: ${Object.keys(row).join(', ')}`);
+            continue;
+          }
+
+          // التحقق من عدم تكرار رقم الموظف
+          const existingUser = users.find(u => {
+            const userEmpNum = u.get('employee_number')?.toString().trim();
+            return userEmpNum === employeeNumber;
+          });
+
+          if (existingUser) {
+            errorCount++;
+            errors.push(`سطر ${i + 2}: رقم الموظف "${employeeNumber}" موجود مسبقاً`);
+            continue;
+          }
+
+          // البحث عن الإدارة بالاسم (اختياري)
+          let departmentId = '';
+          if (departmentName) {
+            const department = departments.find(d => d.get('name') === departmentName);
+            if (department) {
+              departmentId = department.get('id') || '';
+            }
+            // لا نعتبر عدم وجود الإدارة خطأ - يمكن أن يكون المستخدم بدون إدارة
+          }
+
+          // البحث عن المكتب بالاسم (اختياري)
+          let officeId = '';
+          if (officeName && departmentId) {
+            const office = allOffices.find(o => 
+              o.get('name') === officeName && o.get('department_id') === departmentId
+            );
+            if (office) {
+              officeId = office.get('id') || '';
+            }
+            // لا نعتبر عدم وجود المكتب خطأ - يمكن أن يكون المستخدم بدون مكتب
+          }
+
+          // تحديد الدور
+          const finalRole = (role === 'مدير' || role === 'admin' || role === 'Admin') ? 'مدير' : 'غير المدير';
+
+          // تحديد حالة النشاط
+          const finalIsActive = (isActive === '1' || isActive === 'نعم' || isActive === 'yes' || isActive === 'Yes' || isActive === 'true' || isActive === 'True') ? 1 : 0;
+
+          // إعداد الصلاحيات
+          let permissions: string[] = [];
+          if (finalRole === 'مدير') {
+            permissions = allPages.map(page => page.path);
+          }
+
+          // إضافة مستخدم جديد
+          const newId = firestoreApi.getNewId("users");
+          const docRef = firestoreApi.getDocument("users", newId);
+          const userData = {
+            employee_number: employeeNumber,
+            username: username,
+            full_name: fullName,
+            email: email || '',
+            phone: phone || '',
+            department_id: departmentId || '',
+            office_id: officeId || '',
+            role: finalRole,
+            password: password,
+            is_active: finalIsActive,
+            notes: notes || '',
+            permissions: permissions,
+          };
+          
+          console.log(`إضافة مستخدم جديد:`, userData);
+          await firestoreApi.setData(docRef, userData);
+
+          // حفظ الصلاحيات في subcollection powers/{userId}/powers (فقط للمستخدمين غير المديرين)
+          if (finalRole !== 'مدير' && permissions.length > 0) {
+            try {
+              const normalizePath = (path: string): string => {
+                if (!path || path === '/') return '/';
+                return path.replace(/\/+$/, '');
+              };
+
+              for (const pagePath of permissions) {
+                if (pagePath && pagePath !== '/') {
+                  const normalizedPath = normalizePath(pagePath);
+                  const permissionId = firestoreApi.getNewId("powers");
+                  const permissionDocRef = firestoreApi.getSubDocument("powers", newId, "powers", permissionId);
+                  await firestoreApi.setData(permissionDocRef, {
+                    page_path: normalizedPath,
+                    can_view: 1,
+                    can_add: 0,
+                    can_edit: 0,
+                    can_delete: 0,
+                  });
+                }
+              }
+            } catch (error) {
+              console.error("Error saving permissions:", error);
+            }
+          }
+
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          errors.push(`سطر ${i + 2}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+        }
+      }
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم استيراد ${successCount} مستخدم بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+      } else {
+        showSuccess(`تم استيراد ${successCount} مستخدم بنجاح`);
+      }
+
+      loadData();
+    } catch (error) {
+      console.error("Error importing data:", error);
+      throw error;
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const handleDepartmentChange = (departmentId: string) => {
     setSelectedDepartmentId(departmentId);
     const newData = new BaseModel(formData.getData());
@@ -479,25 +664,38 @@ function UsersPageContent() {
             </div>
           </div>
           {canAdd && (
-            <Button
-              onClick={() => {
-                setEditingUser(null);
-                setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => setIsImportModalOpen(true)}
+                size="lg"
+                variant="outline"
+                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold border-2 hover:border-primary-400"
+              >
+                <span className="flex items-center gap-2">
+                  <MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />
+                  <span>استيراد من Excel</span>
+                </span>
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditingUser(null);
+                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
           setSelectedDepartmentId('');
           setOffices([]);
           setShowPassword(false);
           setShowConfirmPassword(false);
-                setIsModalOpen(true);
-              }}
-              size="lg"
-              variant="primary"
-              className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
-            >
-              <span className="flex items-center gap-2">
-                <MaterialIcon name="add" className="w-5 h-5" size="lg" />
-                <span>إضافة مستخدم جديد</span>
-              </span>
-            </Button>
+                  setIsModalOpen(true);
+                }}
+                size="lg"
+                variant="primary"
+                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+              >
+                <span className="flex items-center gap-2">
+                  <MaterialIcon name="add" className="w-5 h-5" size="lg" />
+                  <span>إضافة مستخدم جديد</span>
+                </span>
+              </Button>
+            </div>
           )}
         </div>
         
@@ -890,6 +1088,16 @@ function UsersPageContent() {
           cancelText="إلغاء"
           variant="danger"
           loading={deleteLoading}
+        />
+
+        {/* Import Excel Modal */}
+        <ImportExcelModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={handleImportData}
+          title="استيراد المستخدمين من Excel"
+          description="اختر ملف Excel لعرض البيانات ومعاينتها وتعديلها قبل الحفظ. يجب أن يحتوي الملف على الأعمدة: رقم الموظف، اسم المستخدم، الاسم الكامل، البريد الإلكتروني، الهاتف، الإدارة، المكتب، الدور، كلمة المرور، نشط، الملاحظات"
+          loading={importLoading}
         />
     </MainLayout>
   );

@@ -1,25 +1,53 @@
 /**
- * تحويل التاريخ الميلادي إلى هجري
+ * تحويل التاريخ الميلادي إلى هجري (خوارزمية محسّنة)
+ * يعتمد على حساب الفرق بالأيام من بداية التقويم الهجري
  */
 export function toHijri(date: Date): { year: number; month: number; day: number; monthName: string } {
   const gregorianYear = date.getFullYear();
   const gregorianMonth = date.getMonth() + 1;
   const gregorianDay = date.getDate();
 
-  // حساب التاريخ الهجري
-  const hijriYear = Math.floor((gregorianYear - 622) * 0.9702) + 1;
-  const daysSinceHijriEpoch = Math.floor((gregorianYear - 622) * 354.37) + 
-    Math.floor((gregorianMonth - 1) * 29.5) + gregorianDay - 1;
+  // تاريخ بداية التقويم الهجري: 16 يوليو 622 م (1 محرم 1 هـ)
+  const hijriEpoch = new Date(622, 6, 16); // يوليو = 6 (0-indexed)
+  const currentDate = new Date(gregorianYear, gregorianMonth - 1, gregorianDay);
   
-  let hijriYearCalc = Math.floor(daysSinceHijriEpoch / 354.37) + 1;
-  const remainingDays = daysSinceHijriEpoch % 354.37;
+  // حساب الفرق بالأيام
+  const diffTime = currentDate.getTime() - hijriEpoch.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  // السنة الهجرية = 354.367 يوم في المتوسط
+  let hijriYear = Math.floor(diffDays / 354.367) + 1;
+  
+  // حساب الأيام المتبقية في السنة الحالية
+  let remainingDays = diffDays - Math.floor((hijriYear - 1) * 354.367);
+  
+  // أشهر السنة الهجرية (أيام كل شهر)
+  const hijriMonths = [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29];
+  
+  // تحديد السنة الكبيسة (السنة 2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29 في دورة 30 سنة)
+  const leapYearCycle = hijriYear % 30;
+  const isLeapYear = [2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29].includes(leapYearCycle);
+  if (isLeapYear) {
+    hijriMonths[11] = 30; // ذو الحجة يصبح 30 يوم في السنة الكبيسة
+  }
   
   // حساب الشهر واليوم
-  let hijriMonth = Math.floor(remainingDays / 29.5) + 1;
-  if (hijriMonth > 12) {
-    hijriMonth = 12;
+  let hijriMonth = 1;
+  let hijriDay = remainingDays;
+  
+  for (let i = 0; i < hijriMonths.length; i++) {
+    if (hijriDay <= hijriMonths[i]) {
+      hijriMonth = i + 1;
+      break;
+    }
+    hijriDay -= hijriMonths[i];
   }
-  const hijriDay = Math.floor(remainingDays % 29.5) + 1;
+  
+  // التأكد من أن اليوم والشهر صحيحين
+  if (hijriDay < 1) hijriDay = 1;
+  if (hijriDay > hijriMonths[hijriMonth - 1]) hijriDay = hijriMonths[hijriMonth - 1];
+  if (hijriMonth < 1) hijriMonth = 1;
+  if (hijriMonth > 12) hijriMonth = 12;
 
   const monthNames = [
     'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الثانية',
@@ -27,9 +55,9 @@ export function toHijri(date: Date): { year: number; month: number; day: number;
   ];
 
   return {
-    year: hijriYearCalc,
+    year: hijriYear,
     month: hijriMonth,
-    day: hijriDay,
+    day: Math.floor(hijriDay),
     monthName: monthNames[hijriMonth - 1] || ''
   };
 }
