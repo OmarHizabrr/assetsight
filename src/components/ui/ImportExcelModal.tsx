@@ -372,8 +372,11 @@ export function ImportExcelModal({
                           <input
                             type="checkbox"
                             checked={selectedRows.has(rowIndex)}
-                            onChange={(e) => handleRowToggle(rowIndex, e.nativeEvent)}
-                            onClick={(e) => e.stopPropagation()}
+                            onChange={() => handleRowToggle(rowIndex, undefined)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRowToggle(rowIndex, e);
+                            }}
                             className="w-4 h-4 cursor-pointer"
                           />
                         </td>
