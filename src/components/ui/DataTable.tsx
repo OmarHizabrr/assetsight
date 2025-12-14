@@ -1233,10 +1233,15 @@ export function DataTable({
                         onChange={(e) => {
                           e.stopPropagation();
                           if (itemIdString) {
-                            handleRowToggle(itemIdString, index, e.nativeEvent);
+                            handleRowToggle(itemIdString, index, undefined);
                           }
                         }}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (itemIdString) {
+                            handleRowToggle(itemIdString, index, e);
+                          }
+                        }}
                         className="w-4 h-4 cursor-pointer"
                       />
                     </td>
