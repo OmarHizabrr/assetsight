@@ -1164,7 +1164,7 @@ export function DataTable({
               paginatedData.map((item, index) => {
                 const itemId = item.get('id');
                 const itemIdString = itemId ? String(itemId) : '';
-                const isSelected = itemIdString && selectedRows.has(itemIdString);
+                const isSelected = Boolean(itemIdString && selectedRows.has(itemIdString));
                 return (
                 <tr
                   key={itemIdString || `row-${index}`}
