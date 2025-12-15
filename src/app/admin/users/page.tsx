@@ -17,7 +17,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 function UsersPageContent() {
   const pathname = usePathname();
@@ -69,6 +69,12 @@ function UsersPageContent() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
+  const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+  const [bulkEditLoading, setBulkEditLoading] = useState(false);
+  const [selectedUsersForBulkEdit, setSelectedUsersForBulkEdit] = useState<BaseModel[]>([]);
+  const [bulkEditFormData, setBulkEditFormData] = useState<BaseModel>(new BaseModel({}));
+  const [bulkEditSelectedDepartmentId, setBulkEditSelectedDepartmentId] = useState<string>('');
+  const [bulkEditOffices, setBulkEditOffices] = useState<BaseModel[]>([]);
 
   useEffect(() => {
     loadData();
@@ -346,6 +352,76 @@ function UsersPageContent() {
     }
   };
 
+  const handleBulkEdit = (selectedItems: BaseModel[]) => {
+    setSelectedUsersForBulkEdit(selectedItems);
+    setBulkEditFormData(new BaseModel({}));
+    setBulkEditSelectedDepartmentId('');
+    setBulkEditOffices([]);
+    setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedUsersForBulkEdit.length === 0) return;
+
+    try {
+      setBulkEditLoading(true);
+      const updates: Record<string, any> = {};
+      const formDataObj = bulkEditFormData.getData();
+      
+      Object.keys(formDataObj).forEach(key => {
+        const value = formDataObj[key];
+        if (value !== '' && value !== null && value !== undefined) {
+          updates[key] = value;
+        }
+      });
+
+      // معالجة is_active
+      if ('is_active' in updates) {
+        updates.is_active = bulkEditFormData.getValue<boolean>('is_active') ? 1 : 0;
+      }
+
+      // معالجة permissions
+      if ('permissions' in updates && Array.isArray(updates.permissions)) {
+        updates.permissions = updates.permissions;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        showWarning("لم يتم تحديد أي حقول للتحديث");
+        setBulkEditLoading(false);
+        return;
+      }
+
+      const updatePromises = selectedUsersForBulkEdit.map(async (user) => {
+        const userId = user.get('id');
+        if (!userId) return;
+        const docRef = firestoreApi.getDocument("users", userId);
+        await firestoreApi.updateData(docRef, updates);
+      });
+
+      await Promise.all(updatePromises);
+      
+      setIsBulkEditModalOpen(false);
+      setSelectedUsersForBulkEdit([]);
+      setBulkEditFormData(new BaseModel({}));
+      setBulkEditSelectedDepartmentId('');
+      setBulkEditOffices([]);
+      loadData();
+      showSuccess(`تم تحديث ${selectedUsersForBulkEdit.length} مستخدم بنجاح`);
+    } catch (error) {
+      console.error("Error in bulk edit:", error);
+      showError("حدث خطأ أثناء التحديث الجماعي");
+    } finally {
+      setBulkEditLoading(false);
+    }
+  };
+
+  const updateBulkEditField = useCallback((key: string, value: any) => {
+    const newData = new BaseModel(bulkEditFormData.getData());
+    newData.put(key, value);
+    setBulkEditFormData(newData);
+  }, [bulkEditFormData]);
+
   const getOfficeName = (officeId?: string) => {
     if (!officeId) return '-';
     const office = allOffices.find(o => o.get('id') === officeId);
@@ -368,14 +444,48 @@ function UsersPageContent() {
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
         try {
-          // دالة مساعدة لاستخراج القيمة من الصف بأسماء مختلفة
+          // دالة مساعدة لاستخراج القيمة من الصف بأسماء مختلفة - مرنة جداً
+          const normalizeKey = (key: string): string => {
+            // إزالة المسافات والرموز الخاصة وتحويل إلى صغير
+            return key.toLowerCase()
+              .replace(/\s+/g, '') // إزالة جميع المسافات
+              .replace(/[_\-\.,]/g, '') // إزالة الرموز الخاصة
+              .trim();
+          };
+
           const getValue = (keys: string[]): string => {
+            // أولاً: البحث المباشر بالأسماء المحددة
             for (const key of keys) {
               const value = row[key];
               if (value !== undefined && value !== null && value !== '') {
                 return value.toString().trim();
               }
             }
+
+            // ثانياً: البحث في جميع مفاتيح الصف (مرونة عالية)
+            const normalizedKeys = keys.map(normalizeKey);
+            const rowKeys = Object.keys(row);
+            
+            for (const rowKey of rowKeys) {
+              const normalizedRowKey = normalizeKey(rowKey);
+              
+              // البحث عن تطابق كامل
+              if (normalizedKeys.some(nk => normalizedRowKey === nk)) {
+                const value = row[rowKey];
+                if (value !== undefined && value !== null && value !== '') {
+                  return value.toString().trim();
+                }
+              }
+              
+              // البحث عن تطابق جزئي (يحتوي على)
+              if (normalizedKeys.some(nk => normalizedRowKey.includes(nk) || nk.includes(normalizedRowKey))) {
+                const value = row[rowKey];
+                if (value !== undefined && value !== null && value !== '') {
+                  return value.toString().trim();
+                }
+              }
+            }
+
             return '';
           };
 
@@ -709,6 +819,7 @@ function UsersPageContent() {
         columns={columns}
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
+        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
         onAddNew={canAdd ? () => {
           setEditingUser(null);
           setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
@@ -1099,6 +1210,123 @@ function UsersPageContent() {
           description="اختر ملف Excel لعرض البيانات ومعاينتها وتعديلها قبل الحفظ. يجب أن يحتوي الملف على الأعمدة: رقم الموظف، اسم المستخدم، الاسم الكامل، البريد الإلكتروني، الهاتف، الإدارة، المكتب، الدور، كلمة المرور، نشط، الملاحظات"
           loading={importLoading}
         />
+
+        {/* Bulk Edit Modal */}
+        <Modal
+          isOpen={isBulkEditModalOpen}
+          onClose={() => {
+            setIsBulkEditModalOpen(false);
+            setSelectedUsersForBulkEdit([]);
+            setBulkEditFormData(new BaseModel({}));
+            setBulkEditSelectedDepartmentId('');
+            setBulkEditOffices([]);
+          }}
+          title={`تحرير جماعي (${selectedUsersForBulkEdit.length} مستخدم)`}
+          size="xl"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsBulkEditModalOpen(false);
+                  setSelectedUsersForBulkEdit([]);
+                  setBulkEditFormData(new BaseModel({}));
+                  setBulkEditSelectedDepartmentId('');
+                  setBulkEditOffices([]);
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+                disabled={bulkEditLoading}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                form="bulk-edit-form"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                isLoading={bulkEditLoading}
+              >
+                تطبيق على {selectedUsersForBulkEdit.length} مستخدم
+              </Button>
+            </div>
+          }
+        >
+          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+            <p className="text-sm text-primary-800 font-medium">
+              <MaterialIcon name="info" className="inline ml-2" size="sm" />
+              سيتم تطبيق التغييرات على جميع المستخدمين المختارين. اترك الحقول التي لا تريد تغييرها فارغة.
+            </p>
+          </div>
+          <form id="bulk-edit-form" onSubmit={handleBulkEditSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <SearchableSelect
+                label="الإدارة"
+                value={bulkEditFormData.get('department_id') || bulkEditSelectedDepartmentId}
+                onChange={(value) => {
+                  setBulkEditSelectedDepartmentId(value);
+                  updateBulkEditField('department_id', value);
+                  updateBulkEditField('office_id', '');
+                  if (value) {
+                    const filteredOffices = allOffices.filter(office => office.get('department_id') === value);
+                    setBulkEditOffices(filteredOffices);
+                  } else {
+                    setBulkEditOffices([]);
+                  }
+                }}
+                options={departments.map((dept) => ({
+                  value: dept.get('id'),
+                  label: dept.get('name'),
+                }))}
+                placeholder="اختر الإدارة (اختياري)"
+              />
+              <SearchableSelect
+                label="المكتب"
+                value={bulkEditFormData.get('office_id')}
+                onChange={(value) => updateBulkEditField('office_id', value)}
+                disabled={!bulkEditSelectedDepartmentId || bulkEditOffices.length === 0}
+                options={bulkEditOffices.map((office) => ({
+                  value: office.get('id'),
+                  label: office.get('name'),
+                }))}
+                placeholder={!bulkEditSelectedDepartmentId ? "اختر الإدارة أولاً" : bulkEditOffices.length === 0 ? "لا توجد مكاتب" : "اختر المكتب (اختياري)"}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="الهاتف"
+                type="text"
+                value={bulkEditFormData.get('phone')}
+                onChange={(e) => updateBulkEditField('phone', e.target.value)}
+                placeholder="أدخل الهاتف (اختياري)"
+                fullWidth={false}
+              />
+              <Input
+                label="الدور"
+                type="text"
+                value={bulkEditFormData.get('role')}
+                onChange={(e) => updateBulkEditField('role', e.target.value)}
+                placeholder="أدخل الدور (اختياري)"
+                fullWidth={false}
+              />
+            </div>
+            <Checkbox
+              label="نشط"
+              checked={bulkEditFormData.getValue<boolean>('is_active') === true || bulkEditFormData.getValue<number>('is_active') === 1}
+              onChange={(e) => updateBulkEditField('is_active', e.target.checked)}
+            />
+            <Textarea
+              label="الملاحظات"
+              value={bulkEditFormData.get('notes')}
+              onChange={(e) => updateBulkEditField('notes', e.target.value)}
+              rows={2}
+              placeholder="أدخل الملاحظات (اختياري)"
+              fullWidth={true}
+            />
+          </form>
+        </Modal>
     </MainLayout>
   );
 }

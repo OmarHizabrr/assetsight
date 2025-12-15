@@ -1,15 +1,26 @@
 'use client';
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { firestoreApi } from "@/lib/FirestoreApi";
 import { BaseModel } from "@/lib/BaseModel";
+import { firestoreApi } from "@/lib/FirestoreApi";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
 function normalizePath(path: string): string {
   if (!path || path === '/') return '/';
   return path.replace(/\/+$/, ''); // إزالة جميع الشرطات المائلة في النهاية
+}
+
+// دالة للتحقق من أن المستخدم مدير (تدعم عدة أشكال من role)
+function isAdmin(role: string | null | undefined): boolean {
+  if (!role) return false;
+  const normalizedRole = role.trim().toLowerCase();
+  return normalizedRole === 'مدير' || 
+         normalizedRole === 'admin' || 
+         normalizedRole === 'administrator' ||
+         normalizedRole === 'مدير النظام' ||
+         normalizedRole === 'system admin';
 }
 
 // دالة للتحقق من صلاحية المستخدم على صفحة معينة (async)
@@ -27,7 +38,7 @@ export async function hasPermissionAsync(user: BaseModel | null, path: string): 
   const role = user.get('role');
   
   // المدير لديه صلاحية على جميع الصفحات
-  if (role === 'مدير') {
+  if (isAdmin(role)) {
     return true;
   }
   
@@ -60,7 +71,7 @@ export function hasPermission(user: BaseModel | null, path: string): boolean {
   const role = user.get('role');
   
   // المدير لديه صلاحية على جميع الصفحات
-  if (role === 'مدير') {
+  if (isAdmin(role)) {
     return true;
   }
   
@@ -127,7 +138,7 @@ export async function canAdd(user: BaseModel | null, pagePath: string): Promise<
   if (!user) return false;
   
   const role = user.get('role');
-  if (role === 'مدير') return true;
+  if (isAdmin(role)) return true;
   
   const userId = user.get('id');
   if (!userId) return false;
@@ -144,7 +155,7 @@ export async function canEdit(user: BaseModel | null, pagePath: string): Promise
   if (!user) return false;
   
   const role = user.get('role');
-  if (role === 'مدير') return true;
+  if (isAdmin(role)) return true;
   
   const userId = user.get('id');
   if (!userId) return false;
@@ -161,7 +172,7 @@ export async function canDelete(user: BaseModel | null, pagePath: string): Promi
   if (!user) return false;
   
   const role = user.get('role');
-  if (role === 'مدير') return true;
+  if (isAdmin(role)) return true;
   
   const userId = user.get('id');
   if (!userId) return false;
@@ -191,7 +202,7 @@ export function usePermissions(pagePath: string) {
       }
 
       const role = user.get('role');
-      if (role === 'مدير') {
+      if (isAdmin(role)) {
         setPermissions({ canAdd: true, canEdit: true, canDelete: true, loading: false });
         return;
       }

@@ -85,6 +85,7 @@ interface DataTableProps {
   onView?: (item: BaseModel) => void;
   onArchive?: (item: BaseModel) => void;
   onAddNew?: () => void;
+  onBulkEdit?: (items: BaseModel[]) => void; // دالة التحرير الجماعي
   loading?: boolean;
   title?: string;
   exportFileName?: string;
@@ -100,6 +101,7 @@ export function DataTable({
   onView,
   onArchive,
   onAddNew,
+  onBulkEdit,
   loading = false,
   title,
   exportFileName = 'export',
@@ -907,23 +909,42 @@ export function DataTable({
     <Card variant="elevated" className="overflow-visible animate-scale-in border-primary-200/30 shadow-primary/10">
       <CardHeader className="pb-4 group">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          {title && (
+        {title && (
             <h5 className="text-lg font-semibold text-slate-800">{title}</h5>
           )}
-          {onDelete && selectedRows.size > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600">
+          {((onDelete || onBulkEdit) && selectedRows.size > 0) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-slate-600 font-medium">
                 {selectedRows.size} عنصر محدد
               </span>
-              <Button
-                onClick={handleDeleteSelected}
-                variant="outline"
-                size="sm"
-                className="text-error-600 hover:text-error-700 hover:bg-error-50"
-                leftIcon={<MaterialIcon name="delete" size="sm" />}
-              >
-                حذف المحدد ({selectedRows.size})
-              </Button>
+              {onBulkEdit && (
+                <Button
+                  onClick={() => {
+                    const selectedItems = data.filter(item => {
+                      const id = item.get('id');
+                      return id && selectedRows.has(String(id));
+                    });
+                    onBulkEdit(selectedItems);
+                  }}
+                  variant="primary"
+                  size="sm"
+                  className="shadow-md hover:shadow-lg hover:scale-105 material-transition"
+                  leftIcon={<MaterialIcon name="edit" size="sm" />}
+                >
+                  تحرير جماعي ({selectedRows.size})
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  onClick={handleDeleteSelected}
+                  variant="outline"
+                  size="sm"
+                  className="text-error-600 hover:text-error-700 hover:bg-error-50"
+                  leftIcon={<MaterialIcon name="delete" size="sm" />}
+                >
+                  حذف المحدد ({selectedRows.size})
+                </Button>
+              )}
               <Button
                 onClick={() => {
                   setSelectedRows(new Set());
@@ -937,7 +958,7 @@ export function DataTable({
                 إلغاء التحديد
               </Button>
             </div>
-          )}
+        )}
         </div>
         
         {/* Search and Controls Row */}
@@ -1191,12 +1212,12 @@ export function DataTable({
                   }}
                   onMouseEnter={(e) => {
                     if (!isSelected) {
-                      e.currentTarget.style.background = 'linear-gradient(to right, #f8f7fa 0%, #f0eff2 50%, #f8f7fa 100%)';
+                    e.currentTarget.style.background = 'linear-gradient(to right, #f8f7fa 0%, #f0eff2 50%, #f8f7fa 100%)';
                     }
                     e.currentTarget.style.boxShadow = '0 6px 20px rgba(115, 103, 240, 0.2), 0 2px 8px rgba(115, 103, 240, 0.1)';
                     e.currentTarget.style.transform = 'translateY(-2px) scale(1.002)';
                     if (!isSelected) {
-                      e.currentTarget.style.borderLeft = '3px solid #7367f0';
+                    e.currentTarget.style.borderLeft = '3px solid #7367f0';
                     }
                     Array.from(e.currentTarget.children).forEach((cell) => {
                       (cell as HTMLElement).style.borderBottomColor = '#e8e6ea';
@@ -1204,7 +1225,7 @@ export function DataTable({
                   }}
                   onMouseLeave={(e) => {
                     if (!isSelected) {
-                      e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.background = 'transparent';
                       e.currentTarget.style.borderLeft = 'none';
                     } else {
                       e.currentTarget.style.background = '#f0f4ff';

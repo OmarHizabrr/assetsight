@@ -14,6 +14,7 @@ interface ImportExcelModalProps {
   title?: string;
   description?: string;
   loading?: boolean;
+  exampleColumns?: string[]; // مثال على أسماء الأعمدة
 }
 
 export function ImportExcelModal({
@@ -23,6 +24,7 @@ export function ImportExcelModal({
   title = 'استيراد من Excel',
   description = 'اختر ملف Excel لعرض البيانات ومعاينتها قبل الحفظ',
   loading = false,
+  exampleColumns = [],
 }: ImportExcelModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<Array<Record<string, any>>>([]);
@@ -150,11 +152,11 @@ export function ImportExcelModal({
       }
     } else if (isCtrlPressed) {
       // تحديد/إلغاء تحديد صف واحد فقط
-      if (newSelected.has(rowIndex)) {
-        newSelected.delete(rowIndex);
-      } else {
-        newSelected.add(rowIndex);
-      }
+    if (newSelected.has(rowIndex)) {
+      newSelected.delete(rowIndex);
+    } else {
+      newSelected.add(rowIndex);
+    }
     } else {
       // تحديد/إلغاء تحديد صف واحد
       if (newSelected.has(rowIndex)) {
@@ -248,6 +250,115 @@ export function ImportExcelModal({
           <p className="text-sm text-slate-600">{description}</p>
         )}
 
+        {!file && exampleColumns.length > 0 && (
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <MaterialIcon name="info" className="text-blue-600" size="md" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-base font-bold text-blue-900 mb-3 flex items-center gap-2">
+                  <MaterialIcon name="table_chart" className="text-blue-600" size="sm" />
+                  مثال على تسمية الأعمدة في ملف Excel:
+                </h4>
+                <div className="bg-white rounded-lg p-4 border-2 border-blue-200 shadow-inner overflow-x-auto">
+                  <div className="text-xs text-blue-600 mb-2 font-semibold">الصف الأول (رأس الجدول):</div>
+                  <table className="w-full text-xs border-collapse min-w-full">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-blue-100 to-indigo-100">
+                        {exampleColumns.map((col, index) => (
+                          <th key={index} className="border border-blue-300 px-3 py-3 text-right font-bold text-blue-900 whitespace-nowrap">
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="bg-blue-50/50">
+                        {exampleColumns.map((col, index) => {
+                          // أمثلة للبيانات حسب نوع العمود
+                          let exampleValue = '';
+                          const colLower = col.toLowerCase();
+                          if (colLower.includes('كود') || colLower.includes('code') || colLower.includes('tag')) {
+                            exampleValue = 'AST-123456-789';
+                          } else if (colLower.includes('اسم') || colLower.includes('name')) {
+                            exampleValue = 'جهاز كمبيوتر';
+                          } else if (colLower.includes('نوع') || colLower.includes('type')) {
+                            exampleValue = 'إلكتروني';
+                          } else if (colLower.includes('حالة') || colLower.includes('status')) {
+                            exampleValue = 'نشط';
+                          } else if (colLower.includes('إدارة') || colLower.includes('department')) {
+                            exampleValue = 'إدارة تقنية المعلومات';
+                          } else if (colLower.includes('مكتب') || colLower.includes('office')) {
+                            exampleValue = 'مكتب الدعم الفني';
+                          } else if (colLower.includes('حامل') || colLower.includes('custodian') || colLower.includes('user')) {
+                            exampleValue = 'أحمد محمد';
+                          } else if (colLower.includes('تاريخ') || colLower.includes('date')) {
+                            exampleValue = '2024-01-15';
+                          } else if (colLower.includes('قيمة') || colLower.includes('value')) {
+                            exampleValue = '5000';
+                          } else if (colLower.includes('عملة') || colLower.includes('currency')) {
+                            exampleValue = 'ر.س';
+                          } else if (colLower.includes('تسلسلي') || colLower.includes('serial')) {
+                            exampleValue = 'SN123456';
+                          } else if (colLower.includes('فئة') || colLower.includes('category')) {
+                            exampleValue = 'أجهزة';
+                          } else if (colLower.includes('وصف') || colLower.includes('description')) {
+                            exampleValue = 'جهاز كمبيوتر مكتبي';
+                          } else if (colLower.includes('ضمان') || colLower.includes('warranty')) {
+                            exampleValue = '2025-01-15';
+                          } else if (colLower.includes('إهلاك') || colLower.includes('depreciation')) {
+                            exampleValue = 'خطي';
+                          } else if (colLower.includes('عمر') || colLower.includes('lifetime')) {
+                            exampleValue = '5';
+                          } else if (colLower.includes('متبقية') || colLower.includes('residual')) {
+                            exampleValue = '500';
+                          } else if (colLower.includes('مورد') || colLower.includes('supplier')) {
+                            exampleValue = 'شركة التقنية';
+                          } else if (colLower.includes('فاتورة') || colLower.includes('invoice')) {
+                            exampleValue = 'INV-2024-001';
+                          } else if (colLower.includes('صيانة') || colLower.includes('maintenance')) {
+                            exampleValue = '2024-06-15';
+                          } else if (colLower.includes('نشط') || colLower.includes('active')) {
+                            exampleValue = '1';
+                          } else if (colLower.includes('ملاحظات') || colLower.includes('notes')) {
+                            exampleValue = 'ملاحظات إضافية';
+                          } else {
+                            exampleValue = '...';
+                          }
+                          return (
+                            <td key={index} className="border border-blue-200 px-3 py-2 text-right text-blue-700 whitespace-nowrap bg-white">
+                              <span className="font-medium">{exampleValue}</span>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-3 space-y-1 text-xs text-blue-700">
+                  <p className="flex items-center gap-2">
+                    <MaterialIcon name="check_circle" className="text-green-600" size="sm" />
+                    <strong>الصف الأول:</strong> يجب أن يحتوي على أسماء الأعمدة (رأس الجدول)
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <MaterialIcon name="check_circle" className="text-green-600" size="sm" />
+                    <strong>الصفوف التالية:</strong> البيانات الفعلية للأصول
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <MaterialIcon name="check_circle" className="text-green-600" size="sm" />
+                    <strong>الأسماء:</strong> يمكنك استخدام الأسماء بالعربية أو الإنجليزية (مثل: "اسم الأصل" أو "asset_name")
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <MaterialIcon name="check_circle" className="text-green-600" size="sm" />
+                    <strong>الحقول الاختيارية:</strong> يمكن تركها فارغة، سيتم استخدام القيم الافتراضية
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {!file && (
           <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-300 rounded-xl">
             <MaterialIcon name="upload_file" size="xl" className="text-slate-400 mb-4" />
@@ -292,7 +403,7 @@ export function ImportExcelModal({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {selectedRows.size > 0 && (
+              {selectedRows.size > 0 && (
                   <>
                     <Button
                       onClick={() => {
@@ -306,17 +417,17 @@ export function ImportExcelModal({
                     >
                       إلغاء التحديد
                     </Button>
-                    <Button
-                      onClick={handleDeleteSelected}
-                      variant="outline"
-                      size="sm"
+                <Button
+                  onClick={handleDeleteSelected}
+                  variant="outline"
+                  size="sm"
                       className="text-error-600 hover:text-error-700 hover:bg-error-50"
-                      leftIcon={<MaterialIcon name="delete" size="sm" />}
-                    >
-                      حذف المحدد ({selectedRows.size})
-                    </Button>
+                  leftIcon={<MaterialIcon name="delete" size="sm" />}
+                >
+                  حذف المحدد ({selectedRows.size})
+                </Button>
                   </>
-                )}
+              )}
               </div>
             </div>
 

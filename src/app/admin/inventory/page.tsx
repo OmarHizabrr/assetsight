@@ -39,6 +39,14 @@ function InventoryPageContent() {
   const [editingCycle, setEditingCycle] = useState<BaseModel | null>(null);
   const [editingItem, setEditingItem] = useState<BaseModel | null>(null);
   const [selectedCycleId, setSelectedCycleId] = useState<string>('');
+  const [isBulkEditCycleModalOpen, setIsBulkEditCycleModalOpen] = useState(false);
+  const [isBulkEditItemModalOpen, setIsBulkEditItemModalOpen] = useState(false);
+  const [bulkEditCycleLoading, setBulkEditCycleLoading] = useState(false);
+  const [bulkEditItemLoading, setBulkEditItemLoading] = useState(false);
+  const [selectedCyclesForBulkEdit, setSelectedCyclesForBulkEdit] = useState<BaseModel[]>([]);
+  const [selectedItemsForBulkEdit, setSelectedItemsForBulkEdit] = useState<BaseModel[]>([]);
+  const [bulkEditCycleFormData, setBulkEditCycleFormData] = useState<BaseModel>(new BaseModel({}));
+  const [bulkEditItemFormData, setBulkEditItemFormData] = useState<BaseModel>(new BaseModel({}));
   const [cycleFormData, setCycleFormData] = useState<BaseModel>(new BaseModel({
     name: '',
     start_date: '',
@@ -248,6 +256,143 @@ function InventoryPageContent() {
     setIsConfirmModalOpen(true);
   };
 
+  const handleBulkEditCycles = (selectedItems: BaseModel[]) => {
+    setSelectedCyclesForBulkEdit(selectedItems);
+    setBulkEditCycleFormData(new BaseModel({}));
+    setIsBulkEditCycleModalOpen(true);
+  };
+
+  const handleBulkEditItems = (selectedItems: BaseModel[]) => {
+    setSelectedItemsForBulkEdit(selectedItems);
+    setBulkEditItemFormData(new BaseModel({}));
+    setIsBulkEditItemModalOpen(true);
+  };
+
+  const handleBulkEditCyclesSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedCyclesForBulkEdit.length === 0) return;
+
+    try {
+      setBulkEditCycleLoading(true);
+      const updates: Record<string, any> = {};
+      const formDataObj = bulkEditCycleFormData.getData();
+      
+      Object.keys(formDataObj).forEach(key => {
+        const value = formDataObj[key];
+        if (value !== '' && value !== null && value !== undefined) {
+          updates[key] = value;
+        }
+      });
+
+      if (Object.keys(updates).length === 0) {
+        showWarning("لم يتم تحديد أي حقول للتحديث");
+        setBulkEditCycleLoading(false);
+        return;
+      }
+
+      const updatePromises = selectedCyclesForBulkEdit.map(async (cycle) => {
+        const cycleId = cycle.get('id');
+        const deptId = cycle.get('department_id');
+        if (!cycleId || !deptId) return;
+        
+        const docRef = firestoreApi.getSubDocument(
+          "departments",
+          deptId,
+          "departments",
+          cycleId
+        );
+        await firestoreApi.updateData(docRef, updates);
+      });
+
+      await Promise.all(updatePromises);
+      
+      setIsBulkEditCycleModalOpen(false);
+      setSelectedCyclesForBulkEdit([]);
+      setBulkEditCycleFormData(new BaseModel({}));
+      loadData();
+      showSuccess(`تم تحديث ${selectedCyclesForBulkEdit.length} دورة بنجاح`);
+    } catch (error) {
+      console.error("Error in bulk edit cycles:", error);
+      showError("حدث خطأ أثناء التحديث الجماعي");
+    } finally {
+      setBulkEditCycleLoading(false);
+    }
+  };
+
+  const handleBulkEditItemsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedItemsForBulkEdit.length === 0) return;
+
+    try {
+      setBulkEditItemLoading(true);
+      const updates: Record<string, any> = {};
+      const formDataObj = bulkEditItemFormData.getData();
+      
+      Object.keys(formDataObj).forEach(key => {
+        const value = formDataObj[key];
+        if (value !== '' && value !== null && value !== undefined) {
+          updates[key] = value;
+        }
+      });
+
+      // معالجة found
+      if ('found' in updates) {
+        updates.found = bulkEditItemFormData.getValue<boolean>('found') ? 1 : 0;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        showWarning("لم يتم تحديد أي حقول للتحديث");
+        setBulkEditItemLoading(false);
+        return;
+      }
+
+      const updatePromises = selectedItemsForBulkEdit.map(async (item) => {
+        const itemId = item.get('id');
+        const cycleId = item.get('cycle_id');
+        if (!itemId || !cycleId) return;
+        
+        const cycle = cycles.find(c => c.get('id') === cycleId);
+        const deptId = cycle?.get('department_id');
+        if (!deptId) return;
+        
+        const docRef = firestoreApi.getNestedSubDocument(
+          "departments",
+          deptId,
+          "departments",
+          cycleId,
+          "inventoryItems",
+          itemId
+        );
+        await firestoreApi.updateData(docRef, updates);
+      });
+
+      await Promise.all(updatePromises);
+      
+      setIsBulkEditItemModalOpen(false);
+      setSelectedItemsForBulkEdit([]);
+      setBulkEditItemFormData(new BaseModel({}));
+      loadData();
+      showSuccess(`تم تحديث ${selectedItemsForBulkEdit.length} عنصر بنجاح`);
+    } catch (error) {
+      console.error("Error in bulk edit items:", error);
+      showError("حدث خطأ أثناء التحديث الجماعي");
+    } finally {
+      setBulkEditItemLoading(false);
+    }
+  };
+
+  const updateBulkEditCycleField = useCallback((key: string, value: any) => {
+    const newData = new BaseModel(bulkEditCycleFormData.getData());
+    newData.put(key, value);
+    setBulkEditCycleFormData(newData);
+  }, [bulkEditCycleFormData]);
+
+  const updateBulkEditItemField = useCallback((key: string, value: any) => {
+    const newData = new BaseModel(bulkEditItemFormData.getData());
+    newData.put(key, value);
+    setBulkEditItemFormData(newData);
+  }, [bulkEditItemFormData]);
+
   const confirmDelete = async () => {
     if (deleteType === 'cycle' && deletingCycle) {
       const id = deletingCycle.get('id');
@@ -444,6 +589,7 @@ function InventoryPageContent() {
                 setIsCycleModalOpen(true);
               }) : undefined}
               onDelete={canDelete ? handleDeleteCycle : undefined}
+              onBulkEdit={(canEdit || canDelete) ? handleBulkEditCycles : undefined}
               loading={loading}
             />
           </div>
@@ -492,6 +638,7 @@ function InventoryPageContent() {
                 setIsItemModalOpen(true);
               }) : undefined}
               onDelete={canDelete ? handleDeleteItem : undefined}
+              onBulkEdit={(canEdit || canDelete) ? handleBulkEditItems : undefined}
               loading={loading}
             />
           </div>
@@ -672,6 +819,145 @@ function InventoryPageContent() {
           variant="danger"
           loading={deleteLoading}
         />
+
+        {/* Bulk Edit Cycle Modal */}
+        <Modal
+          isOpen={isBulkEditCycleModalOpen}
+          onClose={() => {
+            setIsBulkEditCycleModalOpen(false);
+            setSelectedCyclesForBulkEdit([]);
+            setBulkEditCycleFormData(new BaseModel({}));
+          }}
+          title={`تحرير جماعي (${selectedCyclesForBulkEdit.length} دورة)`}
+          size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsBulkEditCycleModalOpen(false);
+                  setSelectedCyclesForBulkEdit([]);
+                  setBulkEditCycleFormData(new BaseModel({}));
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+                disabled={bulkEditCycleLoading}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                form="bulk-edit-cycle-form"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                isLoading={bulkEditCycleLoading}
+              >
+                تطبيق على {selectedCyclesForBulkEdit.length} دورة
+              </Button>
+            </div>
+          }
+        >
+          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+            <p className="text-sm text-primary-800 font-medium">
+              سيتم تطبيق التغييرات على جميع الدورات المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
+            </p>
+          </div>
+          <form id="bulk-edit-cycle-form" onSubmit={handleBulkEditCyclesSubmit} className="space-y-6">
+            <Input
+              label="تاريخ البداية"
+              type="date"
+              value={bulkEditCycleFormData.get('start_date')}
+              onChange={(e) => updateBulkEditCycleField('start_date', e.target.value)}
+              fullWidth={false}
+            />
+            <Input
+              label="تاريخ النهاية"
+              type="date"
+              value={bulkEditCycleFormData.get('end_date')}
+              onChange={(e) => updateBulkEditCycleField('end_date', e.target.value)}
+              fullWidth={false}
+            />
+            <Textarea
+              label="الملاحظات"
+              value={bulkEditCycleFormData.get('notes')}
+              onChange={(e) => updateBulkEditCycleField('notes', e.target.value)}
+              rows={2}
+              placeholder="أدخل الملاحظات (اختياري)"
+            />
+          </form>
+        </Modal>
+
+        {/* Bulk Edit Item Modal */}
+        <Modal
+          isOpen={isBulkEditItemModalOpen}
+          onClose={() => {
+            setIsBulkEditItemModalOpen(false);
+            setSelectedItemsForBulkEdit([]);
+            setBulkEditItemFormData(new BaseModel({}));
+          }}
+          title={`تحرير جماعي (${selectedItemsForBulkEdit.length} عنصر)`}
+          size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsBulkEditItemModalOpen(false);
+                  setSelectedItemsForBulkEdit([]);
+                  setBulkEditItemFormData(new BaseModel({}));
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+                disabled={bulkEditItemLoading}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                form="bulk-edit-item-form"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                isLoading={bulkEditItemLoading}
+              >
+                تطبيق على {selectedItemsForBulkEdit.length} عنصر
+              </Button>
+            </div>
+          }
+        >
+          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+            <p className="text-sm text-primary-800 font-medium">
+              سيتم تطبيق التغييرات على جميع العناصر المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
+            </p>
+          </div>
+          <form id="bulk-edit-item-form" onSubmit={handleBulkEditItemsSubmit} className="space-y-6">
+            <SearchableSelect
+              label="المكتب الممسوح"
+              value={bulkEditItemFormData.get('scanned_office_id')}
+              onChange={(value) => updateBulkEditItemField('scanned_office_id', value)}
+              options={offices.map((office) => ({
+                value: office.get('id'),
+                label: office.get('name'),
+              }))}
+              placeholder="اختر المكتب (اختياري)"
+            />
+            <Checkbox
+              label="تم العثور عليه"
+              checked={bulkEditItemFormData.getValue<boolean>('found') === true || bulkEditItemFormData.getValue<number>('found') === 1}
+              onChange={(e) => updateBulkEditItemField('found', e.target.checked)}
+            />
+            <Textarea
+              label="ملاحظة"
+              value={bulkEditItemFormData.get('note')}
+              onChange={(e) => updateBulkEditItemField('note', e.target.value)}
+              rows={2}
+              placeholder="أدخل الملاحظة (اختياري)"
+            />
+          </form>
+        </Modal>
     </MainLayout>
   );
 }

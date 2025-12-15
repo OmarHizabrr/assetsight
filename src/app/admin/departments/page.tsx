@@ -14,7 +14,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 function DepartmentsPageContent() {
   const pathname = usePathname();
@@ -34,6 +34,10 @@ function DepartmentsPageContent() {
   }));
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
+  const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+  const [bulkEditLoading, setBulkEditLoading] = useState(false);
+  const [selectedDepartmentsForBulkEdit, setSelectedDepartmentsForBulkEdit] = useState<BaseModel[]>([]);
+  const [bulkEditFormData, setBulkEditFormData] = useState<BaseModel>(new BaseModel({}));
 
   useEffect(() => {
     loadDepartments();
@@ -106,6 +110,62 @@ function DepartmentsPageContent() {
       setDeleteLoading(false);
     }
   };
+
+  const handleBulkEdit = (selectedItems: BaseModel[]) => {
+    setSelectedDepartmentsForBulkEdit(selectedItems);
+    setBulkEditFormData(new BaseModel({}));
+    setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedDepartmentsForBulkEdit.length === 0) return;
+
+    try {
+      setBulkEditLoading(true);
+      const updates: Record<string, any> = {};
+      const formDataObj = bulkEditFormData.getData();
+      
+      Object.keys(formDataObj).forEach(key => {
+        const value = formDataObj[key];
+        if (value !== '' && value !== null && value !== undefined) {
+          updates[key] = value;
+        }
+      });
+
+      if (Object.keys(updates).length === 0) {
+        showWarning("لم يتم تحديد أي حقول للتحديث");
+        setBulkEditLoading(false);
+        return;
+      }
+
+      const updatePromises = selectedDepartmentsForBulkEdit.map(async (dept) => {
+        const deptId = dept.get('id');
+        if (!deptId) return;
+        const docRef = firestoreApi.getDocument("departments", deptId);
+        await firestoreApi.updateData(docRef, updates);
+      });
+
+      await Promise.all(updatePromises);
+      
+      setIsBulkEditModalOpen(false);
+      setSelectedDepartmentsForBulkEdit([]);
+      setBulkEditFormData(new BaseModel({}));
+      loadDepartments();
+      showSuccess(`تم تحديث ${selectedDepartmentsForBulkEdit.length} إدارة بنجاح`);
+    } catch (error) {
+      console.error("Error in bulk edit:", error);
+      showError("حدث خطأ أثناء التحديث الجماعي");
+    } finally {
+      setBulkEditLoading(false);
+    }
+  };
+
+  const updateBulkEditField = useCallback((key: string, value: any) => {
+    const newData = new BaseModel(bulkEditFormData.getData());
+    newData.put(key, value);
+    setBulkEditFormData(newData);
+  }, [bulkEditFormData]);
 
   const handleImportData = async (data: Array<Record<string, any>>) => {
     setImportLoading(true);
@@ -272,6 +332,7 @@ function DepartmentsPageContent() {
         columns={columns}
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
+        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
         onAddNew={canAdd ? () => {
           setEditingDepartment(null);
           setFormData(new BaseModel({ name: '', description: '', notes: '' }));
@@ -383,6 +444,69 @@ function DepartmentsPageContent() {
           description="اختر ملف Excel لعرض البيانات ومعاينتها وتعديلها قبل الحفظ"
           loading={importLoading}
         />
+
+        {/* Bulk Edit Modal */}
+        <Modal
+          isOpen={isBulkEditModalOpen}
+          onClose={() => {
+            setIsBulkEditModalOpen(false);
+            setSelectedDepartmentsForBulkEdit([]);
+            setBulkEditFormData(new BaseModel({}));
+          }}
+          title={`تحرير جماعي (${selectedDepartmentsForBulkEdit.length} إدارة)`}
+          size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsBulkEditModalOpen(false);
+                  setSelectedDepartmentsForBulkEdit([]);
+                  setBulkEditFormData(new BaseModel({}));
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+                disabled={bulkEditLoading}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                form="bulk-edit-form"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                isLoading={bulkEditLoading}
+              >
+                تطبيق على {selectedDepartmentsForBulkEdit.length} إدارة
+              </Button>
+            </div>
+          }
+        >
+          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+            <p className="text-sm text-primary-800 font-medium">
+              <MaterialIcon name="info" className="inline ml-2" size="sm" />
+              سيتم تطبيق التغييرات على جميع الإدارات المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
+            </p>
+          </div>
+          <form id="bulk-edit-form" onSubmit={handleBulkEditSubmit} className="space-y-6">
+            <Textarea
+              label="الوصف"
+              value={bulkEditFormData.get('description')}
+              onChange={(e) => updateBulkEditField('description', e.target.value)}
+              rows={2}
+              placeholder="أدخل الوصف (اختياري)"
+            />
+            <Textarea
+              label="الملاحظات"
+              value={bulkEditFormData.get('notes')}
+              onChange={(e) => updateBulkEditField('notes', e.target.value)}
+              rows={2}
+              placeholder="أدخل الملاحظات (اختياري)"
+            />
+          </form>
+        </Modal>
     </MainLayout>
   );
 }

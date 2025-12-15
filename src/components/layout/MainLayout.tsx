@@ -13,6 +13,17 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+// دالة للتحقق من أن المستخدم مدير (تدعم عدة أشكال من role)
+function isAdmin(role: string | null | undefined): boolean {
+  if (!role) return false;
+  const normalizedRole = role.trim().toLowerCase();
+  return normalizedRole === 'مدير' || 
+         normalizedRole === 'admin' || 
+         normalizedRole === 'administrator' ||
+         normalizedRole === 'مدير النظام' ||
+         normalizedRole === 'system admin';
+}
+
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -88,7 +99,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
       const role = user.get('role');
       // المدير لديه صلاحية على جميع الصفحات
-      if (role === 'مدير') {
+      if (isAdmin(role)) {
         setUserPermissions(allMenuItems.map(item => normalizePath(item.href)));
         return;
       }
@@ -136,7 +147,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     
     const role = user.get('role');
     // المدير لديه صلاحية على جميع الصفحات
-    if (role === 'مدير') {
+    if (isAdmin(role)) {
       return allMenuItems;
     }
     

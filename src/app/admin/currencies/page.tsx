@@ -16,7 +16,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 function CurrenciesPageContent() {
   const pathname = usePathname();
@@ -38,6 +38,10 @@ function CurrenciesPageContent() {
   }));
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
+  const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+  const [bulkEditLoading, setBulkEditLoading] = useState(false);
+  const [selectedCurrenciesForBulkEdit, setSelectedCurrenciesForBulkEdit] = useState<BaseModel[]>([]);
+  const [bulkEditFormData, setBulkEditFormData] = useState<BaseModel>(new BaseModel({}));
 
   useEffect(() => {
     loadCurrencies();
@@ -124,6 +128,76 @@ function CurrenciesPageContent() {
       setDeleteLoading(false);
     }
   };
+
+  const handleBulkEdit = (selectedItems: BaseModel[]) => {
+    setSelectedCurrenciesForBulkEdit(selectedItems);
+    setBulkEditFormData(new BaseModel({}));
+    setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedCurrenciesForBulkEdit.length === 0) return;
+
+    try {
+      setBulkEditLoading(true);
+      const updates: Record<string, any> = {};
+      const formDataObj = bulkEditFormData.getData();
+      
+      Object.keys(formDataObj).forEach(key => {
+        const value = formDataObj[key];
+        if (value !== '' && value !== null && value !== undefined) {
+          updates[key] = value;
+        }
+      });
+
+      // معالجة is_default
+      if ('is_default' in updates) {
+        updates.is_default = bulkEditFormData.getValue<boolean>('is_default') ? 1 : 0;
+        // إذا تم تحديد كعملة افتراضية، إلغاء التحديد من باقي العملات
+        if (updates.is_default === 1) {
+          for (const currency of currencies) {
+            if (!selectedCurrenciesForBulkEdit.find(c => c.get('id') === currency.get('id')) && currency.getValue<number>('is_default') === 1) {
+              const docRef = firestoreApi.getDocument("currencies", currency.get('id'));
+              await firestoreApi.updateData(docRef, { is_default: 0 });
+            }
+          }
+        }
+      }
+
+      if (Object.keys(updates).length === 0) {
+        showWarning("لم يتم تحديد أي حقول للتحديث");
+        setBulkEditLoading(false);
+        return;
+      }
+
+      const updatePromises = selectedCurrenciesForBulkEdit.map(async (currency) => {
+        const currencyId = currency.get('id');
+        if (!currencyId) return;
+        const docRef = firestoreApi.getDocument("currencies", currencyId);
+        await firestoreApi.updateData(docRef, updates);
+      });
+
+      await Promise.all(updatePromises);
+      
+      setIsBulkEditModalOpen(false);
+      setSelectedCurrenciesForBulkEdit([]);
+      setBulkEditFormData(new BaseModel({}));
+      loadCurrencies();
+      showSuccess(`تم تحديث ${selectedCurrenciesForBulkEdit.length} عملة بنجاح`);
+    } catch (error) {
+      console.error("Error in bulk edit:", error);
+      showError("حدث خطأ أثناء التحديث الجماعي");
+    } finally {
+      setBulkEditLoading(false);
+    }
+  };
+
+  const updateBulkEditField = useCallback((key: string, value: any) => {
+    const newData = new BaseModel(bulkEditFormData.getData());
+    newData.put(key, value);
+    setBulkEditFormData(newData);
+  }, [bulkEditFormData]);
 
   const handleImportData = async (data: Array<Record<string, any>>) => {
     setImportLoading(true);
@@ -316,6 +390,7 @@ function CurrenciesPageContent() {
         columns={columns}
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
+        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
         onAddNew={canAdd ? () => {
           setEditingCurrency(null);
           setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
@@ -453,6 +528,81 @@ function CurrenciesPageContent() {
           description="اختر ملف Excel لعرض البيانات ومعاينتها وتعديلها قبل الحفظ"
           loading={importLoading}
         />
+
+        {/* Bulk Edit Modal */}
+        <Modal
+          isOpen={isBulkEditModalOpen}
+          onClose={() => {
+            setIsBulkEditModalOpen(false);
+            setSelectedCurrenciesForBulkEdit([]);
+            setBulkEditFormData(new BaseModel({}));
+          }}
+          title={`تحرير جماعي (${selectedCurrenciesForBulkEdit.length} عملة)`}
+          size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsBulkEditModalOpen(false);
+                  setSelectedCurrenciesForBulkEdit([]);
+                  setBulkEditFormData(new BaseModel({}));
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+                disabled={bulkEditLoading}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                form="bulk-edit-form"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                isLoading={bulkEditLoading}
+              >
+                تطبيق على {selectedCurrenciesForBulkEdit.length} عملة
+              </Button>
+            </div>
+          }
+        >
+          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+            <p className="text-sm text-primary-800 font-medium">
+              <MaterialIcon name="info" className="inline ml-2" size="sm" />
+              سيتم تطبيق التغييرات على جميع العملات المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
+            </p>
+          </div>
+          <form id="bulk-edit-form" onSubmit={handleBulkEditSubmit} className="space-y-6">
+            <Input
+              label="رمز العملة"
+              type="text"
+              value={bulkEditFormData.get('code')}
+              onChange={(e) => updateBulkEditField('code', e.target.value)}
+              placeholder="أدخل رمز العملة (اختياري)"
+            />
+            <Input
+              label="الرمز"
+              type="text"
+              value={bulkEditFormData.get('symbol')}
+              onChange={(e) => updateBulkEditField('symbol', e.target.value)}
+              placeholder="أدخل الرمز (اختياري)"
+            />
+            <Checkbox
+              label="عملة افتراضية"
+              checked={bulkEditFormData.getValue<boolean>('is_default') === true || bulkEditFormData.getValue<number>('is_default') === 1}
+              onChange={(e) => updateBulkEditField('is_default', e.target.checked)}
+            />
+            <Textarea
+              label="الملاحظات"
+              value={bulkEditFormData.get('notes')}
+              onChange={(e) => updateBulkEditField('notes', e.target.value)}
+              rows={2}
+              placeholder="أدخل الملاحظات (اختياري)"
+            />
+          </form>
+        </Modal>
     </MainLayout>
   );
 }

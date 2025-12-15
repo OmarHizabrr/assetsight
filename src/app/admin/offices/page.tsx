@@ -2,21 +2,21 @@
 
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
+import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
-import { MaterialIcon } from "@/components/icons/MaterialIcon";
-import { useToast } from "@/contexts/ToastContext";
+import { useCallback, useEffect, useState } from "react";
 
 function OfficesPageContent() {
   const pathname = usePathname();
@@ -39,6 +39,10 @@ function OfficesPageContent() {
   }));
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
+  const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+  const [bulkEditLoading, setBulkEditLoading] = useState(false);
+  const [selectedOfficesForBulkEdit, setSelectedOfficesForBulkEdit] = useState<BaseModel[]>([]);
+  const [bulkEditFormData, setBulkEditFormData] = useState<BaseModel>(new BaseModel({}));
 
   useEffect(() => {
     loadData();
@@ -159,6 +163,69 @@ function OfficesPageContent() {
       setDeleteLoading(false);
     }
   };
+
+  const handleBulkEdit = (selectedItems: BaseModel[]) => {
+    setSelectedOfficesForBulkEdit(selectedItems);
+    setBulkEditFormData(new BaseModel({}));
+    setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedOfficesForBulkEdit.length === 0) return;
+
+    try {
+      setBulkEditLoading(true);
+      const updates: Record<string, any> = {};
+      const formDataObj = bulkEditFormData.getData();
+      
+      Object.keys(formDataObj).forEach(key => {
+        const value = formDataObj[key];
+        if (value !== '' && value !== null && value !== undefined) {
+          updates[key] = value;
+        }
+      });
+
+      if (Object.keys(updates).length === 0) {
+        showWarning("لم يتم تحديد أي حقول للتحديث");
+        setBulkEditLoading(false);
+        return;
+      }
+
+      const updatePromises = selectedOfficesForBulkEdit.map(async (office) => {
+        const officeId = office.get('id');
+        const deptId = office.get('department_id');
+        if (!officeId || !deptId) return;
+        
+        const docRef = firestoreApi.getSubDocument(
+          "departments",
+          deptId,
+          "departments",
+          officeId
+        );
+        await firestoreApi.updateData(docRef, updates);
+      });
+
+      await Promise.all(updatePromises);
+      
+      setIsBulkEditModalOpen(false);
+      setSelectedOfficesForBulkEdit([]);
+      setBulkEditFormData(new BaseModel({}));
+      loadData();
+      showSuccess(`تم تحديث ${selectedOfficesForBulkEdit.length} مكتب بنجاح`);
+    } catch (error) {
+      console.error("Error in bulk edit:", error);
+      showError("حدث خطأ أثناء التحديث الجماعي");
+    } finally {
+      setBulkEditLoading(false);
+    }
+  };
+
+  const updateBulkEditField = useCallback((key: string, value: any) => {
+    const newData = new BaseModel(bulkEditFormData.getData());
+    newData.put(key, value);
+    setBulkEditFormData(newData);
+  }, [bulkEditFormData]);
 
   const handleImportData = async (data: Array<Record<string, any>>) => {
     setImportLoading(true);
@@ -368,6 +435,7 @@ function OfficesPageContent() {
         columns={columns}
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
+        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
         onAddNew={canAdd ? () => {
           setEditingOffice(null);
           setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
@@ -508,6 +576,78 @@ function OfficesPageContent() {
           description="اختر ملف Excel لعرض البيانات ومعاينتها وتعديلها قبل الحفظ. يجب أن يحتوي الملف على: اسم المكتب، الإدارة، الطابق (اختياري)، الغرفة (اختياري)"
           loading={importLoading}
         />
+
+        {/* Bulk Edit Modal */}
+        <Modal
+          isOpen={isBulkEditModalOpen}
+          onClose={() => {
+            setIsBulkEditModalOpen(false);
+            setSelectedOfficesForBulkEdit([]);
+            setBulkEditFormData(new BaseModel({}));
+          }}
+          title={`تحرير جماعي (${selectedOfficesForBulkEdit.length} مكتب)`}
+          size="md"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsBulkEditModalOpen(false);
+                  setSelectedOfficesForBulkEdit([]);
+                  setBulkEditFormData(new BaseModel({}));
+                }}
+                size="lg"
+                className="w-full sm:w-auto font-bold"
+                disabled={bulkEditLoading}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                form="bulk-edit-form"
+                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                isLoading={bulkEditLoading}
+              >
+                تطبيق على {selectedOfficesForBulkEdit.length} مكتب
+              </Button>
+            </div>
+          }
+        >
+          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+            <p className="text-sm text-primary-800 font-medium">
+              <MaterialIcon name="info" className="inline ml-2" size="sm" />
+              سيتم تطبيق التغييرات على جميع المكاتب المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
+            </p>
+          </div>
+          <form id="bulk-edit-form" onSubmit={handleBulkEditSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="الطابق"
+                type="text"
+                value={bulkEditFormData.get('floor')}
+                onChange={(e) => updateBulkEditField('floor', e.target.value)}
+                placeholder="أدخل الطابق (اختياري)"
+              />
+              <Input
+                label="الغرفة"
+                type="text"
+                value={bulkEditFormData.get('room')}
+                onChange={(e) => updateBulkEditField('room', e.target.value)}
+                placeholder="أدخل الغرفة (اختياري)"
+              />
+            </div>
+            <Textarea
+              label="الملاحظات"
+              value={bulkEditFormData.get('notes')}
+              onChange={(e) => updateBulkEditField('notes', e.target.value)}
+              rows={2}
+              placeholder="أدخل الملاحظات (اختياري)"
+            />
+          </form>
+        </Modal>
     </MainLayout>
   );
 }
