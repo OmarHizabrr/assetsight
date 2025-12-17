@@ -10,6 +10,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
+import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
@@ -45,8 +46,8 @@ function InventoryPageContent() {
   const [bulkEditItemLoading, setBulkEditItemLoading] = useState(false);
   const [selectedCyclesForBulkEdit, setSelectedCyclesForBulkEdit] = useState<BaseModel[]>([]);
   const [selectedItemsForBulkEdit, setSelectedItemsForBulkEdit] = useState<BaseModel[]>([]);
-  const [bulkEditCycleFormData, setBulkEditCycleFormData] = useState<BaseModel>(new BaseModel({}));
-  const [bulkEditItemFormData, setBulkEditItemFormData] = useState<BaseModel>(new BaseModel({}));
+  const [bulkEditCycleFormDataArray, setBulkEditCycleFormDataArray] = useState<BaseModel[]>([]);
+  const [bulkEditItemFormDataArray, setBulkEditItemFormDataArray] = useState<BaseModel[]>([]);
   const [cycleFormData, setCycleFormData] = useState<BaseModel>(new BaseModel({
     name: '',
     start_date: '',
@@ -258,13 +259,19 @@ function InventoryPageContent() {
 
   const handleBulkEditCycles = (selectedItems: BaseModel[]) => {
     setSelectedCyclesForBulkEdit(selectedItems);
-    setBulkEditCycleFormData(new BaseModel({}));
+    const formDataArray = selectedItems.map(item => new BaseModel(item.getData()));
+    setBulkEditCycleFormDataArray(formDataArray);
     setIsBulkEditCycleModalOpen(true);
   };
 
   const handleBulkEditItems = (selectedItems: BaseModel[]) => {
     setSelectedItemsForBulkEdit(selectedItems);
-    setBulkEditItemFormData(new BaseModel({}));
+    const formDataArray = selectedItems.map(item => {
+      const itemData = item.getData();
+      itemData.found = item.getValue<number>('found') === 1 || item.getValue<boolean>('found') === true;
+      return new BaseModel(itemData);
+    });
+    setBulkEditItemFormDataArray(formDataArray);
     setIsBulkEditItemModalOpen(true);
   };
 
@@ -274,27 +281,16 @@ function InventoryPageContent() {
 
     try {
       setBulkEditCycleLoading(true);
-      const updates: Record<string, any> = {};
-      const formDataObj = bulkEditCycleFormData.getData();
-      
-      Object.keys(formDataObj).forEach(key => {
-        const value = formDataObj[key];
-        if (value !== '' && value !== null && value !== undefined) {
-          updates[key] = value;
-        }
-      });
 
-      if (Object.keys(updates).length === 0) {
-        showWarning("لم يتم تحديد أي حقول للتحديث");
-        setBulkEditCycleLoading(false);
-        return;
-      }
-
-      const updatePromises = selectedCyclesForBulkEdit.map(async (cycle) => {
+      const updatePromises = selectedCyclesForBulkEdit.map(async (cycle, index) => {
         const cycleId = cycle.get('id');
         const deptId = cycle.get('department_id');
         if (!cycleId || !deptId) return;
         
+        const formData = bulkEditCycleFormDataArray[index];
+        if (!formData) return;
+        
+        const updates = formData.getData();
         const docRef = firestoreApi.getSubDocument(
           "departments",
           deptId,
@@ -308,7 +304,7 @@ function InventoryPageContent() {
       
       setIsBulkEditCycleModalOpen(false);
       setSelectedCyclesForBulkEdit([]);
-      setBulkEditCycleFormData(new BaseModel({}));
+      setBulkEditCycleFormDataArray([]);
       loadData();
       showSuccess(`تم تحديث ${selectedCyclesForBulkEdit.length} دورة بنجاح`);
     } catch (error) {
@@ -325,28 +321,8 @@ function InventoryPageContent() {
 
     try {
       setBulkEditItemLoading(true);
-      const updates: Record<string, any> = {};
-      const formDataObj = bulkEditItemFormData.getData();
-      
-      Object.keys(formDataObj).forEach(key => {
-        const value = formDataObj[key];
-        if (value !== '' && value !== null && value !== undefined) {
-          updates[key] = value;
-        }
-      });
 
-      // معالجة found
-      if ('found' in updates) {
-        updates.found = bulkEditItemFormData.getValue<boolean>('found') ? 1 : 0;
-      }
-
-      if (Object.keys(updates).length === 0) {
-        showWarning("لم يتم تحديد أي حقول للتحديث");
-        setBulkEditItemLoading(false);
-        return;
-      }
-
-      const updatePromises = selectedItemsForBulkEdit.map(async (item) => {
+      const updatePromises = selectedItemsForBulkEdit.map(async (item, index) => {
         const itemId = item.get('id');
         const cycleId = item.get('cycle_id');
         if (!itemId || !cycleId) return;
@@ -354,6 +330,15 @@ function InventoryPageContent() {
         const cycle = cycles.find(c => c.get('id') === cycleId);
         const deptId = cycle?.get('department_id');
         if (!deptId) return;
+        
+        const formData = bulkEditItemFormDataArray[index];
+        if (!formData) return;
+        
+        const updates = formData.getData();
+        // معالجة found
+        if ('found' in updates) {
+          updates.found = formData.getValue<boolean>('found') ? 1 : 0;
+        }
         
         const docRef = firestoreApi.getNestedSubDocument(
           "departments",
@@ -370,7 +355,7 @@ function InventoryPageContent() {
       
       setIsBulkEditItemModalOpen(false);
       setSelectedItemsForBulkEdit([]);
-      setBulkEditItemFormData(new BaseModel({}));
+      setBulkEditItemFormDataArray([]);
       loadData();
       showSuccess(`تم تحديث ${selectedItemsForBulkEdit.length} عنصر بنجاح`);
     } catch (error) {
@@ -381,17 +366,21 @@ function InventoryPageContent() {
     }
   };
 
-  const updateBulkEditCycleField = useCallback((key: string, value: any) => {
-    const newData = new BaseModel(bulkEditCycleFormData.getData());
+  const updateBulkEditCycleField = useCallback((index: number, key: string, value: any) => {
+    const newArray = [...bulkEditCycleFormDataArray];
+    const newData = new BaseModel(newArray[index].getData());
     newData.put(key, value);
-    setBulkEditCycleFormData(newData);
-  }, [bulkEditCycleFormData]);
+    newArray[index] = newData;
+    setBulkEditCycleFormDataArray(newArray);
+  }, [bulkEditCycleFormDataArray]);
 
-  const updateBulkEditItemField = useCallback((key: string, value: any) => {
-    const newData = new BaseModel(bulkEditItemFormData.getData());
+  const updateBulkEditItemField = useCallback((index: number, key: string, value: any) => {
+    const newArray = [...bulkEditItemFormDataArray];
+    const newData = new BaseModel(newArray[index].getData());
     newData.put(key, value);
-    setBulkEditItemFormData(newData);
-  }, [bulkEditItemFormData]);
+    newArray[index] = newData;
+    setBulkEditItemFormDataArray(newArray);
+  }, [bulkEditItemFormDataArray]);
 
   const confirmDelete = async () => {
     if (deleteType === 'cycle' && deletingCycle) {
@@ -826,10 +815,10 @@ function InventoryPageContent() {
           onClose={() => {
             setIsBulkEditCycleModalOpen(false);
             setSelectedCyclesForBulkEdit([]);
-            setBulkEditCycleFormData(new BaseModel({}));
+            setBulkEditCycleFormDataArray([]);
           }}
           title={`تحرير جماعي (${selectedCyclesForBulkEdit.length} دورة)`}
-          size="md"
+          size="xl"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button
@@ -838,7 +827,7 @@ function InventoryPageContent() {
                 onClick={() => {
                   setIsBulkEditCycleModalOpen(false);
                   setSelectedCyclesForBulkEdit([]);
-                  setBulkEditCycleFormData(new BaseModel({}));
+                  setBulkEditCycleFormDataArray([]);
                 }}
                 size="lg"
                 className="w-full sm:w-auto font-bold"
@@ -854,38 +843,56 @@ function InventoryPageContent() {
                 className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
                 isLoading={bulkEditCycleLoading}
               >
-                تطبيق على {selectedCyclesForBulkEdit.length} دورة
+                حفظ جميع التعديلات ({selectedCyclesForBulkEdit.length})
               </Button>
             </div>
           }
         >
           <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
             <p className="text-sm text-primary-800 font-medium">
-              سيتم تطبيق التغييرات على جميع الدورات المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
+              يمكنك تعديل كل دورة بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على "حفظ جميع التعديلات".
             </p>
           </div>
           <form id="bulk-edit-cycle-form" onSubmit={handleBulkEditCyclesSubmit} className="space-y-6">
-            <Input
-              label="تاريخ البداية"
-              type="date"
-              value={bulkEditCycleFormData.get('start_date')}
-              onChange={(e) => updateBulkEditCycleField('start_date', e.target.value)}
-              fullWidth={false}
-            />
-            <Input
-              label="تاريخ النهاية"
-              type="date"
-              value={bulkEditCycleFormData.get('end_date')}
-              onChange={(e) => updateBulkEditCycleField('end_date', e.target.value)}
-              fullWidth={false}
-            />
-            <Textarea
-              label="الملاحظات"
-              value={bulkEditCycleFormData.get('notes')}
-              onChange={(e) => updateBulkEditCycleField('notes', e.target.value)}
-              rows={2}
-              placeholder="أدخل الملاحظات (اختياري)"
-            />
+            <div className="max-h-[60vh] overflow-y-auto space-y-6 pr-2">
+              {selectedCyclesForBulkEdit.map((cycle, index) => {
+                const formData = bulkEditCycleFormDataArray[index];
+                if (!formData) return null;
+                
+                return (
+                  <div key={cycle.get('id') || index} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-300">
+                      {cycle.get('name') || `دورة ${index + 1}`}
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                          label="تاريخ البداية"
+                          type="date"
+                          value={formData.get('start_date') || ''}
+                          onChange={(e) => updateBulkEditCycleField(index, 'start_date', e.target.value)}
+                          fullWidth={false}
+                        />
+                        <Input
+                          label="تاريخ النهاية"
+                          type="date"
+                          value={formData.get('end_date') || ''}
+                          onChange={(e) => updateBulkEditCycleField(index, 'end_date', e.target.value)}
+                          fullWidth={false}
+                        />
+                      </div>
+                      <Textarea
+                        label="الملاحظات"
+                        value={formData.get('notes') || ''}
+                        onChange={(e) => updateBulkEditCycleField(index, 'notes', e.target.value)}
+                        rows={2}
+                        placeholder="أدخل الملاحظات"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </form>
         </Modal>
 
@@ -895,10 +902,10 @@ function InventoryPageContent() {
           onClose={() => {
             setIsBulkEditItemModalOpen(false);
             setSelectedItemsForBulkEdit([]);
-            setBulkEditItemFormData(new BaseModel({}));
+            setBulkEditItemFormDataArray([]);
           }}
           title={`تحرير جماعي (${selectedItemsForBulkEdit.length} عنصر)`}
-          size="md"
+          size="xl"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button
@@ -907,7 +914,7 @@ function InventoryPageContent() {
                 onClick={() => {
                   setIsBulkEditItemModalOpen(false);
                   setSelectedItemsForBulkEdit([]);
-                  setBulkEditItemFormData(new BaseModel({}));
+                  setBulkEditItemFormDataArray([]);
                 }}
                 size="lg"
                 className="w-full sm:w-auto font-bold"
@@ -923,39 +930,55 @@ function InventoryPageContent() {
                 className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
                 isLoading={bulkEditItemLoading}
               >
-                تطبيق على {selectedItemsForBulkEdit.length} عنصر
+                حفظ جميع التعديلات ({selectedItemsForBulkEdit.length})
               </Button>
             </div>
           }
         >
           <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
             <p className="text-sm text-primary-800 font-medium">
-              سيتم تطبيق التغييرات على جميع العناصر المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
+              يمكنك تعديل كل عنصر بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على "حفظ جميع التعديلات".
             </p>
           </div>
           <form id="bulk-edit-item-form" onSubmit={handleBulkEditItemsSubmit} className="space-y-6">
-            <SearchableSelect
-              label="المكتب الممسوح"
-              value={bulkEditItemFormData.get('scanned_office_id')}
-              onChange={(value) => updateBulkEditItemField('scanned_office_id', value)}
-              options={offices.map((office) => ({
-                value: office.get('id'),
-                label: office.get('name'),
-              }))}
-              placeholder="اختر المكتب (اختياري)"
-            />
-            <Checkbox
-              label="تم العثور عليه"
-              checked={bulkEditItemFormData.getValue<boolean>('found') === true || bulkEditItemFormData.getValue<number>('found') === 1}
-              onChange={(e) => updateBulkEditItemField('found', e.target.checked)}
-            />
-            <Textarea
-              label="ملاحظة"
-              value={bulkEditItemFormData.get('note')}
-              onChange={(e) => updateBulkEditItemField('note', e.target.value)}
-              rows={2}
-              placeholder="أدخل الملاحظة (اختياري)"
-            />
+            <div className="max-h-[60vh] overflow-y-auto space-y-6 pr-2">
+              {selectedItemsForBulkEdit.map((item, index) => {
+                const formData = bulkEditItemFormDataArray[index];
+                if (!formData) return null;
+                
+                return (
+                  <div key={item.get('id') || index} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-300">
+                      {getCycleName(item.get('cycle_id'))} - {item.get('scanned_tag') || `عنصر ${index + 1}`}
+                    </h4>
+                    <div className="space-y-4">
+                      <SearchableSelect
+                        label="المكتب الممسوح"
+                        value={formData.get('scanned_office_id')}
+                        onChange={(value) => updateBulkEditItemField(index, 'scanned_office_id', value)}
+                        options={offices.map((office) => ({
+                          value: office.get('id'),
+                          label: office.get('name'),
+                        }))}
+                        placeholder="اختر المكتب"
+                      />
+                      <Checkbox
+                        label="تم العثور عليه"
+                        checked={formData.getValue<boolean>('found') === true || formData.getValue<number>('found') === 1}
+                        onChange={(e) => updateBulkEditItemField(index, 'found', e.target.checked)}
+                      />
+                      <Textarea
+                        label="ملاحظة"
+                        value={formData.get('note') || ''}
+                        onChange={(e) => updateBulkEditItemField(index, 'note', e.target.value)}
+                        rows={2}
+                        placeholder="أدخل الملاحظة"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </form>
         </Modal>
     </MainLayout>

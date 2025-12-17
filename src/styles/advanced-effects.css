@@ -1,0 +1,473 @@
+/* ============================================
+   Advanced CSS Effects - Phase 7-8
+   Advanced Visual Effects, Interactive Enhancements
+   ============================================ */
+
+/* ============================================
+   Advanced Gradients
+   ============================================ */
+
+/* Animated gradient backgrounds */
+.gradient-animated {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Radial gradient effects */
+.radial-gradient-primary {
+  background: radial-gradient(circle at center, var(--color-primary-500), var(--color-primary-700));
+}
+
+.radial-gradient-accent {
+  background: radial-gradient(circle at center, var(--color-accent-500), var(--color-accent-700));
+}
+
+/* Conic gradient */
+.conic-gradient {
+  background: conic-gradient(from 0deg, var(--color-primary-500), var(--color-accent-500), var(--color-primary-500));
+}
+
+/* ============================================
+   Advanced Shadows
+   ============================================ */
+
+/* Colored shadows */
+.shadow-primary-glow {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.5), 0 0 40px rgba(99, 102, 241, 0.3);
+}
+
+.shadow-accent-glow {
+  box-shadow: 0 0 20px rgba(217, 70, 239, 0.5), 0 0 40px rgba(217, 70, 239, 0.3);
+}
+
+.shadow-success-glow {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5), 0 0 40px rgba(34, 197, 94, 0.3);
+}
+
+.shadow-warning-glow {
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.5), 0 0 40px rgba(234, 179, 8, 0.3);
+}
+
+.shadow-danger-glow {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), 0 0 40px rgba(239, 68, 68, 0.3);
+}
+
+/* Multi-layer shadows */
+.shadow-multi {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.24),
+    0 4px 6px rgba(0, 0, 0, 0.16),
+    0 8px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Inner shadows */
+.shadow-inner-glow {
+  box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+/* ============================================
+   Advanced Glass Morphism
+   ============================================ */
+
+.glass-morphism-advanced {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.glass-morphism-dark-advanced {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* ============================================
+   Advanced Text Effects
+   ============================================ */
+
+/* Text gradient with animation */
+.text-gradient-animated {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Text shadow effects */
+.text-shadow-glow {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+}
+
+.text-shadow-soft {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-strong {
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Text stroke */
+.text-stroke {
+  -webkit-text-stroke: 2px currentColor;
+  text-stroke: 2px currentColor;
+}
+
+/* ============================================
+   Advanced Hover Effects
+   ============================================ */
+
+/* 3D transform on hover */
+.hover-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+.hover-3d:hover {
+  transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale(1.05);
+}
+
+/* Tilt effect */
+.hover-tilt {
+  transition: transform 0.3s ease;
+}
+
+.hover-tilt:hover {
+  transform: rotateY(5deg) rotateX(5deg);
+}
+
+/* Glow on hover */
+.hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
+}
+
+/* Shine effect */
+.hover-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.hover-shine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.hover-shine:hover::before {
+  left: 100%;
+}
+
+/* ============================================
+   Advanced Animations
+   ============================================ */
+
+/* Morphing shape */
+@keyframes morph {
+  0%, 100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  50% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+}
+
+.animate-morph {
+  animation: morph 8s ease-in-out infinite;
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Rotate 3D */
+@keyframes rotate-3d {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+.animate-rotate-3d {
+  animation: rotate-3d 10s linear infinite;
+  transform-style: preserve-3d;
+}
+
+/* ============================================
+   Interactive Elements
+   ============================================ */
+
+/* Ripple effect */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Magnetic effect */
+.magnetic {
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.magnetic:hover {
+  transform: translate(var(--magnetic-x, 0), var(--magnetic-y, 0)) scale(1.05);
+}
+
+/* ============================================
+   Advanced Loading States
+   ============================================ */
+
+/* Skeleton loading */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0px,
+    #f8f8f8 40px,
+    #f0f0f0 80px
+  );
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+/* Spinner variations */
+.spinner-gradient {
+  border: 4px solid rgba(99, 102, 241, 0.1);
+  border-top-color: var(--color-primary-500);
+  border-right-color: var(--color-accent-500);
+  border-bottom-color: var(--color-primary-500);
+  border-left-color: var(--color-accent-500);
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   Advanced Scroll Effects
+   ============================================ */
+
+/* Parallax scrolling */
+.parallax {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Scroll reveal */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================
+   Advanced Filters
+   ============================================ */
+
+/* Blur effects */
+.blur-soft {
+  filter: blur(2px);
+}
+
+.blur-medium {
+  filter: blur(4px);
+}
+
+.blur-strong {
+  filter: blur(8px);
+}
+
+/* Brightness effects */
+.brightness-high {
+  filter: brightness(1.2);
+}
+
+.brightness-low {
+  filter: brightness(0.8);
+}
+
+/* Contrast effects */
+.contrast-high {
+  filter: contrast(1.2);
+}
+
+/* Saturation effects */
+.saturate-high {
+  filter: saturate(1.5);
+}
+
+.saturate-low {
+  filter: saturate(0.5);
+}
+
+/* ============================================
+   Advanced Borders
+   ============================================ */
+
+/* Gradient borders */
+.border-gradient {
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, var(--color-primary-500), var(--color-accent-500)) border-box;
+}
+
+/* Animated border */
+.border-animated {
+  position: relative;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.border-animated::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(45deg, var(--color-primary-500), var(--color-accent-500));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: gradient-shift 3s linear infinite;
+}
+
+/* ============================================
+   Advanced Overlays
+   ============================================ */
+
+/* Gradient overlay */
+.overlay-gradient {
+  position: relative;
+}
+
+.overlay-gradient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+}
+
+/* Radial overlay */
+.overlay-radial {
+  position: relative;
+}
+
+.overlay-radial::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent, rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+}
+
+/* ============================================
+   Advanced Clipping
+   ============================================ */
+
+/* Clip path shapes */
+.clip-triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.clip-circle {
+  clip-path: circle(50%);
+}
+
+.clip-polygon {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 75% 75%, 75% 100%, 50% 75%, 0% 75%);
+}
+
+/* ============================================
+   Advanced Masks
+   ============================================ */
+
+/* Text mask */
+.mask-text {
+  -webkit-mask-image: linear-gradient(to right, transparent, black, transparent);
+  mask-image: linear-gradient(to right, transparent, black, transparent);
+}
+
+/* Image mask - Example: Uncomment and provide your mask image path */
+/*
+.mask-image {
+  -webkit-mask-image: url('/path/to/your/mask.png');
+  mask-image: url('/path/to/your/mask.png');
+  -webkit-mask-size: cover;
+  mask-size: cover;
+}
+*/
+

@@ -1,0 +1,405 @@
+/**
+ * Admin Page Spacing - تحسين المسافات في صفحات الإدارة
+ * تقليل المساحات المهدرة وجعل التصميم أكثر compactness
+ */
+
+/* ========================================
+   PAGE HEADER OPTIMIZATION
+   ======================================== */
+
+/* تقليل المسافة السفلية للـ Page Header - استهداف قوي جداً */
+.mb-10:first-child,
+main > .mb-10:first-child,
+main > div.mb-10:first-child,
+main > div:first-child.mb-10,
+.admin-page-header,
+[class*="admin"] .mb-10:first-child {
+  margin-bottom: 1.5rem !important; /* بدلاً من 2.5rem */
+}
+
+/* استهداف عام لجميع mb-10 في main */
+main .mb-10 {
+  margin-bottom: 1.5rem !important;
+}
+
+/* تقليل المسافات داخل الـ Header */
+.gap-6,
+.admin-page-header .gap-6,
+main > div:first-child .gap-6,
+main .gap-6 {
+  gap: 1rem !important; /* بدلاً من 1.5rem */
+}
+
+/* تقليل المسافة بين العنوان والوصف */
+.admin-page-header .space-y-3,
+main > div:first-child .space-y-3 {
+  row-gap: 0.5rem !important; /* بدلاً من 0.75rem */
+}
+
+/* ========================================
+   ICON SIZE OPTIMIZATION
+   ======================================== */
+
+/* تقليل حجم الأيقونة قليلاً */
+.admin-page-header .w-16,
+main > div:first-child .w-16 {
+  width: 3.5rem !important; /* 56px بدلاً من 64px */
+  height: 3.5rem !important;
+}
+
+/* ========================================
+   TITLE SIZE OPTIMIZATION
+   ======================================== */
+
+/* تقليل حجم العنوان */
+.admin-page-header h1,
+main > div:first-child h1 {
+  font-size: 2.25rem !important; /* 36px بدلاً من 48px (text-5xl) */
+  line-height: 2.5rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+/* تقليل حجم الوصف */
+.admin-page-header p,
+main > div:first-child h1 + p {
+  font-size: 0.95rem !important;
+  margin-top: 0.25rem !important;
+}
+
+/* ========================================
+   BUTTON CONTAINER OPTIMIZATION
+   ======================================== */
+
+/* تقليل المسافة بين الأزرار */
+.admin-page-header .gap-3,
+main > div:first-child .gap-3 {
+  gap: 0.75rem !important;
+}
+
+/* ========================================
+   DATA TABLE SPACING
+   ======================================== */
+
+/* تقليل المسافة قبل الجدول */
+.data-table-container,
+[class*="table"] {
+  margin-top: 1rem !important;
+}
+
+/* تقليل padding داخل الـ Card */
+[class*="card"] [class*="body"] {
+  padding: 1.25rem !important;
+}
+
+/* ========================================
+   COMPACT MODE FOR ADMIN PAGES
+   ======================================== */
+
+/* Compact page layout */
+.admin-compact {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* Compact header */
+.admin-compact-header {
+  margin-bottom: 1rem !important;
+  padding: 1rem 0 !important;
+}
+
+/* ========================================
+   DECORATIVE ELEMENTS OPTIMIZATION
+   ======================================== */
+
+/* تقليل حجم الـ decorative backgrounds */
+.admin-page-header .absolute.w-64,
+main > div:first-child .absolute.w-64 {
+  width: 12rem !important;
+  height: 12rem !important;
+}
+
+.admin-page-header .absolute.w-48,
+main > div:first-child .absolute.w-48 {
+  width: 10rem !important;
+  height: 10rem !important;
+}
+
+/* ========================================
+   RESPONSIVE IMPROVEMENTS
+   ======================================== */
+
+@media (max-width: 640px) {
+  /* Mobile: تقليل المسافات أكثر */
+  .admin-page-header,
+  main > div:first-child.mb-10 {
+    margin-bottom: 1rem !important;
+  }
+
+  /* تقليل حجم العنوان على الموبايل */
+  .admin-page-header h1,
+  main > div:first-child h1 {
+    font-size: 1.75rem !important;
+    line-height: 2rem !important;
+  }
+
+  /* تقليل حجم الأيقونة على الموبايل */
+  .admin-page-header .w-16,
+  main > div:first-child .w-16 {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+  }
+
+  /* Stack buttons vertically with less space */
+  .admin-page-header .gap-3,
+  main > div:first-child .gap-3 {
+    gap: 0.5rem !important;
+  }
+}
+
+/* ========================================
+   FILTER/SEARCH BAR SPACING
+   ======================================== */
+
+/* تقليل المسافة للـ filter bar */
+.filter-bar,
+[class*="filter"],
+[class*="search-bar"] {
+  margin-bottom: 1rem !important;
+  padding: 0.75rem 1rem !important;
+}
+
+/* ========================================
+   DARK MODE ADJUSTMENTS
+   ======================================== */
+
+[data-theme="dark"] .admin-page-header,
+[data-theme="dark"] main > div:first-child {
+  /* Ensure spacing is consistent in dark mode */
+  margin-bottom: 1.5rem !important;
+}
+
+/* ========================================
+   TABLE HEADER SPACING
+   ======================================== */
+
+/* تقليل padding في رأس الجدول */
+table thead th {
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+/* تقليل padding في صفوف الجدول */
+table tbody td {
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+/* Compact spacing utilities */
+.mb-compact {
+  margin-bottom: 1rem !important;
+}
+
+.mt-compact {
+  margin-top: 1rem !important;
+}
+
+.p-compact {
+  padding: 1rem !important;
+}
+
+.gap-compact {
+  gap: 0.75rem !important;
+}
+
+/* Zero wasted space */
+.no-waste-space {
+  margin: 0 !important;
+  padding: 0.5rem 0 !important;
+}
+
+/* Tight layout */
+.layout-tight {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ========================================
+   SPECIFIC PAGE FIXES
+   ======================================== */
+
+/* أنواع الأصول، أسماء الأصول، الفئات، إلخ */
+[class*="asset"] main > div:first-child,
+[class*="category"] main > div:first-child,
+[class*="department"] main > div:first-child,
+[class*="office"] main > div:first-child {
+  margin-bottom: 1.5rem !important;
+}
+
+/* تقليل المسافة بين العنوان والمحتوى */
+.page-title-container {
+  margin-bottom: 1rem !important;
+}
+
+/* تقليل المسافة للأزرار في الـ header */
+.action-buttons-container {
+  margin-top: 0 !important;
+}
+
+/* ========================================
+   ANIMATION ADJUSTMENTS
+   ======================================== */
+
+/* Keep animations but reduce movement */
+.animate-float {
+  animation-duration: 4s !important;
+}
+
+.animate-pulse-soft {
+  animation-duration: 3s !important;
+}
+
+/* ========================================
+   PRINT MODE
+   ======================================== */
+
+@media print {
+  /* Remove all extra spacing for printing */
+  .admin-page-header,
+  main > div:first-child {
+    margin-bottom: 0.5rem !important;
+    padding: 0 !important;
+  }
+
+  /* Hide decorative elements */
+  .absolute.blur-3xl,
+  .animate-pulse-soft {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   ULTRA COMPACT PAGE HEADERS
+   ======================================== */
+
+/* Target all page headers for consistency */
+main > div:first-child {
+  margin-bottom: 1rem !important;
+  padding: 0 !important;
+}
+
+/* Compact gaps in headers */
+main > div:first-child .gap-6,
+main > div:first-child .gap-4,
+main > div:first-child .gap-3 {
+  gap: 0.75rem !important;
+}
+
+/* Reduce space between title and DataTable */
+main > [class*="Card"]:not(:first-child),
+main > div:not(:first-child) {
+  margin-top: 0 !important;
+}
+
+/* ========================================
+   DATA TABLE CARD SPACING FIXES
+   ======================================== */
+
+/* تقليل المسافة بين body والـ DataTable Card */
+body main {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* تقليل المسافة بين Page Header والـ DataTable Card */
+main > div:first-child + [class*="Card"],
+main > div:first-child + div[class*="data-table"] {
+  margin-top: 0.75rem !important;
+}
+
+/* تقليل padding داخل DataTable Card */
+.data-table-card {
+  margin-top: 0.75rem !important;
+  margin-bottom: 0 !important;
+}
+
+.data-table-card [class*="CardBody"],
+.data-table-card [class*="card-body"] {
+  padding: 1rem !important;
+}
+
+/* تقليل المسافة بين CardHeader و CardBody */
+.data-table-card [class*="CardHeader"] {
+  padding-bottom: 0.75rem !important;
+  margin-bottom: 0 !important;
+}
+
+/* ========================================
+   RESPONSIVE SPACING IMPROVEMENTS
+   ======================================== */
+
+/* Tablet */
+@media (min-width: 640px) and (max-width: 1024px) {
+  body main {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+  
+  .data-table-card {
+    margin-top: 1rem !important;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  body main {
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+  }
+  
+  .data-table-card {
+    margin-top: 1rem !important;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1280px) {
+  body main {
+    padding-left: 2.5rem !important;
+    padding-right: 2.5rem !important;
+  }
+}
+
+/* ========================================
+   MOBILE SPACING OPTIMIZATION
+   ======================================== */
+
+@media (max-width: 640px) {
+  /* تقليل padding في الموبايل */
+  body main {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+  
+  /* تقليل المسافة بين Header والـ Card */
+  main > div:first-child + [class*="Card"] {
+    margin-top: 0.5rem !important;
+  }
+  
+  .data-table-card {
+    margin-top: 0.5rem !important;
+  }
+  
+  .data-table-card [class*="CardBody"] {
+    padding: 0.75rem !important;
+  }
+}
+

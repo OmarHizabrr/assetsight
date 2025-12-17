@@ -13,21 +13,26 @@ export function InstallButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    
     // Check if app is already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
       return;
     }
 
     // Check if running on iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = (window.navigator as any).standalone === true;
+    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isStandalone = (window.navigator as any).standalone === true;
 
-    if (isIOS && isStandalone) {
-      setIsInstalled(true);
-      return;
+      if (isIOS && isStandalone) {
+        setIsInstalled(true);
+        return;
+      }
     }
 
     // Listen for beforeinstallprompt event
@@ -37,27 +42,31 @@ export function InstallButton() {
       setIsVisible(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Check if already installed
-    const checkInstalled = () => {
-      if (window.matchMedia('(display-mode: standalone)').matches) {
+      // Check if already installed
+      const checkInstalled = () => {
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+          setIsInstalled(true);
+          setIsVisible(false);
+        }
+      };
+
+      checkInstalled();
+
+      // Listen for app installed event
+      window.addEventListener('appinstalled', () => {
         setIsInstalled(true);
         setIsVisible(false);
-      }
-    };
-
-    checkInstalled();
-
-    // Listen for app installed event
-    window.addEventListener('appinstalled', () => {
-      setIsInstalled(true);
-      setIsVisible(false);
-      setDeferredPrompt(null);
-    });
+        setDeferredPrompt(null);
+      });
+    }
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      }
     };
   }, []);
 
@@ -91,8 +100,8 @@ export function InstallButton() {
     setDeferredPrompt(null);
   };
 
-  // Don't render if already installed or not visible
-  if (isInstalled || !isVisible) {
+  // Don't render if not mounted, already installed or not visible
+  if (!mounted || isInstalled || !isVisible) {
     return null;
   }
 

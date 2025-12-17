@@ -2,7 +2,7 @@
 
 import { InputHTMLAttributes, forwardRef } from 'react';
 
-interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
+export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label?: string;
   helperText?: string;
   fullWidth?: boolean;
@@ -57,5 +57,4 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 Checkbox.displayName = 'Checkbox';
 
 export { Checkbox };
-export type { CheckboxProps };
 

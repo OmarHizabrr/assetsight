@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userModel = new BaseModel(userData);
         setUser(userModel as AuthUser);
       } catch (error) {
-        console.error("Error parsing saved user:", error);
+        // Silently handle parsing errors and clear invalid data
         window.localStorage.removeItem("user");
       }
     }
@@ -69,7 +69,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
 
       // البحث عن المستخدم في الجدول المستقل users/userId/ باستخدام رقم الموظف
-      const employeeNumber = credentials.employee_number.trim();
+      const employeeNumber = (credentials.employee_number || '').trim();
+      const password = (credentials.password || '').trim();
+      
+      // التحقق الصارم من الحقول
+      if (!employeeNumber || employeeNumber.length === 0) {
+        throw new Error("يرجى إدخال رقم الموظف");
+      }
+      
+      if (!password || password.length === 0) {
+        throw new Error("يرجى إدخال كلمة المرور");
+      }
+
+      // الخطوة الأولى: البحث عن المستخدم بالرقم الوظيفي
       const userDocs = await firestoreApi.getDocuments(
         firestoreApi.getCollection("users"),
         {
@@ -78,24 +90,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       );
       
+      // البحث عن مستخدم نشط
       const foundUser = userDocs.find(doc => {
         const userData = doc.data();
         return (userData.is_active === 1 || userData.is_active === true);
       });
 
+      // إذا لم يتم العثور على المستخدم، رسالة خطأ محددة للرقم الوظيفي
       if (!foundUser) {
-        throw new Error("رقم الموظف أو كلمة المرور غير صحيحة");
+        throw new Error("رقم الموظف غير صحيح");
+      }
+
+      // الخطوة الثانية: التحقق من كلمة المرور
+      const userData = foundUser.data();
+      const storedPassword = userData.password;
+      
+      // التحقق من وجود كلمة مرور مخزنة
+      if (!storedPassword || storedPassword === '' || storedPassword === null || storedPassword === undefined) {
+        throw new Error("كلمة المرور غير موجودة في قاعدة البيانات. يرجى التواصل مع المدير");
+      }
+      
+      // مقارنة كلمة المرور (نص عادي - يمكن تحسينه لاحقاً باستخدام hashing)
+      const passwordMatch = storedPassword.trim() === password.trim();
+      
+      // إذا كانت كلمة المرور خاطئة، رسالة خطأ محددة لكلمة المرور
+      if (!passwordMatch) {
+        throw new Error("كلمة المرور غير صحيحة");
       }
 
       const matchingUser = BaseModel.fromFirestore(foundUser);
       setUser(matchingUser as AuthUser);
       if (typeof window !== "undefined") {
-        window.localStorage.setItem("user", JSON.stringify(matchingUser.getData()));
-        window.localStorage.setItem("userData", JSON.stringify(matchingUser.getData()));
+        try {
+          window.localStorage.setItem("user", JSON.stringify(matchingUser.getData()));
+          window.localStorage.setItem("userData", JSON.stringify(matchingUser.getData()));
+        } catch (storageError) {
+          // If localStorage fails, continue anyway - user is still logged in
+          // This can happen in private browsing mode or when storage is full
+        }
       }
     } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+      // Ensure error is an Error instance before re-throwing
+      if (error instanceof Error) {
+        throw error;
+      }
+      // If it's not an Error instance, wrap it
+      throw new Error(error ? String(error) : "حدث خطأ غير معروف أثناء تسجيل الدخول");
     } finally {
       setLoading(false);
     }

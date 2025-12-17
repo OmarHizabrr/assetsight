@@ -1,0 +1,380 @@
+/**
+ * SEO Improvements - تحسينات محركات البحث
+ * تحسينات للـ meta tags, structured data, وperformance
+ */
+
+/* ========================================
+   PERFORMANCE FOR SEO
+   ======================================== */
+
+/* Optimize font loading for SEO */
+@font-face {
+  font-display: swap;
+}
+
+/* Optimize image loading for SEO */
+img {
+  loading: lazy;
+  decoding: async;
+}
+
+/* Optimize video loading for SEO */
+video {
+  preload: metadata;
+}
+
+/* ========================================
+   STRUCTURED DATA SUPPORT
+   ======================================== */
+
+/* Article Schema */
+.article-schema {
+  display: none;
+}
+
+/* Breadcrumb Schema */
+.breadcrumb-schema {
+  display: none;
+}
+
+/* Organization Schema */
+.organization-schema {
+  display: none;
+}
+
+/* ========================================
+   CONTENT OPTIMIZATION
+   ======================================== */
+
+/* Ensure proper heading hierarchy */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 0.875rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+}
+
+/* Proper link styling for SEO */
+a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--color-primary-500);
+  outline-offset: 3px;
+}
+
+/* Proper alt text styling */
+img[alt=""] {
+  border: 2px dashed var(--color-warning-500);
+}
+
+/* ========================================
+   MOBILE-FIRST FOR SEO
+   ======================================== */
+
+/* Ensure mobile-friendly viewport */
+@media (max-width: 640px) {
+  body {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+}
+
+/* ========================================
+   PAGE SPEED OPTIMIZATION
+   ======================================== */
+
+/* Critical CSS - Above the fold */
+.above-the-fold {
+  contain: layout style paint;
+}
+
+/* Defer non-critical CSS */
+.below-the-fold {
+  contain: layout style;
+}
+
+/* ========================================
+   ACCESSIBILITY FOR SEO
+   ======================================== */
+
+/* Proper semantic HTML */
+main {
+  outline: none;
+}
+
+nav {
+  outline: none;
+}
+
+header {
+  outline: none;
+}
+
+footer {
+  outline: none;
+}
+
+aside {
+  outline: none;
+}
+
+/* Proper landmark roles */
+[role="main"] {
+  outline: none;
+}
+
+[role="navigation"] {
+  outline: none;
+}
+
+[role="banner"] {
+  outline: none;
+}
+
+[role="contentinfo"] {
+  outline: none;
+}
+
+[role="complementary"] {
+  outline: none;
+}
+
+/* ========================================
+   CONTENT READABILITY
+   ======================================== */
+
+/* Optimal line length for readability */
+article,
+.content {
+  max-width: 65ch;
+  margin: 0 auto;
+}
+
+/* Proper paragraph spacing */
+p {
+  margin-bottom: 1rem;
+  line-height: 1.75;
+}
+
+/* Proper list spacing */
+ul,
+ol {
+  margin-bottom: 1rem;
+  padding-right: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+  line-height: 1.75;
+}
+
+/* ========================================
+   IMAGE OPTIMIZATION
+   ======================================== */
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Proper aspect ratio */
+img[width][height] {
+  aspect-ratio: attr(width) / attr(height);
+}
+
+/* ========================================
+   PRINT OPTIMIZATION
+   ======================================== */
+
+@media print {
+  /* Hide non-essential elements */
+  nav,
+  aside,
+  footer,
+  [class*="Button"],
+  [class*="action"] {
+    display: none !important;
+  }
+
+  /* Ensure proper print colors */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+
+  /* Show URLs for links */
+  a[href]::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.75rem;
+    color: #666;
+  }
+
+  /* Page breaks */
+  h1,
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+
+  p,
+  li {
+    page-break-inside: avoid;
+  }
+}
+
+/* ========================================
+   SOCIAL MEDIA OPTIMIZATION
+   ======================================== */
+
+/* Open Graph image optimization */
+.og-image {
+  width: 1200px;
+  height: 630px;
+  object-fit: cover;
+}
+
+/* Twitter Card image optimization */
+.twitter-card-image {
+  width: 1200px;
+  height: 600px;
+  object-fit: cover;
+}
+
+/* ========================================
+   SCHEMA MARKUP SUPPORT
+   ======================================== */
+
+/* Hide schema markup from visual display */
+[itemscope],
+[itemtype],
+[itemprop] {
+  /* Schema markup is hidden by default */
+}
+
+/* ========================================
+   PERFORMANCE METRICS
+   ======================================== */
+
+/* Optimize for Core Web Vitals */
+/* Largest Contentful Paint (LCP) */
+.lcp-element {
+  contain: layout style paint;
+  will-change: auto;
+}
+
+/* First Input Delay (FID) */
+.interactive-element {
+  contain: layout style;
+}
+
+/* Cumulative Layout Shift (CLS) */
+.stable-layout {
+  contain: layout;
+}
+
+/* ========================================
+   CRAWLING OPTIMIZATION
+   ======================================== */
+
+/* Proper robots.txt support */
+.robots-noindex {
+  display: none;
+}
+
+.robots-nofollow a {
+  /* Links marked as nofollow */
+}
+
+/* ========================================
+   INTERNATIONALIZATION (i18n)
+   ======================================== */
+
+/* RTL Support for SEO */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Language attribute support */
+[lang] {
+  /* Language attribute is set via HTML */
+}
+
+/* ========================================
+   STRUCTURED DATA VISUALIZATION
+   ======================================== */
+
+/* Hide structured data from users */
+.structured-data {
+  display: none;
+  visibility: hidden;
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ========================================
+   CANONICAL URL SUPPORT
+   ======================================== */
+
+/* Ensure canonical links are properly styled */
+link[rel="canonical"] {
+  display: none;
+}
+
+/* ========================================
+   SITEMAP OPTIMIZATION
+   ======================================== */
+
+/* Ensure sitemap links are accessible */
+.sitemap-link {
+  display: none;
+}
+
+/* ========================================
+   XML SITEMAP SUPPORT
+   ======================================== */
+
+/* Hide XML sitemap from visual display */
+.xml-sitemap {
+  display: none;
+}
+

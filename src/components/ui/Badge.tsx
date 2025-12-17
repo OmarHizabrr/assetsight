@@ -2,7 +2,7 @@
 
 import { HTMLAttributes } from 'react';
 
-interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'accent';
   size?: 'sm' | 'md' | 'lg';
   dot?: boolean;

@@ -59,6 +59,12 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
       </head>
       <body className="antialiased" suppressHydrationWarning>
+        {/* Skip to Main Content Link for Accessibility */}
+        <a href="#main-content" className="skip-to-content">
+          الانتقال إلى المحتوى الرئيسي
+        </a>
+        {/* ARIA Live Region for Dynamic Content */}
+        <div id="aria-live-region" className="aria-live-region" role="status" aria-live="polite" aria-atomic="true"></div>
         <PWAProvider>
           <AuthProvider>
             <ToastProvider>

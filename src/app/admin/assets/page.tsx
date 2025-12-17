@@ -3,6 +3,7 @@
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -43,7 +44,12 @@ function AssetsPageContent() {
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedAssetsForBulkEdit, setSelectedAssetsForBulkEdit] = useState<BaseModel[]>([]);
-  const [bulkEditFormData, setBulkEditFormData] = useState<BaseModel>(new BaseModel({}));
+  const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
+  const [bulkEditNewAssetNames, setBulkEditNewAssetNames] = useState<Record<number, string>>({});
+  const [bulkEditNewAssetTypes, setBulkEditNewAssetTypes] = useState<Record<number, string>>({});
+  const [bulkEditNewAssetStatuses, setBulkEditNewAssetStatuses] = useState<Record<number, string>>({});
+  const [bulkEditSelectedDepartmentIds, setBulkEditSelectedDepartmentIds] = useState<Record<number, string>>({});
+  const [bulkEditOfficesMap, setBulkEditOfficesMap] = useState<Record<number, BaseModel[]>>({});
   const [newAssetName, setNewAssetName] = useState('');
   const [newAssetType, setNewAssetType] = useState('');
   const [newAssetStatus, setNewAssetStatus] = useState('');
@@ -364,118 +370,62 @@ function AssetsPageContent() {
 
   const handleBulkEdit = (selectedAssets: BaseModel[]) => {
     setSelectedAssetsForBulkEdit(selectedAssets);
-    setBulkEditFormData(new BaseModel({}));
-    setSelectedDepartmentId('');
-    setOffices([]);
+    const formDataArray = selectedAssets.map(item => {
+      const itemData = item.getData();
+      itemData.is_active = item.getValue<number>('is_active') === 1 || item.getValue<boolean>('is_active') === true;
+      return new BaseModel(itemData);
+    });
+    setBulkEditFormDataArray(formDataArray);
+    
+    // تهيئة department IDs و offices لكل أصل
+    const deptIds: Record<number, string> = {};
+    const officesMap: Record<number, BaseModel[]> = {};
+    selectedAssets.forEach((asset, index) => {
+      const deptId = asset.get('department_id');
+      if (deptId) {
+        deptIds[index] = deptId;
+        const filteredOffices = allOffices.filter(office => office.get('department_id') === deptId);
+        officesMap[index] = filteredOffices;
+      }
+    });
+    setBulkEditSelectedDepartmentIds(deptIds);
+    setBulkEditOfficesMap(officesMap);
+    setBulkEditNewAssetNames({});
+    setBulkEditNewAssetTypes({});
+    setBulkEditNewAssetStatuses({});
+    
     setIsBulkEditModalOpen(true);
   };
 
-  const handleBulkEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedAssetsForBulkEdit.length === 0) return;
-
+  const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
     try {
       setBulkEditLoading(true);
-      const updates: Record<string, any> = {};
-      const formDataObj = bulkEditFormData.getData();
-      
-      // نسخ الحقول المملوءة فقط (نسمح بـ 0 و false كقيم صالحة)
-      Object.keys(formDataObj).forEach(key => {
-        const value = formDataObj[key];
-        if (value !== '' && value !== null && value !== undefined) {
-          updates[key] = value;
-        }
-      });
 
-      // معالجة is_active إذا كان موجوداً
-      if ('is_active' in updates) {
-        updates.is_active = bulkEditFormData.getValue<boolean>('is_active') ? 1 : 0;
-      }
-
-      // معالجة الأرقام
-      if ('purchase_value' in updates) {
-        updates.purchase_value = bulkEditFormData.getValue<number>('purchase_value') || 0;
-      }
-      if ('current_value' in updates) {
-        updates.current_value = bulkEditFormData.getValue<number>('current_value') || 0;
-      }
-      if ('expected_lifetime_years' in updates) {
-        updates.expected_lifetime_years = bulkEditFormData.getValue<number>('expected_lifetime_years') || 0;
-      }
-      if ('residual_value' in updates) {
-        updates.residual_value = bulkEditFormData.getValue<number>('residual_value') || 0;
-      }
-
-      // إضافة اسم الأصل إذا كان جديداً
-      if (updates.asset_name_id === '' && newAssetName.trim()) {
-        const existingName = assetNames.find(n => n.get('name') === newAssetName.trim());
-        if (existingName) {
-          updates.asset_name_id = existingName.get('id') || '';
-        } else {
-          const newAssetNameId = firestoreApi.getNewId("assetNames");
-          const assetNameDocRef = firestoreApi.getDocument("assetNames", newAssetNameId);
-          await firestoreApi.setData(assetNameDocRef, {
-            name: newAssetName.trim(),
-            description: '',
-            notes: '',
-          });
-          updates.asset_name_id = newAssetNameId;
-          const newName = new BaseModel({ id: newAssetNameId, name: newAssetName.trim() });
-          setAssetNames(prev => [...prev, newName]);
-        }
-      }
-
-      // إضافة نوع الأصل إذا كان جديداً
-      if (updates.type_id === '' && newAssetType.trim()) {
-        const existingType = assetTypes.find(t => t.get('name') === newAssetType.trim());
-        if (existingType) {
-          updates.type_id = existingType.get('id') || '';
-        } else {
-          const newTypeId = firestoreApi.getNewId("assetTypes");
-          const typeDocRef = firestoreApi.getDocument("assetTypes", newTypeId);
-          await firestoreApi.setData(typeDocRef, {
-            name: newAssetType.trim(),
-            description: '',
-            notes: '',
-          });
-          updates.type_id = newTypeId;
-          const newType = new BaseModel({ id: newTypeId, name: newAssetType.trim() });
-          setAssetTypes(prev => [...prev, newType]);
-        }
-      }
-
-      // إضافة حالة الأصل إذا كانت جديدة
-      if (updates.status_id === '' && newAssetStatus.trim()) {
-        const existingStatus = assetStatuses.find(s => s.get('name') === newAssetStatus.trim());
-        if (existingStatus) {
-          updates.status_id = existingStatus.get('id') || '';
-        } else {
-          const newStatusId = firestoreApi.getNewId("assetStatuses");
-          const statusDocRef = firestoreApi.getDocument("assetStatuses", newStatusId);
-          await firestoreApi.setData(statusDocRef, {
-            name: newAssetStatus.trim(),
-            description: '',
-            notes: '',
-          });
-          updates.status_id = newStatusId;
-          const newStatus = new BaseModel({ id: newStatusId, name: newAssetStatus.trim() });
-          setAssetStatuses(prev => [...prev, newStatus]);
-        }
-      }
-
-      // التحقق من وجود حقول للتحديث
-      if (Object.keys(updates).length === 0) {
-        showWarning("لم يتم تحديد أي حقول للتحديث");
-        setBulkEditLoading(false);
-        return;
-      }
-
-      // تطبيق التحديثات على جميع الأصول المختارة
-      const updatePromises = selectedAssetsForBulkEdit.map(async (asset) => {
-        const assetId = asset.get('id');
-        if (!assetId) return;
+      const updatePromises = dataArray.map(async (item) => {
+        if (!item.id) return;
         
-        const docRef = firestoreApi.getDocument("assets", assetId);
+        const updates: any = {
+          asset_tag: item.asset_tag || '',
+          serial_number: item.serial_number || '',
+          asset_name_id: item.asset_name_id || '',
+          type_id: item.type_id || '',
+          status_id: item.status_id || '',
+          category: item.category || '',
+          description: item.description || '',
+          purchase_date: item.purchase_date || '',
+          purchase_value: parseFloat(item.purchase_value) || 0,
+          currency_id: item.currency_id || '',
+          current_value: parseFloat(item.current_value) || 0,
+          location_office_id: item.location_office_id || '',
+          custodian_user_id: item.custodian_user_id || '',
+          warranty_end: item.warranty_end || '',
+          depreciation_method: item.depreciation_method || '',
+          expected_lifetime_years: parseInt(item.expected_lifetime_years) || 0,
+          residual_value: parseFloat(item.residual_value) || 0,
+          notes: item.notes || '',
+        };
+        
+        const docRef = firestoreApi.getDocument("assets", item.id);
         await firestoreApi.updateData(docRef, updates);
       });
 
@@ -483,14 +433,8 @@ function AssetsPageContent() {
       
       setIsBulkEditModalOpen(false);
       setSelectedAssetsForBulkEdit([]);
-      setBulkEditFormData(new BaseModel({}));
-      setNewAssetName('');
-      setNewAssetType('');
-      setNewAssetStatus('');
-      setSelectedDepartmentId('');
-      setOffices([]);
       loadData();
-      showSuccess(`تم تحديث ${selectedAssetsForBulkEdit.length} أصل بنجاح`);
+      showSuccess(`تم تحديث ${dataArray.length} أصل بنجاح`);
     } catch (error) {
       console.error("Error in bulk edit:", error);
       showError("حدث خطأ أثناء التحديث الجماعي");
@@ -499,11 +443,54 @@ function AssetsPageContent() {
     }
   };
 
-  const updateBulkEditField = useCallback((key: string, value: any) => {
-    const newData = new BaseModel(bulkEditFormData.getData());
+  const updateBulkEditField = useCallback((index: number, key: string, value: any) => {
+    const newArray = [...bulkEditFormDataArray];
+    const newData = new BaseModel(newArray[index].getData());
     newData.put(key, value);
-    setBulkEditFormData(newData);
-  }, [bulkEditFormData]);
+    
+    // إذا تم تغيير department_id، تحديث offices المتاحة
+    if (key === 'department_id') {
+      const newDeptIds = { ...bulkEditSelectedDepartmentIds };
+      newDeptIds[index] = value;
+      setBulkEditSelectedDepartmentIds(newDeptIds);
+      
+      const newOfficesMap = { ...bulkEditOfficesMap };
+      if (value) {
+        const filteredOffices = allOffices.filter(office => office.get('department_id') === value);
+        newOfficesMap[index] = filteredOffices;
+        // إعادة تعيين location_office_id إذا تغيرت الإدارة
+        newData.put('location_office_id', '');
+      } else {
+        newOfficesMap[index] = [];
+        newData.put('location_office_id', '');
+      }
+      setBulkEditOfficesMap(newOfficesMap);
+    }
+    
+    // إذا تم تغيير asset_name_id، إعادة تعيين newAssetName
+    if (key === 'asset_name_id') {
+      const newNames = { ...bulkEditNewAssetNames };
+      delete newNames[index];
+      setBulkEditNewAssetNames(newNames);
+    }
+    
+    // إذا تم تغيير type_id، إعادة تعيين newAssetType
+    if (key === 'type_id') {
+      const newTypes = { ...bulkEditNewAssetTypes };
+      delete newTypes[index];
+      setBulkEditNewAssetTypes(newTypes);
+    }
+    
+    // إذا تم تغيير status_id، إعادة تعيين newAssetStatus
+    if (key === 'status_id') {
+      const newStatuses = { ...bulkEditNewAssetStatuses };
+      delete newStatuses[index];
+      setBulkEditNewAssetStatuses(newStatuses);
+    }
+    
+    newArray[index] = newData;
+    setBulkEditFormDataArray(newArray);
+  }, [bulkEditFormDataArray, bulkEditSelectedDepartmentIds, bulkEditOfficesMap, bulkEditNewAssetNames, bulkEditNewAssetTypes, bulkEditNewAssetStatuses, allOffices]);
 
   const getAssetName = useCallback((id?: string) => {
     if (!id) return '-';
@@ -1460,278 +1447,133 @@ function AssetsPageContent() {
         />
 
         {/* Bulk Edit Modal */}
-        <Modal
+        <BulkEditModal
           isOpen={isBulkEditModalOpen}
           onClose={() => {
             setIsBulkEditModalOpen(false);
             setSelectedAssetsForBulkEdit([]);
-            setBulkEditFormData(new BaseModel({}));
-            setNewAssetName('');
-            setNewAssetType('');
-            setNewAssetStatus('');
-            setSelectedDepartmentId('');
-            setOffices([]);
           }}
-          title={`تحرير جماعي (${selectedAssetsForBulkEdit.length} أصل)`}
-          size="xl"
-          footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsBulkEditModalOpen(false);
-                  setSelectedAssetsForBulkEdit([]);
-                  setBulkEditFormData(new BaseModel({}));
-                  setNewAssetName('');
-                  setNewAssetType('');
-                  setNewAssetStatus('');
-                  setSelectedDepartmentId('');
-                  setOffices([]);
-                }}
-                size="lg"
-                className="w-full sm:w-auto font-bold"
-                disabled={bulkEditLoading}
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                form="bulk-edit-form"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
-                isLoading={bulkEditLoading}
-              >
-                تطبيق على {selectedAssetsForBulkEdit.length} أصل
-              </Button>
-            </div>
-          }
-        >
-          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
-            <p className="text-sm text-primary-800 font-medium">
-              <MaterialIcon name="info" className="inline ml-2" size="sm" />
-              سيتم تطبيق التغييرات على جميع الأصول المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
-            </p>
-          </div>
-          <form id="bulk-edit-form" onSubmit={handleBulkEditSubmit} className="space-y-4">
-            {/* معلومات أساسية */}
-            <div className="grid grid-cols-2 gap-4">
-              <SearchableSelect
-                label="الإدارة"
-                value={bulkEditFormData.get('department_id') || selectedDepartmentId}
-                onChange={(value) => {
-                  setSelectedDepartmentId(value);
-                  updateBulkEditField('department_id', value);
-                  updateBulkEditField('location_office_id', '');
-                  if (value) {
-                    const filteredOffices = allOffices.filter(office => office.get('department_id') === value);
-                    setOffices(filteredOffices);
-                  } else {
-                    setOffices([]);
-                  }
-                }}
-                options={departments.map((dept) => ({
-                  value: dept.get('id'),
-                  label: dept.get('name'),
-                }))}
-                placeholder="اختر الإدارة (اختياري)"
-              />
-              <SearchableSelect
-                label="المكتب الحالي"
-                value={bulkEditFormData.get('location_office_id')}
-                onChange={(value) => updateBulkEditField('location_office_id', value)}
-                disabled={!selectedDepartmentId || offices.length === 0}
-                options={offices.map((office) => ({
-                  value: office.get('id'),
-                  label: office.get('name'),
-                }))}
-                placeholder={!selectedDepartmentId ? "اختر الإدارة أولاً" : offices.length === 0 ? "لا توجد مكاتب" : "اختر المكتب (اختياري)"}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <SearchableSelect
-                  label="اسم الأصل"
-                  value={bulkEditFormData.get('asset_name_id')}
-                  onChange={(value) => {
-                    updateBulkEditField('asset_name_id', value);
-                    setNewAssetName('');
-                  }}
-                  options={assetNames.map((name) => ({
-                    value: name.get('id'),
-                    label: name.get('name'),
-                  }))}
-                  placeholder="اختر اسم الأصل (اختياري)"
-                  fullWidth={false}
-                />
-                <div className="flex gap-2 items-end">
-                  <Input
-                    type="text"
-                    value={newAssetName}
-                    onChange={(e) => {
-                      setNewAssetName(e.target.value);
-                      updateBulkEditField('asset_name_id', '');
-                    }}
-                    placeholder="أو أدخل اسم أصل جديد"
-                    fullWidth={true}
-                    className="text-sm"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <SearchableSelect
-                  label="نوع الأصل"
-                  value={bulkEditFormData.get('type_id')}
-                  onChange={(value) => {
-                    updateBulkEditField('type_id', value);
-                    setNewAssetType('');
-                  }}
-                  options={assetTypes.map((type) => ({
-                    value: type.get('id'),
-                    label: type.get('name'),
-                  }))}
-                  placeholder="اختر نوع الأصل (اختياري)"
-                  fullWidth={false}
-                />
-                <div className="flex gap-2 items-end">
-                  <Input
-                    type="text"
-                    value={newAssetType}
-                    onChange={(e) => {
-                      setNewAssetType(e.target.value);
-                      updateBulkEditField('type_id', '');
-                    }}
-                    placeholder="أو أدخل نوع أصل جديد"
-                    fullWidth={true}
-                    className="text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <SearchableSelect
-                  label="حالة الأصل"
-                  value={bulkEditFormData.get('status_id')}
-                  onChange={(value) => {
-                    updateBulkEditField('status_id', value);
-                    setNewAssetStatus('');
-                  }}
-                  options={assetStatuses.map((status) => ({
-                    value: status.get('id'),
-                    label: status.get('name'),
-                  }))}
-                  placeholder="اختر حالة الأصل (اختياري)"
-                  fullWidth={false}
-                />
-                <div className="flex gap-2 items-end">
-                  <Input
-                    type="text"
-                    value={newAssetStatus}
-                    onChange={(e) => {
-                      setNewAssetStatus(e.target.value);
-                      updateBulkEditField('status_id', '');
-                    }}
-                    placeholder="أو أدخل حالة أصل جديدة"
-                    fullWidth={true}
-                    className="text-sm"
-                  />
-                </div>
-              </div>
-              <SearchableSelect
-                label="حامل الأصل"
-                value={bulkEditFormData.get('custodian_user_id')}
-                onChange={(value) => updateBulkEditField('custodian_user_id', value)}
-                options={users.map((user) => ({
-                  value: user.get('id'),
-                  label: user.get('full_name'),
-                }))}
-                placeholder="اختر حامل الأصل (اختياري)"
-                fullWidth={false}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <SearchableSelect
-                label="العملة"
-                value={bulkEditFormData.get('currency_id')}
-                onChange={(value) => updateBulkEditField('currency_id', value)}
-                options={currencies.map((currency) => ({
-                  value: currency.get('id'),
-                  label: `${currency.get('name')} (${currency.get('code')})`,
-                }))}
-                placeholder="اختر العملة (اختياري)"
-                fullWidth={false}
-              />
-              <Input
-                label="الفئة"
-                type="text"
-                value={bulkEditFormData.get('category')}
-                onChange={(e) => updateBulkEditField('category', e.target.value)}
-                placeholder="أدخل الفئة (اختياري)"
-                fullWidth={false}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="تاريخ الشراء"
-                type="date"
-                value={bulkEditFormData.get('purchase_date')}
-                onChange={(e) => updateBulkEditField('purchase_date', e.target.value)}
-                fullWidth={false}
-              />
-              <Input
-                label="نهاية الضمان"
-                type="date"
-                value={bulkEditFormData.get('warranty_end')}
-                onChange={(e) => updateBulkEditField('warranty_end', e.target.value)}
-                fullWidth={false}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="قيمة الشراء"
-                type="number"
-                step="0.01"
-                value={bulkEditFormData.getValue<number>('purchase_value') || ''}
-                onChange={(e) => updateBulkEditField('purchase_value', e.target.value ? parseFloat(e.target.value) : '')}
-                placeholder="(اختياري)"
-                fullWidth={false}
-              />
-              <Input
-                label="القيمة الحالية"
-                type="number"
-                step="0.01"
-                value={bulkEditFormData.getValue<number>('current_value') || ''}
-                onChange={(e) => updateBulkEditField('current_value', e.target.value ? parseFloat(e.target.value) : '')}
-                placeholder="(اختياري)"
-                fullWidth={false}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="تاريخ آخر صيانة"
-                type="date"
-                value={bulkEditFormData.get('last_maintenance_date')}
-                onChange={(e) => updateBulkEditField('last_maintenance_date', e.target.value)}
-                fullWidth={false}
-              />
-              <Checkbox
-                label="نشط"
-                checked={bulkEditFormData.getValue<boolean>('is_active') === true || bulkEditFormData.getValue<number>('is_active') === 1}
-                onChange={(e) => updateBulkEditField('is_active', e.target.checked)}
-              />
-            </div>
-            <Textarea
-              label="الملاحظات"
-              value={bulkEditFormData.get('notes')}
-              onChange={(e) => updateBulkEditField('notes', e.target.value)}
-              rows={2}
-              placeholder="أدخل أي ملاحظات إضافية (اختياري)"
-              fullWidth={true}
-            />
-          </form>
-        </Modal>
+          title="تعديل جماعي للأصول"
+          items={selectedAssetsForBulkEdit.map((asset) => ({
+            id: asset.get('id') || '',
+            label: asset.get('asset_tag') || '',
+            data: asset.getData(),
+          }))}
+          fields={[
+            {
+              name: 'asset_tag',
+              label: 'كود الأصل',
+              type: 'text',
+              placeholder: 'أدخل كود الأصل',
+              icon: 'qr_code',
+              required: true,
+            },
+            {
+              name: 'serial_number',
+              label: 'الرقم التسلسلي',
+              type: 'text',
+              placeholder: 'أدخل الرقم التسلسلي',
+              icon: 'tag',
+            },
+            {
+              name: 'asset_name_id',
+              label: 'اسم الأصل',
+              type: 'select',
+              placeholder: 'اختر اسم الأصل',
+              icon: 'label',
+              options: assetNames.map((name) => ({
+                value: name.get('id'),
+                label: name.get('name'),
+              })),
+            },
+            {
+              name: 'type_id',
+              label: 'نوع الأصل',
+              type: 'select',
+              placeholder: 'اختر نوع الأصل',
+              icon: 'category',
+              options: assetTypes.map((type) => ({
+                value: type.get('id'),
+                label: type.get('name'),
+              })),
+            },
+            {
+              name: 'status_id',
+              label: 'حالة الأصل',
+              type: 'select',
+              placeholder: 'اختر حالة الأصل',
+              icon: 'assignment',
+              options: assetStatuses.map((status) => ({
+                value: status.get('id'),
+                label: status.get('name'),
+              })),
+            },
+            {
+              name: 'location_office_id',
+              label: 'المكتب الحالي',
+              type: 'select',
+              placeholder: 'اختر المكتب',
+              icon: 'meeting_room',
+              options: allOffices.map((office) => ({
+                value: office.get('id'),
+                label: office.get('name'),
+              })),
+            },
+            {
+              name: 'custodian_user_id',
+              label: 'حامل الأصل',
+              type: 'select',
+              placeholder: 'اختر حامل الأصل',
+              icon: 'person',
+              options: users.map((user) => ({
+                value: user.get('id'),
+                label: user.get('full_name'),
+              })),
+            },
+            {
+              name: 'purchase_date',
+              label: 'تاريخ الشراء',
+              type: 'date',
+              placeholder: 'اختر تاريخ الشراء',
+              icon: 'calendar_today',
+            },
+            {
+              name: 'purchase_value',
+              label: 'قيمة الشراء',
+              type: 'number',
+              placeholder: 'أدخل قيمة الشراء',
+              icon: 'attach_money',
+            },
+            {
+              name: 'currency_id',
+              label: 'العملة',
+              type: 'select',
+              placeholder: 'اختر العملة',
+              icon: 'payments',
+              options: currencies.map((currency) => ({
+                value: currency.get('id'),
+                label: currency.get('name'),
+              })),
+            },
+            {
+              name: 'warranty_end',
+              label: 'نهاية الضمان',
+              type: 'date',
+              placeholder: 'اختر تاريخ نهاية الضمان',
+              icon: 'verified',
+            },
+            {
+              name: 'notes',
+              label: 'الملاحظات',
+              type: 'textarea',
+              placeholder: 'أدخل الملاحظات',
+              icon: 'note',
+            },
+          ]}
+          onSubmit={handleBulkEditSubmit}
+          isLoading={bulkEditLoading}
+          infoMessage="يمكنك تعديل كل أصل بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
     </MainLayout>
   );
 }

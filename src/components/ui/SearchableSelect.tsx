@@ -4,11 +4,16 @@ import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { Input } from "@/components/ui/Input";
 import { memo, useEffect, useRef, useState } from "react";
 
-interface SearchableSelectProps {
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export interface SearchableSelectProps {
   label?: string;
   value: string;
   onChange: (value: string) => void;
-  options: { value: string; label: string }[];
+  options: SelectOption[];
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;

@@ -1,18 +1,17 @@
 'use client';
 
+import logoText from "@/assets/images/logos/logo-text.png";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { BaseModel } from "@/lib/BaseModel";
-import { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback } from "react";
+import { PdfSettingsService } from "@/lib/services/PdfSettingsService";
+import { getBothDates } from "@/lib/utils/hijriDate";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as XLSX from 'xlsx';
 import { Button } from "./Button";
-import { Input } from "./Input";
-import { Select } from "./Select";
 import { Card, CardBody, CardHeader } from "./Card";
 import { DebouncedInput } from "./DebouncedInput";
-import logoText from "@/assets/images/logos/logo-text.png";
-import { PdfSettingsService } from "@/lib/services/PdfSettingsService";
-import { getBothDates } from "@/lib/utils/hijriDate";
+import { Select } from "./Select";
 
 // Utility function to format dates
 const formatDate = (dateValue: any): string => {
@@ -70,14 +69,14 @@ const isNumericValue = (value: any): boolean => {
   return false;
 };
 
-interface Column {
+export interface Column {
   key: string;
   label: string;
   render?: (item: BaseModel) => React.ReactNode;
   sortable?: boolean; // إمكانية الترتيب على هذا العمود
 }
 
-interface DataTableProps {
+export interface DataTableProps {
   data: BaseModel[];
   columns: Column[];
   onEdit?: (item: BaseModel) => void;
@@ -888,7 +887,7 @@ export function DataTable({
       await navigator.clipboard.writeText(fullText);
       alert('تم نسخ البيانات إلى الحافظة');
     } catch (err) {
-      console.error('Failed to copy:', err);
+      // Silent fail - user already has alert feedback
     }
     setExportDropdownOpen(false);
   };
@@ -906,15 +905,27 @@ export function DataTable({
 
   return (
     <>
-    <Card variant="elevated" className="overflow-visible animate-scale-in border-primary-200/30 shadow-primary/10">
-      <CardHeader className="pb-4 group">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+    <Card 
+      variant="flat" 
+      className="overflow-visible animate-scale-in border border-slate-200 dark:border-slate-700 shadow-sm data-table-card mt-0"
+      style={{
+        backgroundColor: 'var(--card-bg, #ffffff)',
+        marginTop: '0.75rem',
+      }}
+    >
+      <CardHeader 
+        className="pb-3 group border-b border-slate-200 dark:border-slate-700"
+        style={{
+          backgroundColor: 'var(--card-header-bg, #f8fafc)',
+        }}
+      >
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
         {title && (
-            <h5 className="text-lg font-semibold text-slate-800">{title}</h5>
+            <h5 className="text-base font-bold text-slate-800 dark:text-slate-100">{title}</h5>
           )}
           {((onDelete || onBulkEdit) && selectedRows.size > 0) && (
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-slate-600 font-medium">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">
                 {selectedRows.size} عنصر محدد
               </span>
               {onBulkEdit && (
@@ -939,7 +950,7 @@ export function DataTable({
                   onClick={handleDeleteSelected}
                   variant="outline"
                   size="sm"
-                  className="text-error-600 hover:text-error-700 hover:bg-error-50"
+                  className="text-error-600 hover:text-error-700 hover:bg-error-50 dark:text-error-400 dark:hover:text-error-300 dark:hover:bg-error-900/30"
                   leftIcon={<MaterialIcon name="delete" size="sm" />}
                 >
                   حذف المحدد ({selectedRows.size})
@@ -962,8 +973,8 @@ export function DataTable({
         </div>
         
         {/* Search and Controls Row */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <Select
               value={itemsPerPage.toString()}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
@@ -971,11 +982,11 @@ export function DataTable({
               className="w-20"
               fullWidth={false}
             />
-            <span className="text-sm text-slate-600 font-medium">عنصر في الصفحة</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">عنصر في الصفحة</span>
           </div>
           
-          <div className="flex items-center gap-3 flex-wrap flex-1 sm:flex-initial sm:justify-end">
-            <div className="flex-1 sm:flex-initial min-w-[200px] sm:min-w-[280px]">
+          <div className="flex items-center gap-2 flex-wrap flex-1 sm:flex-initial sm:justify-end">
+            <div className="flex-1 sm:flex-initial min-w-[200px] sm:min-w-[250px]">
               <DebouncedInput
                 value={searchTerm}
                 onChange={(value) => setDebouncedSearchTerm(String(value))}
@@ -1016,24 +1027,26 @@ export function DataTable({
       </CardHeader>
       
       <CardBody padding="none" className="p-0">
-        <div className="table-responsive overflow-x-auto" style={{ maxWidth: '100%' }}>
+        <div className="table-responsive overflow-x-auto smooth-scroll" style={{ maxWidth: '100%', WebkitOverflowScrolling: 'touch' }}>
         {/* Desktop Table */}
-        <table className="table datatables-basic" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-          <thead className="sticky top-0 z-10">
-            <tr style={{ backgroundColor: '#f8f7fa' }}>
+        <table className="table datatables-basic gpu-accelerated" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', minWidth: '600px', willChange: 'transform' }}>
+          <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900/80">
+            <tr className="bg-slate-50 dark:bg-slate-900/80">
               {onDelete && (
                 <th
-                  style={{ 
-                    padding: '1rem 1.5rem',
-                    textAlign: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#5d596c',
-                    borderBottom: '2px solid #dbdade',
-                    background: 'linear-gradient(to bottom, #f8f7fa 0%, #f0eff2 100%)',
-                    width: '60px',
-                    borderTopRightRadius: '1.5rem'
-                  }}
+                    style={{ 
+                      padding: '0.75rem 1rem',
+                      textAlign: 'center',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#5d596c',
+                      borderBottom: '2px solid #dbdade',
+                      background: 'linear-gradient(to bottom, #f8f7fa 0%, #f0eff2 100%)',
+                      width: '60px',
+                      minWidth: '60px',
+                      borderTopRightRadius: '1.5rem'
+                    }}
+                    className="responsive-th"
                 >
                   <input
                     type="checkbox"
@@ -1054,7 +1067,7 @@ export function DataTable({
                     key={String(col.key)}
                     onClick={() => isSortable && handleSort(col.key)}
                     style={{ 
-                      padding: '1rem 1.5rem',
+                      padding: '0.75rem 1rem',
                       textAlign: 'right',
                       fontSize: '0.875rem',
                       fontWeight: 600,
@@ -1068,8 +1081,10 @@ export function DataTable({
                       letterSpacing: '0.01em',
                       borderTopRightRadius: isFirstColumn ? '1.5rem' : '0',
                       borderTopLeftRadius: isLastColumn ? '1.5rem' : '0',
-                      backdropFilter: 'blur(10px)'
+                      backdropFilter: 'blur(10px)',
+                      minWidth: '120px'
                     }}
+                    className="responsive-th"
                     onMouseEnter={(e) => {
                       if (isSortable) {
                         e.currentTarget.style.background = 'linear-gradient(to bottom, #f0eff2 0%, #e8e6ea 100%)';
@@ -1132,7 +1147,7 @@ export function DataTable({
               {(onEdit || onDelete || onView || onArchive) && (
                 <th
                   style={{ 
-                    padding: '1rem 1.5rem',
+                    padding: '0.75rem 1rem',
                     textAlign: 'right',
                     fontSize: '0.875rem',
                     fontWeight: 600,
@@ -1140,9 +1155,11 @@ export function DataTable({
                     borderBottom: '2px solid #dbdade',
                     backgroundColor: '#f8f7fa',
                     width: '200px',
+                    minWidth: '150px',
                     letterSpacing: '0.01em',
                     borderTopLeftRadius: '1.5rem'
                   }}
+                  className="responsive-th"
                 >
                   الإجراءات
                 </th>

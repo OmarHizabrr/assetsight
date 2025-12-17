@@ -4,6 +4,7 @@ import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute
 import { PlusIcon } from "@/components/icons";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
@@ -15,7 +16,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 function AssetTypesPageContent() {
   const pathname = usePathname();
@@ -39,7 +40,7 @@ function AssetTypesPageContent() {
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedAssetTypesForBulkEdit, setSelectedAssetTypesForBulkEdit] = useState<BaseModel[]>([]);
-  const [bulkEditFormData, setBulkEditFormData] = useState<BaseModel>(new BaseModel({}));
+  const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
 
   useEffect(() => {
     loadAssetTypes();
@@ -115,59 +116,40 @@ function AssetTypesPageContent() {
 
   const handleBulkEdit = (selectedItems: BaseModel[]) => {
     setSelectedAssetTypesForBulkEdit(selectedItems);
-    setBulkEditFormData(new BaseModel({}));
+    const formDataArray = selectedItems.map(item => new BaseModel(item.getData()));
+    setBulkEditFormDataArray(formDataArray);
     setIsBulkEditModalOpen(true);
   };
 
-  const handleBulkEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedAssetTypesForBulkEdit.length === 0) return;
-
+  const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
     try {
       setBulkEditLoading(true);
-      const updates: Record<string, any> = {};
-      const formDataObj = bulkEditFormData.getData();
-      
-      Object.keys(formDataObj).forEach(key => {
-        const value = formDataObj[key];
-        if (value !== '' && value !== null && value !== undefined) {
-          updates[key] = value;
-        }
-      });
 
-      if (Object.keys(updates).length === 0) {
-        showWarning("لم يتم تحديد أي حقول للتحديث");
-        setBulkEditLoading(false);
-        return;
-      }
-
-      const updatePromises = selectedAssetTypesForBulkEdit.map(async (assetType) => {
-        const assetTypeId = assetType.get('id');
-        if (!assetTypeId) return;
-        const docRef = firestoreApi.getDocument("assetTypes", assetTypeId);
-        await firestoreApi.updateData(docRef, updates);
+      const updatePromises = dataArray.map(async (item) => {
+        if (!item.id) return;
+        
+        const docRef = firestoreApi.getDocument("assetTypes", item.id);
+        await firestoreApi.updateData(docRef, {
+          name: item.name || '',
+          category: item.category || '',
+          description: item.description || '',
+          notes: item.notes || '',
+        });
       });
 
       await Promise.all(updatePromises);
       
       setIsBulkEditModalOpen(false);
       setSelectedAssetTypesForBulkEdit([]);
-      setBulkEditFormData(new BaseModel({}));
+      setBulkEditFormDataArray([]);
       loadAssetTypes();
-      showSuccess(`تم تحديث ${selectedAssetTypesForBulkEdit.length} نوع بنجاح`);
+      showSuccess(`تم تحديث ${dataArray.length} نوع بنجاح`);
     } catch (error) {
-      console.error("Error in bulk edit:", error);
       showError("حدث خطأ أثناء التحديث الجماعي");
     } finally {
       setBulkEditLoading(false);
     }
   };
-
-  const updateBulkEditField = useCallback((key: string, value: any) => {
-    const newData = new BaseModel(bulkEditFormData.getData());
-    newData.put(key, value);
-    setBulkEditFormData(newData);
-  }, [bulkEditFormData]);
 
   const handleImportData = async (data: Array<Record<string, any>>) => {
     setImportLoading(true);
@@ -261,45 +243,38 @@ function AssetTypesPageContent() {
 
   return (
     <MainLayout>
-      {/* Page Header */}
-      <div className="mb-10 relative">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/50 overflow-hidden group hover:scale-110 hover:rotate-3 material-transition">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition animate-gradient"></div>
-                <MaterialIcon name="category" className="text-white relative z-10 drop-shadow-lg" size="3xl" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/30 rounded-full blur-md animate-pulse-glow"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/20 rounded-full blur-md animate-pulse-glow" style={{ animationDelay: '0.5s' }}></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition" style={{ transform: 'translateX(-100%)', transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent drop-shadow-sm animate-fade-in">
-                    أنواع الأصول
-                  </h1>
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
-                    <MaterialIcon name="category" className="text-primary-600" size="sm" />
-                    <span className="text-xs font-semibold text-primary-700">{assetTypes.length}</span>
-                  </div>
+      {/* Compact Page Header */}
+      <div className="mb-4 relative">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30 overflow-hidden group hover:scale-105 material-transition">
+              <MaterialIcon name="category" className="text-white relative z-10" size="lg" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white">
+                  أنواع الأصول
+                </h1>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 rounded-lg border border-primary-200 dark:border-primary-800">
+                  <MaterialIcon name="category" className="text-primary-600 dark:text-primary-400 text-xs" size="sm" />
+                  <span className="text-xs font-bold text-primary-700 dark:text-primary-300">{assetTypes.length}</span>
                 </div>
-                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
-                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
-                  <span>إدارة وإضافة أنواع الأصول في النظام</span>
-                </p>
               </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                إدارة وإضافة أنواع الأصول في النظام
+              </p>
             </div>
           </div>
           {canAdd && (
-            <div className="flex gap-4">
+            <div className="flex gap-2">
               <Button
                 onClick={() => setIsImportModalOpen(true)}
-                leftIcon={<MaterialIcon name="upload_file" size="md" />}
-                size="lg"
+                leftIcon={<MaterialIcon name="upload_file" size="sm" />}
+                size="md"
                 variant="outline"
-                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold"
+                className="text-sm font-semibold"
               >
-                استيراد من Excel
+                استيراد
               </Button>
               <Button
                 onClick={() => {
@@ -307,10 +282,10 @@ function AssetTypesPageContent() {
                   setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
                   setIsModalOpen(true);
                 }}
-                leftIcon={<PlusIcon className="w-5 h-5" />}
-                size="lg"
+                leftIcon={<PlusIcon className="w-4 h-4" />}
+                size="md"
                 variant="primary"
-                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+                className="text-sm font-semibold"
               >
                 إضافة نوع جديد
               </Button>
@@ -451,74 +426,54 @@ function AssetTypesPageContent() {
         />
 
         {/* Bulk Edit Modal */}
-        <Modal
+        <BulkEditModal
           isOpen={isBulkEditModalOpen}
           onClose={() => {
             setIsBulkEditModalOpen(false);
             setSelectedAssetTypesForBulkEdit([]);
-            setBulkEditFormData(new BaseModel({}));
+            setBulkEditFormDataArray([]);
           }}
           title={`تحرير جماعي (${selectedAssetTypesForBulkEdit.length} نوع)`}
-          size="md"
-          footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsBulkEditModalOpen(false);
-                  setSelectedAssetTypesForBulkEdit([]);
-                  setBulkEditFormData(new BaseModel({}));
-                }}
-                size="lg"
-                className="w-full sm:w-auto font-bold"
-                disabled={bulkEditLoading}
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                form="bulk-edit-form"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
-                isLoading={bulkEditLoading}
-              >
-                تطبيق على {selectedAssetTypesForBulkEdit.length} نوع
-              </Button>
-            </div>
-          }
-        >
-          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
-            <p className="text-sm text-primary-800 font-medium">
-              <MaterialIcon name="info" className="inline ml-2" size="sm" />
-              سيتم تطبيق التغييرات على جميع الأنواع المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
-            </p>
-          </div>
-          <form id="bulk-edit-form" onSubmit={handleBulkEditSubmit} className="space-y-6">
-            <Input
-              label="الفئة"
-              type="text"
-              value={bulkEditFormData.get('category')}
-              onChange={(e) => updateBulkEditField('category', e.target.value)}
-              placeholder="أدخل الفئة (اختياري)"
-            />
-            <Textarea
-              label="الوصف"
-              value={bulkEditFormData.get('description')}
-              onChange={(e) => updateBulkEditField('description', e.target.value)}
-              rows={2}
-              placeholder="أدخل الوصف (اختياري)"
-            />
-            <Textarea
-              label="الملاحظات"
-              value={bulkEditFormData.get('notes')}
-              onChange={(e) => updateBulkEditField('notes', e.target.value)}
-              rows={2}
-              placeholder="أدخل الملاحظات (اختياري)"
-            />
-          </form>
-        </Modal>
+          items={selectedAssetTypesForBulkEdit.map((assetType, index) => ({
+            id: assetType.get('id') || `asset-type-${index}`,
+            label: assetType.get('name') || `نوع ${index + 1}`,
+            data: bulkEditFormDataArray[index]?.getData() || assetType.getData(),
+          }))}
+          fields={[
+            {
+              name: 'name',
+              label: 'اسم النوع',
+              type: 'text',
+              placeholder: 'أدخل اسم النوع',
+              icon: 'label',
+              required: true,
+            },
+            {
+              name: 'category',
+              label: 'الفئة',
+              type: 'text',
+              placeholder: 'أدخل الفئة',
+              icon: 'category',
+            },
+            {
+              name: 'description',
+              label: 'الوصف',
+              type: 'textarea',
+              placeholder: 'أدخل الوصف',
+              icon: 'description',
+            },
+            {
+              name: 'notes',
+              label: 'الملاحظات',
+              type: 'textarea',
+              placeholder: 'أدخل الملاحظات',
+              icon: 'note',
+            },
+          ]}
+          onSubmit={handleBulkEditSubmit}
+          isLoading={bulkEditLoading}
+          infoMessage="يمكنك تعديل كل نوع بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
     </MainLayout>
   );
 }

@@ -6,12 +6,26 @@ import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { ProfileModal } from "@/components/profile/ProfileModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { InstallButton } from "@/components/ui/InstallButton";
+import { KeyboardShortcutsModal } from "@/components/ui/KeyboardShortcutsModal";
+import { SkipToContent } from "@/components/ui/SkipToContent";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDarkMode } from "@/hooks/useDarkMode";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+
+// Hook to prevent hydration mismatch
+function useIsClient() {
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  return isClient;
+}
 
 // دالة للتحقق من أن المستخدم مدير (تدعم عدة أشكال من role)
 function isAdmin(role: string | null | undefined): boolean {
@@ -28,6 +42,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const isClient = useIsClient();
+  const { isDarkMode } = useDarkMode();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -36,6 +52,28 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const isOpeningProfileRef = useRef(false);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: '?',
+      ctrl: true,
+      description: 'إظهار اختصارات لوحة المفاتيح',
+      callback: () => setIsShortcutsModalOpen(true),
+    },
+    {
+      key: 'b',
+      ctrl: true,
+      description: 'تبديل Sidebar',
+      callback: () => setSidebarOpen(!sidebarOpen),
+    },
+    {
+      key: 'Escape',
+      description: 'إغلاق Sidebar',
+      callback: () => setSidebarOpen(false),
+    },
+  ]);
 
   // إغلاق القائمة المنسدلة عند النقر خارجها
   useEffect(() => {
@@ -66,22 +104,51 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isProfileDropdownOpen]);
 
-  const allMenuItems = [
-    { href: '/', label: 'الرئيسية', icon: 'home' },
-    { href: '/admin/departments', label: 'الإدارات', icon: 'business' },
-    { href: '/admin/offices', label: 'المكاتب', icon: 'meeting_room' },
-    { href: '/admin/asset-types', label: 'أنواع الأصول', icon: 'category' },
-    { href: '/admin/asset-statuses', label: 'حالات الأصول', icon: 'assessment' },
-    { href: '/admin/asset-names', label: 'أسماء الأصول', icon: 'label' },
-    { href: '/admin/categories', label: 'الفئات', icon: 'folder' },
-    { href: '/admin/currencies', label: 'العملات', icon: 'attach_money' },
-    { href: '/admin/users', label: 'المستخدمون', icon: 'people' },
-    { href: '/admin/permissions', label: 'الصلاحيات', icon: 'settings' },
-    { href: '/admin/assets', label: 'الأصول', icon: 'inventory' },
-    { href: '/admin/inventory', label: 'الجرد', icon: 'checklist' },
-    { href: '/admin/reports', label: 'التقارير', icon: 'bar_chart' },
-    { href: '/admin/pdf-settings', label: 'إعدادات PDF', icon: 'picture_as_pdf' },
+  // تجميع عناصر القائمة في فئات لتحسين UX
+  const menuGroups = [
+    {
+      title: 'لوحة التحكم',
+      items: [
+        { href: '/', label: 'الرئيسية', icon: 'home', badge: null },
+      ]
+    },
+    {
+      title: 'الإدارة التنظيمية',
+      items: [
+        { href: '/admin/departments', label: 'الإدارات', icon: 'business', badge: null },
+        { href: '/admin/offices', label: 'المكاتب', icon: 'meeting_room', badge: null },
+        { href: '/admin/users', label: 'المستخدمون', icon: 'people', badge: null },
+        { href: '/admin/permissions', label: 'الصلاحيات', icon: 'settings', badge: null },
+      ]
+    },
+    {
+      title: 'إدارة الأصول',
+      items: [
+        { href: '/admin/assets', label: 'الأصول', icon: 'inventory', badge: 'hot' },
+        { href: '/admin/asset-types', label: 'أنواع الأصول', icon: 'category', badge: null },
+        { href: '/admin/asset-statuses', label: 'حالات الأصول', icon: 'assessment', badge: null },
+        { href: '/admin/asset-names', label: 'أسماء الأصول', icon: 'label', badge: null },
+        { href: '/admin/categories', label: 'الفئات', icon: 'folder', badge: null },
+      ]
+    },
+    {
+      title: 'العمليات',
+      items: [
+        { href: '/admin/inventory', label: 'الجرد', icon: 'checklist', badge: null },
+        { href: '/admin/reports', label: 'التقارير', icon: 'bar_chart', badge: null },
+      ]
+    },
+    {
+      title: 'الإعدادات',
+      items: [
+        { href: '/admin/currencies', label: 'العملات', icon: 'attach_money', badge: null },
+        { href: '/admin/pdf-settings', label: 'إعدادات PDF', icon: 'picture_as_pdf', badge: null },
+      ]
+    },
   ];
+
+  // تسطيح جميع العناصر للصلاحيات
+  const allMenuItems = menuGroups.flatMap(group => group.items);
 
   // دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
   const normalizePath = (path: string): string => {
@@ -126,9 +193,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           .filter(path => path !== null && path !== undefined) as string[];
         
         setUserPermissions(pagePaths);
-        console.log("Loaded user permissions for sidebar:", pagePaths);
       } catch (error) {
-        console.error("Error loading user permissions for sidebar:", error);
+        // Silent fail - permissions will be empty array
         setUserPermissions([]);
       } finally {
         setPermissionsLoading(false);
@@ -162,9 +228,20 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }, [user, userPermissions]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#f8f7fa' }}>
+    <div 
+      className="min-h-screen flex flex-col" 
+      style={{ 
+        background: isDarkMode 
+          ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' 
+          : '#f8f7fa' 
+      }}
+    >
+      {/* Skip to main content - Accessibility */}
+      <SkipToContent />
       {/* Header - Professional Design with Advanced Effects */}
       <header 
+        role="banner"
+        aria-label="رأس الصفحة"
         className="sticky top-0 z-50 flex-shrink-0 relative" 
         style={{ 
           backdropFilter: 'blur(20px) saturate(180%)',
@@ -242,6 +319,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             {/* Right Section - User Profile & Install Button */}
             {user && (
               <div className="flex items-center gap-2 sm:gap-3 relative">
+                {/* Theme Toggle */}
+                <ThemeToggle variant="icon" size="md" />
+                
                 {/* Install Button */}
                 <InstallButton />
                 {/* Profile Button - Desktop */}
@@ -556,17 +636,31 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Layout Container */}
       <div className="flex flex-1 overflow-hidden">
+        {/* Backdrop Overlay للشاشات الصغيرة */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-sm material-transition"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Sidebar */}
         <aside
+          role="navigation"
+          aria-label="القائمة الجانبية"
+          aria-expanded={sidebarOpen ? 'true' : 'false'}
           className={`${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0 fixed lg:static top-[4.75rem] lg:top-0 left-0 z-40 w-64 transform material-transition lg:transition-none h-[calc(100vh-4.75rem)] lg:h-screen overflow-y-auto relative`}
+            sidebarOpen ? 'translate-x-0' : 'translate-x-full'
+          } lg:translate-x-0 fixed lg:static top-[4.75rem] lg:top-0 right-0 lg:right-auto lg:left-0 z-40 w-[85vw] sm:w-64 max-w-[320px] lg:max-w-none lg:w-64 transform material-transition lg:transition-none h-[calc(100vh-4.75rem)] lg:h-screen overflow-y-auto relative`}
           style={{ 
             backdropFilter: 'blur(20px) saturate(180%)',
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            backgroundColor: 'rgba(255, 255, 255, 0.75)',
-            borderRight: '1px solid rgba(226, 232, 240, 0.6)',
-            boxShadow: '2px 0 8px 0 rgba(0, 0, 0, 0.04), 1px 0 0 0 rgba(255, 255, 255, 0.5) inset',
+            backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.75)',
+            borderLeft: isDarkMode ? '1px solid rgba(71, 85, 105, 0.6)' : '1px solid rgba(226, 232, 240, 0.6)',
+            boxShadow: isDarkMode 
+              ? '-2px 0 8px 0 rgba(0, 0, 0, 0.3), -1px 0 0 0 rgba(71, 85, 105, 0.3) inset'
+              : '-2px 0 8px 0 rgba(0, 0, 0, 0.04), -1px 0 0 0 rgba(255, 255, 255, 0.5) inset',
           }}
         >
           {/* Subtle gradient overlay */}
@@ -577,68 +671,139 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             }}
           />
           
-          <nav className="h-full py-5 relative z-10">
-            <ul className="space-y-1.5 px-3">
-              {menuItems.map((item, index) => (
-                <li key={item.href} style={{ animationDelay: `${index * 30}ms` }}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center gap-3.5 px-4 py-3 rounded-xl material-transition text-sm font-semibold relative group overflow-hidden ${
-                      pathname === item.href
-                        ? 'text-primary-700 bg-gradient-to-r from-primary-50 via-primary-100/70 to-primary-50 shadow-lg shadow-primary-500/15 ring-1 ring-primary-500/20'
-                        : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50/80 hover:via-primary-50/40 hover:to-slate-50/80 hover:text-primary-700 hover:shadow-md hover:ring-1 hover:ring-primary-500/10'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                    style={{
-                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                  >
-                    {/* Active indicator with enhanced gradient */}
-                    {pathname === item.href && (
-                      <div className="absolute right-0 top-0 bottom-0 w-1.5 rounded-l-xl bg-gradient-to-b from-primary-500 via-primary-600 to-primary-500 shadow-xl shadow-primary-500/60"></div>
-                    )}
-                    
-                    {/* Hover gradient overlay - Enhanced */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/0 to-primary-500/0 group-hover:from-primary-500/8 group-hover:via-primary-500/0 group-hover:to-primary-500/8 material-transition rounded-xl"></div>
-                    
-                    {/* Icon Container - Enhanced */}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center material-transition relative z-10 ${
-                      pathname === item.href 
-                        ? 'bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white shadow-xl shadow-primary-500/40 scale-110 ring-2 ring-primary-500/30' 
-                        : 'bg-slate-100/80 text-slate-600 group-hover:bg-gradient-to-br group-hover:from-primary-100 group-hover:via-primary-200 group-hover:to-primary-100 group-hover:text-primary-700 group-hover:scale-110 group-hover:shadow-lg group-hover:ring-1 group-hover:ring-primary-500/20'
-                    }`}
-                    style={{
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
+          <nav className="h-full py-5 relative z-10" aria-label="القائمة الرئيسية">
+            {/* Loading State */}
+            {permissionsLoading ? (
+              <div className="px-3 space-y-3">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-12 bg-slate-200/50 rounded-xl"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {menuGroups.map((group, groupIndex) => {
+                  // تصفية العناصر حسب الصلاحيات
+                  const visibleItems = group.items.filter(item => {
+                    if (!user) return item.href === '/';
+                    const role = user.get('role');
+                    if (isAdmin(role)) return true;
+                    if (item.href === '/') return true;
+                    return userPermissions.includes(normalizePath(item.href));
+                  });
+
+                  // عدم عرض المجموعة إذا لم يكن بها عناصر مرئية
+                  if (visibleItems.length === 0) return null;
+
+                  return (
+                    <div 
+                      key={group.title} 
+                      className="animate-fade-in-down"
+                      style={{ animationDelay: `${groupIndex * 50}ms` }}
                     >
-                      {/* Icon shine effect */}
-                      {pathname === item.href && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent rounded-xl" />
-                      )}
-                      <MaterialIcon 
-                        name={item.icon} 
-                        className="material-transition relative z-10"
-                        size="md" 
-                      />
+                      {/* Group Title */}
+                      <div className="px-6 mb-2">
+                        <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                          {group.title}
+                        </h3>
+                      </div>
+
+                      {/* Group Items */}
+                      <ul className="space-y-1 px-3" role="menubar">
+                        {visibleItems.map((item, itemIndex) => {
+                          const isActive = pathname === item.href;
+                          return (
+                            <li 
+                              key={item.href} 
+                              style={{ animationDelay: `${(groupIndex * visibleItems.length + itemIndex) * 20}ms` }}
+                            >
+                              <Link
+                                href={item.href}
+                                role="menuitem"
+                                tabIndex={0}
+                                aria-current={isActive ? 'page' : undefined}
+                                aria-label={item.label}
+                                className={`flex items-center gap-3 sm:gap-3.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl material-transition text-sm font-semibold relative group overflow-hidden min-h-[44px] focus:outline-none focus:ring-2 focus:ring-primary-500/50 ${
+                                  isActive
+                                    ? 'text-primary-700 bg-gradient-to-r from-primary-50 via-primary-100/70 to-primary-50 shadow-lg shadow-primary-500/15 ring-1 ring-primary-500/20'
+                                    : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50/80 hover:via-primary-50/40 hover:to-slate-50/80 hover:text-primary-700 hover:shadow-md hover:ring-1 hover:ring-primary-500/10 active:bg-primary-50'
+                                }`}
+                                onClick={() => setSidebarOpen(false)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    setSidebarOpen(false);
+                                    router.push(item.href);
+                                  }
+                                }}
+                                style={{
+                                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                }}
+                              >
+                                {/* Active indicator with enhanced gradient */}
+                                {isActive && (
+                                  <div className="absolute right-0 top-0 bottom-0 w-1.5 rounded-l-xl bg-gradient-to-b from-primary-500 via-primary-600 to-primary-500 shadow-xl shadow-primary-500/60"></div>
+                                )}
+                                
+                                {/* Hover gradient overlay - Enhanced */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/0 to-primary-500/0 group-hover:from-primary-500/8 group-hover:via-primary-500/0 group-hover:to-primary-500/8 material-transition rounded-xl"></div>
+                                
+                                {/* Icon Container - Enhanced */}
+                                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center material-transition relative z-10 flex-shrink-0 ${
+                                  isActive 
+                                    ? 'bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white shadow-xl shadow-primary-500/40 scale-110 ring-2 ring-primary-500/30' 
+                                    : 'bg-slate-100/80 text-slate-600 group-hover:bg-gradient-to-br group-hover:from-primary-100 group-hover:via-primary-200 group-hover:to-primary-100 group-hover:text-primary-700 group-hover:scale-110 group-hover:shadow-lg group-hover:ring-1 group-hover:ring-primary-500/20 active:scale-95'
+                                }`}
+                                style={{
+                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                }}
+                                >
+                                  {/* Icon shine effect */}
+                                  {isActive && (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent rounded-xl" />
+                                  )}
+                                  <MaterialIcon 
+                                    name={item.icon} 
+                                    className="material-transition relative z-10"
+                                    size="md" 
+                                  />
+                                </div>
+                                
+                                {/* Label - Enhanced */}
+                                <span className={`truncate flex-1 relative z-10 material-transition ${
+                                  isActive 
+                                    ? 'font-bold text-primary-800' 
+                                    : 'font-semibold group-hover:font-bold'
+                                }`}>
+                                  {item.label}
+                                </span>
+
+                                {/* Badge - Hot/New */}
+                                {item.badge && (
+                                  <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-md ${
+                                    item.badge === 'hot' 
+                                      ? 'bg-gradient-to-r from-error-500 to-error-600 text-white shadow-lg shadow-error-500/30 animate-pulse-soft' 
+                                      : 'bg-gradient-to-r from-success-500 to-success-600 text-white shadow-lg shadow-success-500/30'
+                                  }`}>
+                                    {item.badge === 'hot' ? '🔥' : '✨'}
+                                  </span>
+                                )}
+                                
+                                {/* Active glow effect */}
+                                {isActive && (
+                                  <div className="absolute inset-0 rounded-xl bg-primary-500/10 blur-xl -z-0" />
+                                )}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
                     </div>
-                    
-                    {/* Label - Enhanced */}
-                    <span className={`truncate flex-1 relative z-10 material-transition ${
-                      pathname === item.href 
-                        ? 'font-bold text-primary-800' 
-                        : 'font-semibold group-hover:font-bold'
-                    }`}>
-                      {item.label}
-                    </span>
-                    
-                    {/* Active glow effect */}
-                    {pathname === item.href && (
-                      <div className="absolute inset-0 rounded-xl bg-primary-500/10 blur-xl -z-0" />
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                  );
+                })}
+              </div>
+            )}
           </nav>
         </aside>
 
@@ -657,7 +822,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
         {/* Main Content - Enhanced Professional Design */}
         <main 
+          id="main-content"
           className="flex-1 overflow-y-auto relative" 
+          role="main"
           style={{ 
             background: 'linear-gradient(to bottom, #f8f7fa 0%, #f5f4f7 50%, #f0eff2 100%)',
             backgroundAttachment: 'fixed',
@@ -712,20 +879,26 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
       {/* Footer - Enhanced Professional Design */}
       <footer 
+        role="contentinfo"
+        aria-label="تذييل الصفحة"
         className="border-t mt-auto flex-shrink-0 relative" 
         style={{ 
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          backgroundColor: 'rgba(255, 255, 255, 0.75)',
-          borderTop: '1px solid rgba(226, 232, 240, 0.6)',
-          boxShadow: '0 -1px 0 0 rgba(255, 255, 255, 0.5) inset, 0 -2px 8px 0 rgba(0, 0, 0, 0.04)',
+          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.75)',
+          borderTop: isDarkMode ? '1px solid rgba(71, 85, 105, 0.6)' : '1px solid rgba(226, 232, 240, 0.6)',
+          boxShadow: isDarkMode 
+            ? '0 -1px 0 0 rgba(71, 85, 105, 0.3) inset, 0 -2px 8px 0 rgba(0, 0, 0, 0.3)'
+            : '0 -1px 0 0 rgba(255, 255, 255, 0.5) inset, 0 -2px 8px 0 rgba(0, 0, 0, 0.04)',
         }}
       >
         {/* Subtle gradient overlay */}
         <div 
           className="absolute inset-0 pointer-events-none opacity-30"
           style={{
-            background: 'linear-gradient(to top, rgba(115, 103, 240, 0.02) 0%, transparent 100%)',
+            background: isDarkMode 
+              ? 'linear-gradient(to top, rgba(115, 103, 240, 0.05) 0%, transparent 100%)'
+              : 'linear-gradient(to top, rgba(115, 103, 240, 0.02) 0%, transparent 100%)',
           }}
         />
         
@@ -733,10 +906,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3 text-sm">
               <div 
-                className="relative rounded-xl overflow-hidden flex items-center justify-center shadow-md ring-1 ring-primary-500/10 bg-white/90 backdrop-blur-sm p-1" 
+                className="relative rounded-xl overflow-hidden flex items-center justify-center shadow-md ring-1 ring-primary-500/10 backdrop-blur-sm p-1" 
                 style={{ 
-                  boxShadow: '0 2px 6px 0 rgba(0, 0, 0, 0.08)',
-                  height: '2rem', // Fixed height for footer
+                  backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.7)' : 'rgba(255, 255, 255, 0.9)',
+                  boxShadow: isDarkMode 
+                    ? '0 2px 6px 0 rgba(0, 0, 0, 0.3)'
+                    : '0 2px 6px 0 rgba(0, 0, 0, 0.08)',
+                  height: '2rem',
                 }}
               >
                 <img
@@ -746,18 +922,18 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     height: '100%',
                     width: 'auto',
                     maxHeight: '2rem',
-                    filter: 'none',
+                    filter: isDarkMode ? 'brightness(1.2)' : 'none',
                     display: 'block',
                     objectFit: 'contain',
                   }}
                 />
               </div>
-              <span className="font-bold bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">AssetSight</span>
-              <span className="text-slate-400 font-semibold">© {new Date().getFullYear()}</span>
+              <span className={`font-bold bg-gradient-to-r ${isDarkMode ? 'from-primary-400 via-primary-300 to-accent-400' : 'from-primary-600 via-primary-700 to-accent-600'} bg-clip-text text-transparent`}>AssetSight</span>
+              <span className={`${isDarkMode ? 'text-slate-400' : 'text-slate-400'} font-semibold`}>© {new Date().getFullYear()}</span>
             </div>
-            <div className="flex items-center gap-4 text-sm text-slate-600 font-semibold">
+            <div className={`flex items-center gap-4 text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} font-semibold`}>
               <span>نظام إدارة الأصول</span>
-              <span className="hidden sm:inline text-slate-300">•</span>
+              <span className={`hidden sm:inline ${isDarkMode ? 'text-slate-600' : 'text-slate-300'}`}>•</span>
               <span className="hidden sm:inline">جميع الحقوق محفوظة</span>
             </div>
           </div>
@@ -791,6 +967,24 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         cancelText="إلغاء"
         variant="warning"
       />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
+      />
+
+      {/* Floating Help Button - Keyboard Shortcuts */}
+      {user && (
+        <button
+          onClick={() => setIsShortcutsModalOpen(true)}
+          className="fixed bottom-6 left-6 w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-2xl shadow-primary-500/40 hover:shadow-3xl hover:shadow-primary-500/50 hover:scale-110 material-transition flex items-center justify-center z-40 group"
+          aria-label="إظهار اختصارات لوحة المفاتيح"
+          title="اختصارات لوحة المفاتيح (Ctrl + ?)"
+        >
+          <span className="text-xl font-bold group-hover:scale-110 material-transition">⌨️</span>
+        </button>
+      )}
     </div>
   );
 }

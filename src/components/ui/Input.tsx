@@ -1,11 +1,12 @@
 'use client';
 
-import { InputHTMLAttributes, TextareaHTMLAttributes, forwardRef, useEffect, useId, useRef } from 'react';
+import { useDarkMode } from '@/hooks/useDarkMode';
+import { InputHTMLAttributes, TextareaHTMLAttributes, forwardRef, useEffect, useId, useRef, useState } from 'react';
 
 type InputElementProps = InputHTMLAttributes<HTMLInputElement>;
 type TextareaElementProps = TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-interface InputProps extends Omit<InputElementProps & TextareaElementProps, 'onFocus' | 'onBlur'> {
+interface InputProps extends Omit<InputElementProps & TextareaElementProps, 'onFocus' | 'onBlur' | 'size'> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -17,6 +18,8 @@ interface InputProps extends Omit<InputElementProps & TextareaElementProps, 'onF
   isPasswordVisible?: boolean;
   type?: string;
   rows?: number;
+  size?: 'small' | 'medium' | 'large';
+  variant?: 'outlined' | 'filled';
   onFocus?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
@@ -37,6 +40,8 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
       isPasswordVisible = false,
       type = 'text',
       rows = 1,
+      size = 'medium',
+      variant = 'outlined',
       ...props
     },
     ref
@@ -46,6 +51,9 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
     const hasError = !!error;
     const isPassword = type === 'password' || showPasswordToggle;
     const hasRightElement = rightIcon || showPasswordToggle;
+    const [isFocused, setIsFocused] = useState(false);
+    const [hasValue, setHasValue] = useState(false);
+    const { isDark: isDarkMode } = useDarkMode();
     
     // Determine if we should use textarea (for text fields) or input (for special types)
     const useTextarea = !type || ['text', 'email', 'tel', 'url', 'search', 'password'].includes(type);
@@ -135,15 +143,30 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
       };
     }, [rows, useTextarea]);
 
-    const baseStyles = 'block w-full rounded-xl border-2 bg-white px-3.5 py-2.5 text-base font-medium material-transition focus:outline-none focus:ring-2 focus:ring-primary-500/30 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-300 backdrop-blur-sm min-w-0 resize-none';
+    // Size variants - محسّن من DawamWeb
+    const sizeStyles = {
+      small: 'px-3 py-2 text-sm min-h-[32px]',
+      medium: 'px-3.5 py-2.5 text-base min-h-[38px]',
+      large: 'px-4 py-3 text-base min-h-[44px]',
+    };
+
+    // Variant styles - مستوحى من Ant Design و DawamWeb
+    const variantBaseStyles = variant === 'filled'
+      ? 'rounded-lg border-2 border-transparent'
+      : 'rounded-lg border-2';
+
+    const baseStyles = `block w-full ${variantBaseStyles} ${sizeStyles[size]} font-medium material-transition focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed min-w-0 resize-none`;
     
     const inputStyles = hasError
-      ? 'border-error-400 text-error-900 placeholder-error-400 focus:border-error-500 focus:ring-error-500/30 bg-gradient-to-r from-error-50 to-error-50/70 shadow-error-200/50 hover:border-error-500 hover:shadow-error-500/20 focus:scale-[1.01]'
-      : 'border-slate-300 text-slate-800 placeholder-slate-400 focus:border-primary-500 focus:bg-white focus:shadow-xl focus:shadow-primary-500/25 hover:border-primary-400 hover:shadow-lg hover:scale-[1.005] hover:bg-gradient-to-br hover:from-white hover:to-slate-50/50 focus:scale-[1.01] focus:ring-4 focus:ring-primary-500/15';
+      ? variant === 'filled'
+        ? 'bg-error-50 dark:!bg-slate-600/70 text-error-900 dark:!text-slate-50 placeholder-error-400 dark:!placeholder-slate-300 hover:bg-error-100 dark:hover:!bg-slate-600/80 focus:bg-white dark:focus:!bg-slate-600/90 focus:border-error-500 focus:ring-4 focus:ring-error-100 dark:focus:ring-error-900/30'
+        : 'border-error-400 text-error-900 dark:!text-slate-50 placeholder-error-400 bg-white dark:!bg-slate-600/70 hover:border-error-500 hover:bg-error-50/30 dark:hover:!bg-slate-600/80 focus:border-error-500 focus:bg-white dark:focus:!bg-slate-600/90 focus:ring-4 focus:ring-error-100 dark:focus:ring-error-900/30'
+      : variant === 'filled'
+        ? 'bg-slate-50 dark:!bg-slate-600/70 text-slate-800 dark:!text-slate-50 placeholder-slate-400 dark:!placeholder-slate-300 hover:bg-slate-100 dark:hover:!bg-slate-600/80 focus:bg-white dark:focus:!bg-slate-600/90 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/30'
+        : 'border-slate-300 dark:!border-slate-500 text-slate-800 dark:!text-slate-50 placeholder-slate-400 dark:!placeholder-slate-300 bg-white dark:!bg-slate-600/70 hover:border-slate-400 dark:hover:!border-slate-400 hover:bg-slate-50/50 dark:hover:!bg-slate-600/80 focus:border-primary-500 dark:focus:!border-primary-400 focus:bg-white dark:focus:!bg-slate-600/90 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/30';
 
     // Adjust padding based on required asterisk and icons
-    // If required, add padding on the left (RTL) to make room for asterisk
-    const paddingLeft = props.required && !leftIcon ? 'pl-8' : (leftIcon ? 'pl-12' : '');
+    const paddingLeft = props.required && !leftIcon ? 'pl-8' : (leftIcon ? 'pl-11' : '');
     const paddingRight = hasRightElement ? 'pr-11' : '';
 
     const combinedInputClassName = `
@@ -163,26 +186,35 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
       lineHeight: 1,
       paddingTop: '0.625rem',
       paddingBottom: '0.625rem',
-      borderRadius: '0.75rem', // rounded-xl - ensure elegant rounded corners
+      borderRadius: '0.75rem',
+      // Force dark mode colors via inline styles for maximum priority
+      ...(isDarkMode && {
+        backgroundColor: 'rgba(71, 85, 105, 0.7)',
+        color: 'rgb(248, 250, 252)',
+        borderColor: 'rgba(100, 116, 139, 0.7)',
+      }),
     };
 
+    // Track value changes for floating label effect
+    useEffect(() => {
+      const element = useTextarea ? textareaRef.current : inputRef.current;
+      if (element) {
+        const checkValue = () => {
+          setHasValue(!!element.value);
+        };
+        checkValue();
+        element.addEventListener('input', checkValue);
+        return () => element.removeEventListener('input', checkValue);
+      }
+    }, [useTextarea, props.value]);
+
     const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const element = e.target as HTMLInputElement | HTMLTextAreaElement;
-      element.style.transform = 'scale(1.01) translateZ(0)';
-      element.style.boxShadow = '0 8px 24px rgba(115, 103, 240, 0.25), 0 0 0 4px rgba(115, 103, 240, 0.1)';
-      element.style.borderColor = '#7367f0';
-      element.style.borderRadius = '0.75rem'; // rounded-xl
+      setIsFocused(true);
       props.onFocus?.(e);
     };
 
     const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const element = e.target as HTMLInputElement | HTMLTextAreaElement;
-      element.style.transform = 'scale(1) translateZ(0)';
-      element.style.boxShadow = '';
-      element.style.borderRadius = '0.75rem'; // rounded-xl
-      if (!hasError) {
-        element.style.borderColor = '';
-      }
+      setIsFocused(false);
       props.onBlur?.(e);
     };
 
@@ -192,58 +224,51 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
           <label
             htmlFor={inputId}
             className="block text-sm font-bold text-slate-700 mb-2.5 material-transition"
+            aria-required={props.required}
           >
             <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">{label}</span>
+            {props.required && (
+              <span className="text-error-500 font-black ml-1" aria-label="حقل مطلوب">*</span>
+            )}
           </label>
         )}
         <div className="relative group">
+          {/* Premium Glow effect on focus */}
+          {variant === 'outlined' && (
+            <div 
+              className={`absolute -inset-0.5 rounded-lg opacity-0 group-focus-within:opacity-100 material-transition blur-sm -z-10`}
+              style={{ 
+                background: hasError 
+                  ? 'linear-gradient(135deg, rgba(234, 84, 85, 0.3) 0%, rgba(234, 84, 85, 0.1) 100%)'
+                  : 'linear-gradient(135deg, rgba(115, 103, 240, 0.3) 0%, rgba(115, 103, 240, 0.1) 100%)',
+                transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+            />
+          )}
+          
           {/* Required asterisk - positioned inside the field on the left side (RTL) */}
           {props.required && (
             <span 
-              className={`absolute top-1/2 transform -translate-y-1/2 text-error-500 text-xl font-black animate-pulse-glow z-30 pointer-events-none ${
-                leftIcon ? 'left-12' : 'left-2.5'
+              className={`absolute top-1/2 transform -translate-y-1/2 text-error-500 text-lg font-bold z-30 pointer-events-none ${
+                leftIcon ? 'left-10' : 'left-2.5'
               }`}
               style={{
                 lineHeight: 1,
                 display: 'block',
-                textShadow: '0 0 2px rgba(239, 68, 68, 0.3)',
-                fontWeight: 900,
               }}
+              aria-hidden="true"
             >
               *
             </span>
           )}
-          {/* Reflection effect on focus - Premium shine */}
-          <div 
-            className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-focus-within:opacity-100 material-transition" 
-            style={{ 
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%)',
-              transition: 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
-          ></div>
-          
-          {/* Premium Glow effect */}
-          <div 
-            className="absolute -inset-1 rounded-xl opacity-0 group-focus-within:opacity-100 material-transition blur-md -z-10" 
-            style={{ 
-              background: 'radial-gradient(circle, rgba(115, 103, 240, 0.4) 0%, rgba(115, 103, 240, 0.2) 50%, transparent 100%)',
-              transition: 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
-          ></div>
-          
-          {/* Border glow */}
-          <div 
-            className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100 material-transition pointer-events-none" 
-            style={{ 
-              border: '2px solid transparent',
-              background: 'linear-gradient(white, white) padding-box, linear-gradient(135deg, rgba(115, 103, 240, 0.5), rgba(212, 70, 239, 0.3)) border-box',
-              transition: 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-              borderRadius: '0.75rem', // rounded-xl - ensure elegant rounded corners
-            }}
-          ></div>
+
           
           {leftIcon && (
-            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-20 group-focus-within:text-primary-500 material-transition">
+            <div 
+              className={`absolute left-3.5 top-1/2 transform -translate-y-1/2 pointer-events-none z-20 material-transition ${
+                isFocused ? 'text-primary-500' : hasError ? 'text-error-500' : 'text-slate-400'
+              }`}
+            >
               {leftIcon}
             </div>
           )}
@@ -255,8 +280,12 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
               className={combinedInputClassName}
               placeholder={props.placeholder}
               rows={rows}
+              aria-invalid={hasError}
+              aria-describedby={hasError ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
+              aria-required={props.required}
               style={{
                 ...commonStyle,
+                ...props.style,
                 transition: 'height 0.2s cubic-bezier(0.4, 0, 0.2, 1), all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 minHeight: rows ? `${rows * 16 + 24}px` : '40px',
                 height: 'auto',
@@ -278,8 +307,12 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
               className={combinedInputClassName}
               placeholder={props.placeholder}
               type={showPasswordToggle && isPasswordVisible ? 'text' : type}
+              aria-invalid={hasError}
+              aria-describedby={hasError ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
+              aria-required={props.required}
               style={{
                 ...commonStyle,
+                ...props.style,
                 borderRadius: '0.75rem', // rounded-xl - ensure elegant rounded corners always
               }}
               onFocus={handleFocus}
@@ -292,7 +325,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
             <button
               type="button"
               onClick={onTogglePassword}
-              className="absolute right-2.5 top-1/2 transform -translate-y-1/2 z-10 p-1.5 rounded-md text-slate-400 hover:text-slate-600 active:text-primary-600 hover:bg-slate-100/50 active:bg-slate-100 material-transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500/20 active:scale-95 transition-all duration-200"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 p-1.5 rounded-md text-slate-400 hover:text-primary-600 hover:bg-primary-50 active:bg-primary-100 material-transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500/20 active:scale-95"
               tabIndex={-1}
               aria-label={isPasswordVisible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
             >
@@ -328,16 +361,39 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
             </button>
           )}
           {rightIcon && !showPasswordToggle && (
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
+            <div 
+              className={`absolute right-3.5 top-1/2 transform -translate-y-1/2 z-10 material-transition ${
+                isFocused ? 'text-primary-500' : hasError ? 'text-error-500' : 'text-slate-400'
+              }`}
+            >
               {rightIcon}
             </div>
           )}
         </div>
         {error && (
-          <p className="mt-1 text-xs text-error-600 animate-fade-in">{error}</p>
+          <p 
+            id={`${inputId}-error`}
+            role="alert"
+            className="mt-1 text-xs text-error-600 animate-fade-in flex items-center gap-1 error-message"
+            aria-live="polite"
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>{error}</span>
+          </p>
         )}
         {helperText && !error && (
-          <p className="mt-1 text-xs text-secondary-500">{helperText}</p>
+          <p 
+            id={`${inputId}-helper`}
+            className="mt-1 text-xs text-secondary-500 animate-fade-in flex items-center gap-1"
+            aria-live="polite"
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span>{helperText}</span>
+          </p>
         )}
       </div>
     );

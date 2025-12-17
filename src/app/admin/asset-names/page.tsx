@@ -4,6 +4,7 @@ import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute
 import { PlusIcon } from "@/components/icons";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
@@ -15,7 +16,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as XLSX from 'xlsx';
 
 function AssetNamesPageContent() {
@@ -40,7 +41,7 @@ function AssetNamesPageContent() {
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedAssetNamesForBulkEdit, setSelectedAssetNamesForBulkEdit] = useState<BaseModel[]>([]);
-  const [bulkEditFormData, setBulkEditFormData] = useState<BaseModel>(new BaseModel({}));
+  const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -117,59 +118,41 @@ function AssetNamesPageContent() {
 
   const handleBulkEdit = (selectedItems: BaseModel[]) => {
     setSelectedAssetNamesForBulkEdit(selectedItems);
-    setBulkEditFormData(new BaseModel({}));
+    // تهيئة formData لكل صف مع بياناته الحالية
+    const formDataArray = selectedItems.map(item => new BaseModel(item.getData()));
+    setBulkEditFormDataArray(formDataArray);
     setIsBulkEditModalOpen(true);
   };
 
-  const handleBulkEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedAssetNamesForBulkEdit.length === 0) return;
-
+  const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
     try {
       setBulkEditLoading(true);
-      const updates: Record<string, any> = {};
-      const formDataObj = bulkEditFormData.getData();
-      
-      Object.keys(formDataObj).forEach(key => {
-        const value = formDataObj[key];
-        if (value !== '' && value !== null && value !== undefined) {
-          updates[key] = value;
-        }
-      });
 
-      if (Object.keys(updates).length === 0) {
-        showWarning("لم يتم تحديد أي حقول للتحديث");
-        setBulkEditLoading(false);
-        return;
-      }
-
-      const updatePromises = selectedAssetNamesForBulkEdit.map(async (assetName) => {
-        const assetNameId = assetName.get('id');
-        if (!assetNameId) return;
-        const docRef = firestoreApi.getDocument("assetNames", assetNameId);
-        await firestoreApi.updateData(docRef, updates);
+      const updatePromises = dataArray.map(async (item) => {
+        if (!item.id) return;
+        
+        const docRef = firestoreApi.getDocument("assetNames", item.id);
+        await firestoreApi.updateData(docRef, {
+          name: item.name || '',
+          category: item.category || '',
+          description: item.description || '',
+          notes: item.notes || '',
+        });
       });
 
       await Promise.all(updatePromises);
       
       setIsBulkEditModalOpen(false);
       setSelectedAssetNamesForBulkEdit([]);
-      setBulkEditFormData(new BaseModel({}));
+      setBulkEditFormDataArray([]);
       loadAssetNames();
-      showSuccess(`تم تحديث ${selectedAssetNamesForBulkEdit.length} اسم بنجاح`);
+      showSuccess(`تم تحديث ${dataArray.length} اسم بنجاح`);
     } catch (error) {
-      console.error("Error in bulk edit:", error);
       showError("حدث خطأ أثناء التحديث الجماعي");
     } finally {
       setBulkEditLoading(false);
     }
   };
-
-  const updateBulkEditField = useCallback((key: string, value: any) => {
-    const newData = new BaseModel(bulkEditFormData.getData());
-    newData.put(key, value);
-    setBulkEditFormData(newData);
-  }, [bulkEditFormData]);
 
   const handleImportClick = () => {
     setIsImportModalOpen(true);
@@ -614,74 +597,54 @@ function AssetNamesPageContent() {
         />
 
         {/* Bulk Edit Modal */}
-        <Modal
+        <BulkEditModal
           isOpen={isBulkEditModalOpen}
           onClose={() => {
             setIsBulkEditModalOpen(false);
             setSelectedAssetNamesForBulkEdit([]);
-            setBulkEditFormData(new BaseModel({}));
+            setBulkEditFormDataArray([]);
           }}
           title={`تحرير جماعي (${selectedAssetNamesForBulkEdit.length} اسم)`}
-          size="md"
-          footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsBulkEditModalOpen(false);
-                  setSelectedAssetNamesForBulkEdit([]);
-                  setBulkEditFormData(new BaseModel({}));
-                }}
-                size="lg"
-                className="w-full sm:w-auto font-bold"
-                disabled={bulkEditLoading}
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                form="bulk-edit-form"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
-                isLoading={bulkEditLoading}
-              >
-                تطبيق على {selectedAssetNamesForBulkEdit.length} اسم
-              </Button>
-            </div>
-          }
-        >
-          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
-            <p className="text-sm text-primary-800 font-medium">
-              <MaterialIcon name="info" className="inline ml-2" size="sm" />
-              سيتم تطبيق التغييرات على جميع الأسماء المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
-            </p>
-          </div>
-          <form id="bulk-edit-form" onSubmit={handleBulkEditSubmit} className="space-y-6">
-            <Input
-              label="الفئة"
-              type="text"
-              value={bulkEditFormData.get('category')}
-              onChange={(e) => updateBulkEditField('category', e.target.value)}
-              placeholder="أدخل الفئة (اختياري)"
-            />
-            <Textarea
-              label="الوصف"
-              value={bulkEditFormData.get('description')}
-              onChange={(e) => updateBulkEditField('description', e.target.value)}
-              rows={2}
-              placeholder="أدخل الوصف (اختياري)"
-            />
-            <Textarea
-              label="الملاحظات"
-              value={bulkEditFormData.get('notes')}
-              onChange={(e) => updateBulkEditField('notes', e.target.value)}
-              rows={2}
-              placeholder="أدخل الملاحظات (اختياري)"
-            />
-          </form>
-        </Modal>
+          items={selectedAssetNamesForBulkEdit.map((assetName, index) => ({
+            id: assetName.get('id') || `asset-name-${index}`,
+            label: assetName.get('name') || `اسم ${index + 1}`,
+            data: bulkEditFormDataArray[index]?.getData() || assetName.getData(),
+          }))}
+          fields={[
+            {
+              name: 'name',
+              label: 'اسم الأصل',
+              type: 'text',
+              placeholder: 'أدخل اسم الأصل',
+              icon: 'label',
+              required: true,
+            },
+            {
+              name: 'category',
+              label: 'الفئة',
+              type: 'text',
+              placeholder: 'أدخل الفئة',
+              icon: 'category',
+            },
+            {
+              name: 'description',
+              label: 'الوصف',
+              type: 'textarea',
+              placeholder: 'أدخل الوصف',
+              icon: 'description',
+            },
+            {
+              name: 'notes',
+              label: 'الملاحظات',
+              type: 'textarea',
+              placeholder: 'أدخل الملاحظات',
+              icon: 'note',
+            },
+          ]}
+          onSubmit={handleBulkEditSubmit}
+          isLoading={bulkEditLoading}
+          infoMessage="يمكنك تعديل كل صف بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
     </MainLayout>
   );
 }

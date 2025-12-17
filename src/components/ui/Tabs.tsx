@@ -2,8 +2,13 @@
 
 import { HTMLAttributes } from 'react';
 
-interface TabsProps extends HTMLAttributes<HTMLDivElement> {
-  tabs: { id: string; label: string }[];
+export interface Tab {
+  id: string;
+  label: string;
+}
+
+export interface TabsProps extends HTMLAttributes<HTMLDivElement> {
+  tabs: Tab[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
 }

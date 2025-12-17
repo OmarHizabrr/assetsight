@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Input } from './Input';
 import { MaterialIcon } from '@/components/icons/MaterialIcon';
 
-interface DebouncedInputProps {
+export interface DebouncedInputProps {
   value: string | number;
   onChange: (value: string | number) => void;
   debounce?: number;

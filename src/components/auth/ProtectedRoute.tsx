@@ -1,8 +1,15 @@
 'use client';
 
+import loginIllustration from "@/assets/images/illustrations/auth/v2-login-light.png";
+import logoText from "@/assets/images/logos/logo-text.png";
+import authMaskLight from "@/assets/images/pages/auth-mask-light.png";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { Button } from "@/components/ui/Button";
+import { Card, CardBody } from "@/components/ui/Card";
 import { useAuth } from "@/contexts/AuthContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -247,10 +254,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-      return;
-    }
+    // لا نعيد التوجيه تلقائياً، سنعرض صفحة ترحيبية بدلاً من ذلك
+    // if (!loading && !user) {
+    //   router.push('/login');
+    //   return;
+    // }
 
     // التحقق من الصلاحيات إذا كان المستخدم مسجل دخول
     if (!loading && user && pathname) {
@@ -298,7 +306,131 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#f8f7fa] px-4 py-12">
+        {/* Background Mask Image */}
+        <div className="absolute inset-0 z-0 opacity-20">
+          <Image
+            src={authMaskLight}
+            alt="Background"
+            fill
+            className="object-cover"
+            priority
+            quality={90}
+          />
+        </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-success-500/10 to-warning-500/10 rounded-full blur-3xl -z-10"></div>
+
+        <div className="relative z-10 w-full max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Side - Illustration */}
+            <div className="hidden lg:flex flex-col items-center justify-center space-y-6 p-8">
+              <div className="relative w-full max-w-md">
+                <Image
+                  src={loginIllustration}
+                  alt="Welcome Illustration"
+                  width={500}
+                  height={500}
+                  className="object-contain animate-fade-in"
+                  priority
+                  quality={90}
+                />
+              </div>
+            </div>
+
+            {/* Right Side - Welcome Content */}
+            <div className="w-full">
+              <div className="w-full max-w-lg mx-auto">
+                {/* Logo */}
+                <div className="flex flex-col items-center mb-10 space-y-4">
+                  <div className="relative w-24 h-24">
+                    <Image
+                      src={logoText}
+                      alt="AssetSight Logo"
+                      fill
+                      className="object-contain"
+                      priority
+                      quality={90}
+                    />
+                  </div>
+                  <div className="text-center space-y-2">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                      AssetSight
+                    </h1>
+                    <p className="text-slate-600 text-base font-medium">نظام إدارة الأصول والممتلكات</p>
+                  </div>
+                </div>
+
+                {/* Welcome Card */}
+                <Card variant="elevated" className="w-full shadow-2xl shadow-primary/20 border border-slate-200/80 bg-white/95 backdrop-blur-sm">
+                  <CardBody className="p-8 space-y-6">
+                    <div className="text-center space-y-4">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 mx-auto">
+                        <MaterialIcon name="person" className="text-white" size="3xl" />
+                      </div>
+                      <h2 className="text-3xl font-bold text-slate-900">مرحباً بك!</h2>
+                      <p className="text-slate-600 text-lg leading-relaxed">
+                        للوصول إلى النظام والاستفادة من جميع الميزات، يرجى تسجيل الدخول باستخدام بياناتك المسجلة
+                      </p>
+                    </div>
+
+                    <div className="pt-4">
+                      <Button
+                        onClick={() => router.push('/login')}
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        leftIcon={<MaterialIcon name="login" className="text-white" size="md" />}
+                        className="shadow-xl shadow-primary-500/40"
+                      >
+                        تسجيل الدخول
+                      </Button>
+                    </div>
+
+                    {/* Features */}
+                    <div className="pt-6 border-t border-slate-200 space-y-4">
+                      <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide text-center">
+                        ميزات النظام
+                      </p>
+                      <div className="grid grid-cols-1 gap-3">
+                        <div className="flex items-center gap-3 p-4 bg-primary-50 rounded-xl border border-primary-100 hover:bg-primary-100 material-transition">
+                          <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center">
+                            <MaterialIcon name="inventory" className="text-white" size="md" />
+                          </div>
+                          <span className="text-sm font-semibold text-slate-700">إدارة الأصول</span>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 bg-accent-50 rounded-xl border border-accent-100 hover:bg-accent-100 material-transition">
+                          <div className="w-10 h-10 rounded-lg bg-accent-500 flex items-center justify-center">
+                            <MaterialIcon name="assessment" className="text-white" size="md" />
+                          </div>
+                          <span className="text-sm font-semibold text-slate-700">التقارير والإحصائيات</span>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 bg-success-50 rounded-xl border border-success-100 hover:bg-success-100 material-transition">
+                          <div className="w-10 h-10 rounded-lg bg-success-500 flex items-center justify-center">
+                            <MaterialIcon name="track_changes" className="text-white" size="md" />
+                          </div>
+                          <span className="text-sm font-semibold text-slate-700">تتبع الجرد</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+
+                {/* Footer */}
+                <div className="mt-8 text-center">
+                  <p className="text-xs text-slate-500">
+                    © {new Date().getFullYear()} AssetSight. جميع الحقوق محفوظة.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // التحقق من الصلاحيات قبل عرض المحتوى (الصفحة الرئيسية متاحة دائماً)

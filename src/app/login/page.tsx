@@ -6,7 +6,6 @@ import authMaskLight from "@/assets/images/pages/auth-mask-light.png";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -17,16 +16,61 @@ export default function LoginPage() {
   const router = useRouter();
   const [credentials, setCredentials] = useState({ employee_number: '', password: '' });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ employee_number?: string; password?: string }>({});
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     setError('');
+    setFieldErrors({});
+    
+    // التحقق الصارم من الحقول قبل الإرسال
+    const employeeNumber = credentials.employee_number?.trim() || '';
+    const password = credentials.password?.trim() || '';
+    
+    if (!employeeNumber || employeeNumber.length === 0) {
+      setFieldErrors({ employee_number: 'يرجى إدخال رقم الموظف' });
+      return;
+    }
+    
+    if (!password || password.length === 0) {
+      setFieldErrors({ password: 'يرجى إدخال كلمة المرور' });
+      return;
+    }
     
     try {
-      await login(credentials);
+      await login({ employee_number: employeeNumber, password: password });
       router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل الدخول');
+      const errorMessage = err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل الدخول';
+      setError(errorMessage);
+      
+      // تحديد نوع الخطأ وإظهاره في الحقل المناسب
+      if (errorMessage.includes('رقم الموظف')) {
+        setFieldErrors({ employee_number: errorMessage });
+      } else if (errorMessage.includes('كلمة المرور')) {
+        setFieldErrors({ password: errorMessage });
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      handleSubmit();
+    }
+  };
+
+  const handleInputChange = (field: 'employee_number' | 'password', value: string) => {
+    setCredentials({ ...credentials, [field]: value });
+    // مسح خطأ الحقل عند البدء بالكتابة
+    if (fieldErrors[field]) {
+      setFieldErrors({ ...fieldErrors, [field]: undefined });
+    }
+    if (error) {
+      setError('');
     }
   };
 
@@ -71,22 +115,23 @@ export default function LoginPage() {
 
           {/* Right Side - Login Form */}
           <div className="w-full">
-            <Card variant="elevated" className="w-full max-w-md mx-auto animate-scale-in shadow-2xl shadow-primary/20 border border-slate-200/80 bg-white/98 backdrop-blur-md hover:shadow-primary-lg material-transition">
-              <CardBody className="p-8">
+            <Card variant="elevated" className="w-full max-w-md mx-auto shadow-2xl shadow-primary/20 border border-slate-200/80 bg-white/98 backdrop-blur-md hover:shadow-primary-lg material-transition hover-lift-smooth glass-morphism">
+              <CardBody padding="lg">
                 {/* Logo */}
-                <div className="flex flex-col items-center mb-8 space-y-4">
-                  <div className="relative w-20 h-20">
+                <div className="flex flex-col items-center mb-8 space-y-4 animate-fade-in-down">
+                  <div className="relative w-20 h-20 animate-float">
+                    <div className="absolute -inset-2 bg-primary-500/20 rounded-full blur-xl opacity-50 animate-pulse-soft"></div>
                     <Image
                       src={logoText}
                       alt="AssetSight Logo"
                       fill
-                      className="object-contain"
+                      className="object-contain relative z-10"
                       priority
                       quality={90}
                     />
                   </div>
-                  <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                  <div className="text-center space-y-2 animate-fade-in-down" style={{ animationDelay: '0.1s' }}>
+                    <h1 className="text-3xl font-bold text-gradient-primary animate-gradient">
                       AssetSight
                     </h1>
                     <p className="text-slate-600 text-sm font-medium">تسجيل الدخول إلى النظام</p>
@@ -94,10 +139,10 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {error && (
-                    <div className="bg-gradient-to-r from-error-50 to-error-100/80 border-r-4 border-error-500 text-error-700 px-4 py-3 rounded-xl animate-fade-in shadow-md shadow-error/20 flex items-center gap-2 backdrop-blur-sm">
-                      <MaterialIcon name="warning" className="text-error-600 animate-bounce-subtle" size="md" />
-                      <span className="flex-1 font-semibold">{error}</span>
+                  {error && !fieldErrors.employee_number && !fieldErrors.password && (
+                    <div className="bg-gradient-to-r from-error-50 to-error-100/80 border-r-4 border-error-500 text-error-700 px-4 py-3 rounded-xl animate-fade-in-down shadow-md shadow-error/20 flex items-center gap-2 backdrop-blur-sm hover-glow-error">
+                      <MaterialIcon name="warning" className="text-error-600 animate-pulse-soft" size="md" />
+                      <span className="flex-1 font-semibold text-sm">{error}</span>
                     </div>
                   )}
                   
@@ -105,30 +150,72 @@ export default function LoginPage() {
                     <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
                       <MaterialIcon name="person" className="text-primary-600" size="sm" />
                       <span>رقم الموظف</span>
+                      <span className="text-error-500">*</span>
                     </label>
-                    <Input
-                      type="text"
-                      required
-                      value={credentials.employee_number}
-                      onChange={(e) => setCredentials({ ...credentials, employee_number: e.target.value })}
-                      placeholder="أدخل رقم الموظف"
-                      error={error && !credentials.employee_number ? 'رقم الموظف مطلوب' : undefined}
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        value={credentials.employee_number}
+                        onChange={(e) => handleInputChange('employee_number', e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="أدخل رقم الموظف"
+                        className={`block w-full rounded-xl border-2 bg-white px-4 py-3 pl-10 text-base font-medium material-transition focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-300 backdrop-blur-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:shadow-xl hover:shadow-lg hover:scale-[1.005] hover:bg-gradient-to-br hover:from-white hover:to-slate-50/50 focus:scale-[1.01] focus:ring-4 ${
+                          fieldErrors.employee_number
+                            ? 'border-error-500 focus:border-error-500 focus:ring-error-500/15 focus:shadow-error-500/25'
+                            : 'border-slate-300 focus:border-primary-500 focus:ring-primary-500/15 focus:shadow-primary-500/25 hover:border-primary-400'
+                        }`}
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <MaterialIcon 
+                          name={fieldErrors.employee_number ? "error" : "person"} 
+                          className={fieldErrors.employee_number ? "text-error-500" : "text-slate-400"} 
+                          size="sm" 
+                        />
+                      </div>
+                    </div>
+                    {fieldErrors.employee_number && (
+                      <div className="mt-1 flex items-center gap-1 text-xs text-error-600 animate-fade-in">
+                        <MaterialIcon name="error" className="text-error-500" size="sm" />
+                        <span>{fieldErrors.employee_number}</span>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-1">
                     <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
-                      <MaterialIcon name="visibility_off" className="text-primary-600" size="sm" />
+                      <MaterialIcon name="lock" className="text-primary-600" size="sm" />
                       <span>كلمة المرور</span>
+                      <span className="text-error-500">*</span>
                     </label>
-                    <Input
-                      type="password"
-                      required
-                      value={credentials.password}
-                      onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                      placeholder="أدخل كلمة المرور"
-                      error={error && !credentials.password ? 'كلمة المرور مطلوبة' : undefined}
-                    />
+                    <div className="relative">
+                      <input
+                        type="password"
+                        required
+                        value={credentials.password}
+                        onChange={(e) => handleInputChange('password', e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="أدخل كلمة المرور"
+                        className={`block w-full rounded-xl border-2 bg-white px-4 py-3 pl-10 text-base font-medium material-transition focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-300 backdrop-blur-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:shadow-xl hover:shadow-lg hover:scale-[1.005] hover:bg-gradient-to-br hover:from-white hover:to-slate-50/50 focus:scale-[1.01] focus:ring-4 ${
+                          fieldErrors.password
+                            ? 'border-error-500 focus:border-error-500 focus:ring-error-500/15 focus:shadow-error-500/25'
+                            : 'border-slate-300 focus:border-primary-500 focus:ring-primary-500/15 focus:shadow-primary-500/25 hover:border-primary-400'
+                        }`}
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <MaterialIcon 
+                          name={fieldErrors.password ? "error" : "lock"} 
+                          className={fieldErrors.password ? "text-error-500" : "text-slate-400"} 
+                          size="sm" 
+                        />
+                      </div>
+                    </div>
+                    {fieldErrors.password && (
+                      <div className="mt-1 flex items-center gap-1 text-xs text-error-600 animate-fade-in">
+                        <MaterialIcon name="error" className="text-error-500" size="sm" />
+                        <span>{fieldErrors.password}</span>
+                      </div>
+                    )}
                   </div>
 
                   <Button
@@ -137,7 +224,7 @@ export default function LoginPage() {
                     size="lg"
                     fullWidth
                     isLoading={loading}
-                    className="mt-6"
+                    className="mt-6 hover-lift-smooth"
                   >
                     {loading ? (
                       <span className="flex items-center gap-2">
@@ -146,7 +233,7 @@ export default function LoginPage() {
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        <MaterialIcon name="login" className="text-white" size="md" />
+                        <MaterialIcon name="login" className="text-white material-transition group-hover:translate-x-1" size="md" />
                         <span>تسجيل الدخول</span>
                       </span>
                     )}

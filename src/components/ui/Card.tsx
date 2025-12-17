@@ -2,7 +2,7 @@
 
 import { HTMLAttributes } from 'react';
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
+export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'elevated' | 'outlined' | 'flat';
   padding?: 'none' | 'sm' | 'md' | 'lg';
   hover?: boolean;
@@ -16,13 +16,14 @@ export function Card({
   className = '',
   ...props
 }: CardProps) {
-  const baseStyles = 'rounded-2xl material-transition backdrop-blur-sm relative overflow-hidden';
+  const baseStyles = 'rounded-2xl material-transition backdrop-blur-sm relative overflow-hidden gpu-accelerated';
   
+  // تحسين Variants مع استخدام متغيرات Design Tokens + Dark Mode
   const variants = {
-    default: 'bg-white/95 shadow-lg border border-slate-200/60 hover:shadow-xl hover:border-primary-200/50 hover:scale-[1.01]',
-    elevated: 'bg-white/95 shadow-xl border border-slate-200/60 hover:shadow-2xl hover:border-primary-200/50 hover:scale-[1.01]',
-    outlined: 'bg-white/95 border-2 border-slate-300 hover:border-primary-300 hover:shadow-lg hover:scale-[1.01]',
-    flat: 'bg-white/95 hover:shadow-md hover:scale-[1.005]',
+    default: 'bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:border-primary-200 dark:hover:border-primary-700 hover:scale-[1.005]',
+    elevated: 'bg-white dark:bg-slate-800/50 shadow-xl border border-slate-200 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-700 hover:scale-[1.005]',
+    outlined: 'bg-white dark:bg-slate-800/50 border-2 border-slate-300 dark:border-slate-600 hover:border-primary-400 dark:hover:border-primary-600 hover:shadow-lg hover:scale-[1.005]',
+    flat: 'bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:shadow-md hover:scale-[1.002]',
   };
 
   const paddings = {
@@ -33,24 +34,43 @@ export function Card({
   };
 
   const hoverStyles = hover
-    ? 'hover:shadow-2xl hover:shadow-primary-500/10 hover:scale-[1.02] cursor-pointer material-transition hover:border-primary-200/50 hover:bg-gradient-to-br hover:from-white hover:to-primary-50/20'
-    : '';
+    ? 'hover:shadow-2xl hover:shadow-primary-500/10 hover:scale-[1.01] cursor-pointer material-transition hover:border-primary-300 animate-fade-in group'
+    : 'group';
 
-  const combinedClassName = `
-    ${baseStyles}
-    ${variants[variant]}
-    ${paddings[padding]}
-    ${hoverStyles}
-    ${className}
-  `.trim().replace(/\s+/g, ' ');
-
-  const borderColor = variant === 'outlined' ? '#dbdade' : '#dbdade';
+  // Build className consistently to avoid hydration issues
+  const classParts = [
+    baseStyles,
+    variants[variant],
+    paddings[padding],
+    hoverStyles,
+    className
+  ].filter(Boolean);
+  
+  const combinedClassName = classParts.join(' ').trim().replace(/\s+/g, ' ');
   
   return (
-    <div className={combinedClassName} style={{ borderColor }} {...props}>
-      {/* Subtle gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-500/0 via-primary-500/0 to-primary-500/0 group-hover:from-primary-500/5 group-hover:via-primary-500/0 group-hover:to-primary-500/5 material-transition pointer-events-none rounded-2xl"></div>
-      <div className="relative z-10">{children}</div>
+    <div 
+      className={combinedClassName} 
+      {...props} 
+      suppressHydrationWarning
+    >
+      {/* Enhanced gradient overlay on hover - مستوحى من DawamWeb */}
+      {hover && (
+        <>
+          <div 
+            className="absolute inset-0 bg-gradient-to-br from-primary-500/0 via-primary-500/0 to-primary-500/5 opacity-0 group-hover:opacity-100 material-transition pointer-events-none rounded-2xl" 
+            aria-hidden="true" 
+            suppressHydrationWarning
+          />
+          {/* Glow effect on hover */}
+          <div 
+            className="absolute -inset-0.5 bg-primary-500/0 group-hover:bg-primary-500/10 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 material-transition pointer-events-none -z-10" 
+            aria-hidden="true" 
+            suppressHydrationWarning
+          />
+        </>
+      )}
+      {children}
     </div>
   );
 }
@@ -70,19 +90,24 @@ export function CardHeader({
   ...props
 }: CardHeaderProps) {
   return (
-    <div className={`px-6 py-5 border-b border-slate-200/60 bg-gradient-to-br from-slate-50/60 via-white to-slate-50/40 backdrop-blur-sm relative overflow-hidden ${className}`} {...props}>
-      {/* Decorative accent line */}
-      <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-primary-500 via-primary-600 to-primary-500 opacity-0 group-hover:opacity-100 material-transition"></div>
+    <div 
+      className={`px-6 py-5 border-b border-slate-200 dark:border-slate-700 relative overflow-hidden animate-fade-in ${className}`} 
+      {...props}
+    >
+      {/* Enhanced decorative accent line - مستوحى من Vuexy */}
+      <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-primary-500 via-primary-600 to-primary-500 opacity-0 group-hover:opacity-100 material-transition" aria-hidden="true" />
+      {/* Subtle shine effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 material-transition pointer-events-none" aria-hidden="true" />
       {(title || subtitle || action) && (
         <div className="flex items-start justify-between gap-4 relative z-10">
           <div className="flex-1 min-w-0">
             {title && (
-              <h3 className="text-2xl font-bold text-slate-800 mb-2 bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent material-transition">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1.5 material-transition">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-sm text-slate-600 font-medium leading-relaxed">{subtitle}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">{subtitle}</p>
             )}
           </div>
           {action && <div className="flex-shrink-0">{action}</div>}
@@ -106,9 +131,20 @@ export function CardBody({ children, className = '', padding, ...props }: CardBo
   };
 
   const paddingClass = padding ? paddings[padding] : '';
+  
+  // Remove padding classes from className if padding prop is provided to avoid conflicts
+  const cleanClassName = paddingClass 
+    ? className.replace(/\b(p-\d+|px-\d+|py-\d+|pt-\d+|pb-\d+|pl-\d+|pr-\d+)\b/g, '').trim()
+    : className.trim();
+  
+  // Combine classes properly to avoid hydration issues - always return consistent structure
+  const classParts = [paddingClass, cleanClassName].filter(Boolean);
+  const combinedClassName = classParts.length > 0 
+    ? classParts.join(' ').trim().replace(/\s+/g, ' ')
+    : '';
 
   return (
-    <div className={`${paddingClass} ${className}`} {...props}>
+    <div className={combinedClassName || undefined} {...props} suppressHydrationWarning>
       {children}
     </div>
   );
@@ -118,7 +154,7 @@ interface CardFooterProps extends HTMLAttributes<HTMLDivElement> {}
 
 export function CardFooter({ children, className = '', ...props }: CardFooterProps) {
   return (
-    <div className={`mt-4 pt-4 border-t border-secondary-300 ${className}`} {...props}>
+    <div className={`mt-4 pt-4 border-t border-secondary-300 dark:border-slate-700 ${className}`} {...props}>
       {children}
     </div>
   );

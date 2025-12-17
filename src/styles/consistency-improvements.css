@@ -1,0 +1,718 @@
+/**
+ * Consistency Improvements - تحسينات التناسق الشاملة
+ * توحيد التصميم والمسافات والألوان في جميع أنحاء المشروع
+ */
+
+/* ========================================
+   GLOBAL CONSISTENCY FIXES
+   ======================================== */
+
+/* توحيد border-radius */
+:root {
+  --radius-xs: 0.25rem;   /* 4px */
+  --radius-sm: 0.5rem;    /* 8px */
+  --radius-md: 0.75rem;  /* 12px */
+  --radius-lg: 1rem;      /* 16px */
+  --radius-xl: 1.5rem;    /* 24px */
+  --radius-2xl: 2rem;     /* 32px */
+  --radius-full: 9999px;
+}
+
+/* توحيد المسافات */
+:root {
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  --spacing-2xl: 3rem;     /* 48px */
+}
+
+/* ========================================
+   CARD CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم Cards */
+[class*="Card"],
+.card {
+  border-radius: var(--radius-xl) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[class*="Card"]:hover,
+.card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ========================================
+   BUTTON CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم الأزرار */
+button[class*="Button"],
+[class*="button"] {
+  border-radius: var(--radius-md) !important;
+  font-weight: 600 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ========================================
+   INPUT CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم الحقول */
+input[class*="Input"],
+textarea[class*="Textarea"],
+select[class*="Select"],
+[class*="input"],
+[class*="textarea"],
+[class*="select"] {
+  border-radius: var(--radius-md) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ========================================
+   MODAL CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم المودالات */
+[role="dialog"],
+[class*="Modal"],
+.modal {
+  border-radius: var(--radius-xl) !important;
+}
+
+/* ========================================
+   TABLE CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم الجداول */
+table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+table th,
+table td {
+  border-radius: 0 !important;
+}
+
+table th:first-child,
+table td:first-child {
+  border-top-right-radius: var(--radius-sm) !important;
+  border-bottom-right-radius: var(--radius-sm) !important;
+}
+
+table th:last-child,
+table td:last-child {
+  border-top-left-radius: var(--radius-sm) !important;
+  border-bottom-left-radius: var(--radius-sm) !important;
+}
+
+/* ========================================
+   ICON CONSISTENCY
+   ======================================== */
+
+/* توحيد حجم الأيقونات */
+[class*="MaterialIcon"],
+[class*="icon"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}
+
+/* ========================================
+   SPACING CONSISTENCY
+   ======================================== */
+
+/* توحيد المسافات بين العناصر */
+.gap-2 { gap: var(--spacing-sm) !important; }
+.gap-3 { gap: 0.75rem !important; }
+.gap-4 { gap: var(--spacing-md) !important; }
+.gap-6 { gap: var(--spacing-lg) !important; }
+.gap-8 { gap: var(--spacing-xl) !important; }
+
+/* ========================================
+   COLOR CONSISTENCY
+   ======================================== */
+
+/* توحيد الألوان في Dark Mode */
+[data-theme="dark"] {
+  --text-primary: rgb(248, 250, 252);
+  --text-secondary: rgb(203, 213, 225);
+  --text-tertiary: rgb(148, 163, 184);
+  --bg-primary: rgba(15, 23, 42, 0.95);
+  --bg-secondary: rgba(30, 41, 59, 0.5);
+  --bg-tertiary: rgba(51, 65, 85, 0.3);
+  --border-primary: rgba(71, 85, 105, 0.4);
+  --border-secondary: rgba(100, 116, 139, 0.3);
+}
+
+/* ========================================
+   TYPOGRAPHY CONSISTENCY
+   ======================================== */
+
+/* توحيد الخطوط */
+body,
+input,
+textarea,
+select,
+button {
+  font-family: var(--font-public-sans), var(--font-noto-sans-arabic), system-ui, -apple-system, sans-serif !important;
+}
+
+/* توحيد أحجام الخطوط */
+.text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
+.text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
+.text-base { font-size: 1rem !important; line-height: 1.5rem !important; }
+.text-lg { font-size: 1.125rem !important; line-height: 1.75rem !important; }
+.text-xl { font-size: 1.25rem !important; line-height: 1.75rem !important; }
+
+/* ========================================
+   SHADOW CONSISTENCY
+   ======================================== */
+
+/* توحيد الظلال */
+:root {
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ========================================
+   TRANSITION CONSISTENCY
+   ======================================== */
+
+/* توحيد الانتقالات */
+.material-transition,
+.transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ========================================
+   RESPONSIVE CONSISTENCY
+   ======================================== */
+
+/* توحيد breakpoints */
+@media (max-width: 640px) {
+  /* Mobile adjustments */
+  [class*="Card"] {
+    border-radius: var(--radius-lg) !important;
+    margin-left: -0.75rem !important;
+    margin-right: -0.75rem !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* Tablet adjustments */
+  [class*="Card"] {
+    border-radius: var(--radius-xl) !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  /* Desktop adjustments */
+  [class*="Card"] {
+    border-radius: var(--radius-xl) !important;
+  }
+}
+
+/* ========================================
+   DARK MODE CONSISTENCY
+   ======================================== */
+
+[data-theme="dark"] [class*="Card"] {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-primary) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="dark"] [class*="Card"]:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ========================================
+   ANIMATION CONSISTENCY
+   ======================================== */
+
+/* توحيد الأنيميشن */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ========================================
+   Z-INDEX CONSISTENCY
+   ======================================== */
+
+:root {
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+}
+
+/* ========================================
+   FOCUS CONSISTENCY
+   ======================================== */
+
+/* توحيد focus indicators */
+*:focus-visible {
+  outline: 3px solid var(--color-primary-500) !important;
+  outline-offset: 3px !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ========================================
+   LOADING STATE CONSISTENCY
+   ======================================== */
+
+/* توحيد حالات التحميل */
+[aria-busy="true"],
+.loading {
+  position: relative !important;
+  pointer-events: none !important;
+  opacity: 0.6 !important;
+}
+
+[aria-busy="true"]::after,
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 3px solid var(--color-primary-200);
+  border-top-color: var(--color-primary-600);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   ERROR STATE CONSISTENCY
+   ======================================== */
+
+/* توحيد حالات الخطأ */
+.error,
+[class*="error"] {
+  border-color: var(--color-error-500) !important;
+  color: var(--color-error-700) !important;
+}
+
+.error:focus,
+[class*="error"]:focus {
+  outline-color: var(--color-error-500) !important;
+  box-shadow: 0 0 0 4px rgba(234, 84, 85, 0.2) !important;
+}
+
+/* ========================================
+   SUCCESS STATE CONSISTENCY
+   ======================================== */
+
+/* توحيد حالات النجاح */
+.success,
+[class*="success"] {
+  border-color: var(--color-success-500) !important;
+  color: var(--color-success-700) !important;
+}
+
+.success:focus,
+[class*="success"]:focus {
+  outline-color: var(--color-success-500) !important;
+  box-shadow: 0 0 0 4px rgba(40, 199, 111, 0.2) !important;
+}
+
+/* ========================================
+   PRINT CONSISTENCY
+   ======================================== */
+
+@media print {
+  /* إزالة جميع الألوان والظلال للطباعة */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* إزالة الأنيميشن */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* تحسين الطباعة */
+  @page {
+    margin: 1cm;
+  }
+  
+  /* إخفاء العناصر غير الضرورية */
+  header,
+  aside,
+  footer,
+  [class*="Button"]:not(.print-visible),
+  [class*="action"] {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+
+/* تحسين contrast ratio */
+[data-theme="dark"] {
+  --contrast-ratio: 4.5;
+}
+
+/* تحسين focus indicators */
+*:focus-visible {
+  outline: 3px solid var(--color-primary-500) !important;
+  outline-offset: 3px !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* تحسين hover states */
+button:hover,
+a:hover,
+[role="button"]:hover {
+  cursor: pointer !important;
+}
+
+/* تحسين disabled states */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* ========================================
+   SCROLLBAR CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-full);
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ========================================
+   SELECTION CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم النص المحدد */
+::selection {
+  background: var(--color-primary-500);
+  color: white;
+}
+
+::-moz-selection {
+  background: var(--color-primary-500);
+  color: white;
+}
+
+[data-theme="dark"] ::selection {
+  background: var(--color-primary-400);
+  color: white;
+}
+
+[data-theme="dark"] ::-moz-selection {
+  background: var(--color-primary-400);
+  color: white;
+}
+
+/* ========================================
+   TOOLTIP CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم tooltips */
+[title],
+[data-tooltip] {
+  position: relative;
+}
+
+[title]:hover::after,
+[data-tooltip]:hover::after {
+  content: attr(title);
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  right: 50%;
+  transform: translateX(50%);
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  z-index: var(--z-tooltip);
+  pointer-events: none;
+  margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] [title]:hover::after,
+[data-theme="dark"] [data-tooltip]:hover::after {
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+/* ========================================
+   BADGE CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم badges */
+.badge,
+[class*="Badge"],
+[class*="badge"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ========================================
+   DIVIDER CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم dividers */
+hr,
+[class*="Divider"],
+[class*="divider"] {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: var(--spacing-lg) 0;
+}
+
+[data-theme="dark"] hr,
+[data-theme="dark"] [class*="Divider"],
+[data-theme="dark"] [class*="divider"] {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ========================================
+   SKELETON CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم skeletons */
+[class*="Skeleton"],
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+[data-theme="dark"] [class*="Skeleton"],
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ========================================
+   LOADING SPINNER CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم loading spinners */
+[class*="Spinner"],
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--color-primary-500);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+[data-theme="dark"] [class*="Spinner"],
+[data-theme="dark"] .spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: var(--color-primary-400);
+}
+
+/* ========================================
+   EMPTY STATE CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم empty states */
+[class*="EmptyState"],
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--text-secondary);
+}
+
+[class*="EmptyState"] svg,
+.empty-state svg {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--spacing-lg);
+  opacity: 0.5;
+}
+
+/* ========================================
+   FORM GROUP CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم form groups */
+[class*="FormGroup"],
+.form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+[class*="FormGroup"]:last-child,
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================
+   LABEL CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم labels */
+label,
+[class*="Label"],
+[class*="label"] {
+  display: block;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] label,
+[data-theme="dark"] [class*="Label"],
+[data-theme="dark"] [class*="label"] {
+  color: var(--text-primary);
+}
+
+/* ========================================
+   HELPER TEXT CONSISTENCY
+   ======================================== */
+
+/* توحيد تصميم helper text */
+[class*="HelperText"],
+.helper-text {
+  font-size: 0.75rem;
+  margin-top: var(--spacing-xs);
+  color: var(--text-secondary);
+}
+
+[class*="HelperText"].error,
+.helper-text.error {
+  color: var(--color-error-600);
+}
+
+[data-theme="dark"] [class*="HelperText"].error,
+[data-theme="dark"] .helper-text.error {
+  color: var(--color-error-400);
+}
+

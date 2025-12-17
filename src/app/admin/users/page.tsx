@@ -4,6 +4,7 @@ import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/Badge";
+import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -59,6 +60,7 @@ function UsersPageContent() {
     department_id: '',
     office_id: '',
     role: '',
+    user_type: 'موظف', // نوع المستخدم: موظف أو مستخدم نظام
     password: '',
     confirm_password: '',
     permissions: [] as string[],
@@ -72,9 +74,10 @@ function UsersPageContent() {
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedUsersForBulkEdit, setSelectedUsersForBulkEdit] = useState<BaseModel[]>([]);
-  const [bulkEditFormData, setBulkEditFormData] = useState<BaseModel>(new BaseModel({}));
-  const [bulkEditSelectedDepartmentId, setBulkEditSelectedDepartmentId] = useState<string>('');
-  const [bulkEditOffices, setBulkEditOffices] = useState<BaseModel[]>([]);
+  const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
+  const [bulkEditSelectedDepartmentIds, setBulkEditSelectedDepartmentIds] = useState<Record<number, string>>({});
+  const [bulkEditOfficesMap, setBulkEditOfficesMap] = useState<Record<number, BaseModel[]>>({});
+  const [userTypeFilter, setUserTypeFilter] = useState<string>('all'); // 'all', 'موظف', 'مستخدم نظام'
 
   useEffect(() => {
     loadData();
@@ -253,7 +256,7 @@ function UsersPageContent() {
       
       setIsModalOpen(false);
       setEditingUser(null);
-      setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+      setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
       setShowPassword(false);
       setShowConfirmPassword(false);
       showSuccess(editingUser ? "تم تحديث المستخدم بنجاح" : "تم إضافة المستخدم بنجاح");
@@ -354,48 +357,54 @@ function UsersPageContent() {
 
   const handleBulkEdit = (selectedItems: BaseModel[]) => {
     setSelectedUsersForBulkEdit(selectedItems);
-    setBulkEditFormData(new BaseModel({}));
-    setBulkEditSelectedDepartmentId('');
-    setBulkEditOffices([]);
+    const formDataArray = selectedItems.map(item => {
+      const itemData = item.getData();
+      itemData.is_active = item.getValue<number>('is_active') === 1 || item.getValue<boolean>('is_active') === true;
+      return new BaseModel(itemData);
+    });
+    setBulkEditFormDataArray(formDataArray);
+    
+    // تهيئة department IDs و offices لكل مستخدم
+    const deptIds: Record<number, string> = {};
+    const officesMap: Record<number, BaseModel[]> = {};
+    selectedItems.forEach((user, index) => {
+      const deptId = user.get('department_id');
+      if (deptId) {
+        deptIds[index] = deptId;
+        const filteredOffices = allOffices.filter(office => office.get('department_id') === deptId);
+        officesMap[index] = filteredOffices;
+      }
+    });
+    setBulkEditSelectedDepartmentIds(deptIds);
+    setBulkEditOfficesMap(officesMap);
+    
     setIsBulkEditModalOpen(true);
   };
 
-  const handleBulkEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedUsersForBulkEdit.length === 0) return;
-
+  const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
     try {
       setBulkEditLoading(true);
-      const updates: Record<string, any> = {};
-      const formDataObj = bulkEditFormData.getData();
-      
-      Object.keys(formDataObj).forEach(key => {
-        const value = formDataObj[key];
-        if (value !== '' && value !== null && value !== undefined) {
-          updates[key] = value;
-        }
-      });
 
-      // معالجة is_active
-      if ('is_active' in updates) {
-        updates.is_active = bulkEditFormData.getValue<boolean>('is_active') ? 1 : 0;
-      }
-
-      // معالجة permissions
-      if ('permissions' in updates && Array.isArray(updates.permissions)) {
-        updates.permissions = updates.permissions;
-      }
-
-      if (Object.keys(updates).length === 0) {
-        showWarning("لم يتم تحديد أي حقول للتحديث");
-        setBulkEditLoading(false);
-        return;
-      }
-
-      const updatePromises = selectedUsersForBulkEdit.map(async (user) => {
-        const userId = user.get('id');
-        if (!userId) return;
-        const docRef = firestoreApi.getDocument("users", userId);
+      const updatePromises = dataArray.map(async (item) => {
+        if (!item.id) return;
+        
+        const updates: any = {
+          employee_number: item.employee_number || '',
+          username: item.username || '',
+          full_name: item.full_name || '',
+          email: item.email || '',
+          phone: item.phone || '',
+          department_id: item.department_id || '',
+          office_id: item.office_id || '',
+          role: item.role || '',
+          user_type: item.user_type || 'موظف',
+          notes: item.notes || '',
+        };
+        
+        // معالجة is_active
+        updates.is_active = item.is_active === true || item.is_active === 1 ? 1 : 0;
+        
+        const docRef = firestoreApi.getDocument("users", item.id);
         await firestoreApi.updateData(docRef, updates);
       });
 
@@ -403,11 +412,11 @@ function UsersPageContent() {
       
       setIsBulkEditModalOpen(false);
       setSelectedUsersForBulkEdit([]);
-      setBulkEditFormData(new BaseModel({}));
-      setBulkEditSelectedDepartmentId('');
-      setBulkEditOffices([]);
+      setBulkEditFormDataArray([]);
+      setBulkEditSelectedDepartmentIds({});
+      setBulkEditOfficesMap({});
       loadData();
-      showSuccess(`تم تحديث ${selectedUsersForBulkEdit.length} مستخدم بنجاح`);
+      showSuccess(`تم تحديث ${dataArray.length} مستخدم بنجاح`);
     } catch (error) {
       console.error("Error in bulk edit:", error);
       showError("حدث خطأ أثناء التحديث الجماعي");
@@ -416,11 +425,33 @@ function UsersPageContent() {
     }
   };
 
-  const updateBulkEditField = useCallback((key: string, value: any) => {
-    const newData = new BaseModel(bulkEditFormData.getData());
+  const updateBulkEditField = useCallback((index: number, key: string, value: any) => {
+    const newArray = [...bulkEditFormDataArray];
+    const newData = new BaseModel(newArray[index].getData());
     newData.put(key, value);
-    setBulkEditFormData(newData);
-  }, [bulkEditFormData]);
+    
+    // إذا تم تغيير department_id، تحديث offices المتاحة
+    if (key === 'department_id') {
+      const newDeptIds = { ...bulkEditSelectedDepartmentIds };
+      newDeptIds[index] = value;
+      setBulkEditSelectedDepartmentIds(newDeptIds);
+      
+      const newOfficesMap = { ...bulkEditOfficesMap };
+      if (value) {
+        const filteredOffices = allOffices.filter(office => office.get('department_id') === value);
+        newOfficesMap[index] = filteredOffices;
+        // إعادة تعيين office_id إذا تغيرت الإدارة
+        newData.put('office_id', '');
+      } else {
+        newOfficesMap[index] = [];
+        newData.put('office_id', '');
+      }
+      setBulkEditOfficesMap(newOfficesMap);
+    }
+    
+    newArray[index] = newData;
+    setBulkEditFormDataArray(newArray);
+  }, [bulkEditFormDataArray, bulkEditSelectedDepartmentIds, bulkEditOfficesMap, allOffices]);
 
   const getOfficeName = (officeId?: string) => {
     if (!officeId) return '-';
@@ -668,6 +699,11 @@ function UsersPageContent() {
     }
   };
 
+  // فلترة المستخدمين حسب النوع
+  const filteredUsers = userTypeFilter === 'all' 
+    ? users 
+    : users.filter(user => user.get('user_type') === userTypeFilter);
+
   const columns = [
     { 
       key: 'employee_number', 
@@ -692,6 +728,19 @@ function UsersPageContent() {
     { 
       key: 'phone', 
       label: 'الهاتف',
+      sortable: true,
+    },
+    { 
+      key: 'user_type', 
+      label: 'نوع المستخدم',
+      render: (item: BaseModel) => {
+        const userType = item.get('user_type') || 'موظف';
+        return (
+          <Badge variant={userType === 'موظف' ? 'primary' : 'warning'} size="sm">
+            {userType}
+          </Badge>
+        );
+      },
       sortable: true,
     },
     { 
@@ -746,27 +795,31 @@ function UsersPageContent() {
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10 relative">
+      <div className="mb-10 relative animate-fade-in-down">
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-full blur-3xl -z-10 animate-pulse-soft"></div>
+        <div className="absolute top-10 left-10 w-48 h-48 bg-gradient-to-br from-success-500/5 to-warning-500/5 rounded-full blur-3xl -z-10 animate-pulse-soft" style={{ animationDelay: '0.5s' }}></div>
+        
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-110 material-transition animate-float">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <MaterialIcon name="people" className="text-white relative z-10" size="3xl" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
+                <MaterialIcon name="people" className="text-white relative z-10 group-hover:scale-110 material-transition" size="3xl" />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm animate-pulse-soft"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm animate-pulse-soft" style={{ animationDelay: '0.3s' }}></div>
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
+                  <h1 className="text-4xl sm:text-5xl font-black text-gradient-primary">
                     المستخدمون
                   </h1>
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200 animate-fade-in">
                     <MaterialIcon name="people" className="text-primary-600" size="sm" />
                     <span className="text-xs font-semibold text-primary-700">{users.length}</span>
                   </div>
                 </div>
-                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
+                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2 animate-fade-in">
                   <MaterialIcon name="info" className="text-slate-400" size="sm" />
                   <span>إدارة وإضافة المستخدمين في النظام</span>
                 </p>
@@ -774,12 +827,12 @@ function UsersPageContent() {
             </div>
           </div>
           {canAdd && (
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 animate-fade-in-left">
               <Button
                 onClick={() => setIsImportModalOpen(true)}
                 size="lg"
                 variant="outline"
-                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold border-2 hover:border-primary-400"
+                className="shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:scale-105 material-transition font-bold border-2 hover:border-primary-400 hover:bg-primary-50"
               >
                 <span className="flex items-center gap-2">
                   <MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />
@@ -789,7 +842,7 @@ function UsersPageContent() {
               <Button
                 onClick={() => {
                   setEditingUser(null);
-                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
           setSelectedDepartmentId('');
           setOffices([]);
           setShowPassword(false);
@@ -813,16 +866,52 @@ function UsersPageContent() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/5 to-accent-500/5 rounded-full blur-3xl -z-10"></div>
       </div>
 
+      {/* Filter Section */}
+      <div className="mb-6 p-4 bg-white rounded-xl border-2 border-slate-200/80 shadow-sm animate-fade-in">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <MaterialIcon name="filter_alt" className="text-primary-600" size="lg" />
+            <span className="font-bold text-slate-700">فلتر حسب نوع المستخدم:</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={userTypeFilter === 'all' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setUserTypeFilter('all')}
+              className="font-semibold"
+            >
+              الكل ({users.length})
+            </Button>
+            <Button
+              variant={userTypeFilter === 'موظف' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setUserTypeFilter('موظف')}
+              className="font-semibold"
+            >
+              موظف ({users.filter(u => u.get('user_type') === 'موظف' || !u.get('user_type')).length})
+            </Button>
+            <Button
+              variant={userTypeFilter === 'مستخدم نظام' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setUserTypeFilter('مستخدم نظام')}
+              className="font-semibold"
+            >
+              مستخدم نظام ({users.filter(u => u.get('user_type') === 'مستخدم نظام').length})
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Data Table */}
       <DataTable
-        data={users}
+        data={filteredUsers}
         columns={columns}
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
         onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
         onAddNew={canAdd ? () => {
           setEditingUser(null);
-          setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+          setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
           setSelectedDepartmentId('');
           setOffices([]);
           setShowPassword(false);
@@ -843,7 +932,7 @@ function UsersPageContent() {
           onClose={() => {
             setIsModalOpen(false);
             setEditingUser(null);
-            setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+            setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
           setSelectedDepartmentId('');
           setOffices([]);
           setShowPassword(false);
@@ -859,7 +948,7 @@ function UsersPageContent() {
                 onClick={() => {
                   setIsModalOpen(false);
                   setEditingUser(null);
-                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
                   setSelectedDepartmentId('');
                   setOffices([]);
                   setShowPassword(false);
@@ -978,6 +1067,21 @@ function UsersPageContent() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+              <SearchableSelect
+                label="نوع المستخدم"
+                value={formData.get('user_type') || 'موظف'}
+                onChange={(value) => {
+                  const newData = new BaseModel(formData.getData());
+                  newData.put('user_type', value);
+                  setFormData(newData);
+                }}
+                options={[
+                  { value: 'موظف', label: 'موظف' },
+                  { value: 'مستخدم نظام', label: 'مستخدم نظام' },
+                ]}
+                placeholder="اختر نوع المستخدم"
+                fullWidth={false}
+              />
               <SearchableSelect
                 label="الإدارة"
                 value={formData.get('department_id')}
@@ -1212,121 +1316,114 @@ function UsersPageContent() {
         />
 
         {/* Bulk Edit Modal */}
-        <Modal
+        <BulkEditModal
           isOpen={isBulkEditModalOpen}
           onClose={() => {
             setIsBulkEditModalOpen(false);
             setSelectedUsersForBulkEdit([]);
-            setBulkEditFormData(new BaseModel({}));
-            setBulkEditSelectedDepartmentId('');
-            setBulkEditOffices([]);
           }}
-          title={`تحرير جماعي (${selectedUsersForBulkEdit.length} مستخدم)`}
-          size="xl"
-          footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsBulkEditModalOpen(false);
-                  setSelectedUsersForBulkEdit([]);
-                  setBulkEditFormData(new BaseModel({}));
-                  setBulkEditSelectedDepartmentId('');
-                  setBulkEditOffices([]);
-                }}
-                size="lg"
-                className="w-full sm:w-auto font-bold"
-                disabled={bulkEditLoading}
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                form="bulk-edit-form"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
-                isLoading={bulkEditLoading}
-              >
-                تطبيق على {selectedUsersForBulkEdit.length} مستخدم
-              </Button>
-            </div>
-          }
-        >
-          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
-            <p className="text-sm text-primary-800 font-medium">
-              <MaterialIcon name="info" className="inline ml-2" size="sm" />
-              سيتم تطبيق التغييرات على جميع المستخدمين المختارين. اترك الحقول التي لا تريد تغييرها فارغة.
-            </p>
-          </div>
-          <form id="bulk-edit-form" onSubmit={handleBulkEditSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <SearchableSelect
-                label="الإدارة"
-                value={bulkEditFormData.get('department_id') || bulkEditSelectedDepartmentId}
-                onChange={(value) => {
-                  setBulkEditSelectedDepartmentId(value);
-                  updateBulkEditField('department_id', value);
-                  updateBulkEditField('office_id', '');
-                  if (value) {
-                    const filteredOffices = allOffices.filter(office => office.get('department_id') === value);
-                    setBulkEditOffices(filteredOffices);
-                  } else {
-                    setBulkEditOffices([]);
-                  }
-                }}
-                options={departments.map((dept) => ({
-                  value: dept.get('id'),
-                  label: dept.get('name'),
-                }))}
-                placeholder="اختر الإدارة (اختياري)"
-              />
-              <SearchableSelect
-                label="المكتب"
-                value={bulkEditFormData.get('office_id')}
-                onChange={(value) => updateBulkEditField('office_id', value)}
-                disabled={!bulkEditSelectedDepartmentId || bulkEditOffices.length === 0}
-                options={bulkEditOffices.map((office) => ({
-                  value: office.get('id'),
-                  label: office.get('name'),
-                }))}
-                placeholder={!bulkEditSelectedDepartmentId ? "اختر الإدارة أولاً" : bulkEditOffices.length === 0 ? "لا توجد مكاتب" : "اختر المكتب (اختياري)"}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="الهاتف"
-                type="text"
-                value={bulkEditFormData.get('phone')}
-                onChange={(e) => updateBulkEditField('phone', e.target.value)}
-                placeholder="أدخل الهاتف (اختياري)"
-                fullWidth={false}
-              />
-              <Input
-                label="الدور"
-                type="text"
-                value={bulkEditFormData.get('role')}
-                onChange={(e) => updateBulkEditField('role', e.target.value)}
-                placeholder="أدخل الدور (اختياري)"
-                fullWidth={false}
-              />
-            </div>
-            <Checkbox
-              label="نشط"
-              checked={bulkEditFormData.getValue<boolean>('is_active') === true || bulkEditFormData.getValue<number>('is_active') === 1}
-              onChange={(e) => updateBulkEditField('is_active', e.target.checked)}
-            />
-            <Textarea
-              label="الملاحظات"
-              value={bulkEditFormData.get('notes')}
-              onChange={(e) => updateBulkEditField('notes', e.target.value)}
-              rows={2}
-              placeholder="أدخل الملاحظات (اختياري)"
-              fullWidth={true}
-            />
-          </form>
-        </Modal>
+          title="تعديل جماعي للمستخدمين"
+          items={selectedUsersForBulkEdit.map((user) => ({
+            id: user.get('id') || '',
+            label: user.get('full_name') || user.get('username') || '',
+            data: user.getData(),
+          }))}
+          fields={[
+            {
+              name: 'employee_number',
+              label: 'رقم الموظف',
+              type: 'text',
+              placeholder: 'أدخل رقم الموظف',
+              icon: 'badge',
+            },
+            {
+              name: 'username',
+              label: 'اسم المستخدم',
+              type: 'text',
+              placeholder: 'أدخل اسم المستخدم',
+              icon: 'person',
+              required: true,
+            },
+            {
+              name: 'full_name',
+              label: 'الاسم الكامل',
+              type: 'text',
+              placeholder: 'أدخل الاسم الكامل',
+              icon: 'account_circle',
+              required: true,
+            },
+            {
+              name: 'email',
+              label: 'البريد الإلكتروني',
+              type: 'text',
+              placeholder: 'أدخل البريد الإلكتروني',
+              icon: 'email',
+            },
+            {
+              name: 'phone',
+              label: 'الهاتف',
+              type: 'text',
+              placeholder: 'أدخل الهاتف',
+              icon: 'phone',
+            },
+            {
+              name: 'department_id',
+              label: 'الإدارة',
+              type: 'select',
+              placeholder: 'اختر الإدارة',
+              icon: 'apartment',
+              options: departments.map((dept) => ({
+                value: dept.get('id'),
+                label: dept.get('name'),
+              })),
+            },
+            {
+              name: 'office_id',
+              label: 'المكتب',
+              type: 'select',
+              placeholder: 'اختر المكتب',
+              icon: 'meeting_room',
+              options: allOffices.map((office) => ({
+                value: office.get('id'),
+                label: office.get('name'),
+              })),
+            },
+            {
+              name: 'user_type',
+              label: 'نوع المستخدم',
+              type: 'select',
+              placeholder: 'اختر نوع المستخدم',
+              icon: 'category',
+              options: [
+                { value: 'موظف', label: 'موظف' },
+                { value: 'مستخدم نظام', label: 'مستخدم نظام' },
+              ],
+            },
+            {
+              name: 'role',
+              label: 'الدور',
+              type: 'text',
+              placeholder: 'أدخل الدور',
+              icon: 'work',
+            },
+            {
+              name: 'is_active',
+              label: 'نشط',
+              type: 'checkbox',
+              icon: 'check_circle',
+            },
+            {
+              name: 'notes',
+              label: 'الملاحظات',
+              type: 'textarea',
+              placeholder: 'أدخل الملاحظات',
+              icon: 'note',
+            },
+          ]}
+          onSubmit={handleBulkEditSubmit}
+          isLoading={bulkEditLoading}
+          infoMessage="يمكنك تعديل كل مستخدم بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
     </MainLayout>
   );
 }

@@ -1,0 +1,361 @@
+/* Login Page Enhanced Styles - مستوحى من DawamWeb */
+
+.loginContainer {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(
+      ellipse 800px 400px at 90% -20%,
+      rgba(115, 103, 240, 0.08),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 600px 300px at 10% 120%,
+      rgba(115, 103, 240, 0.06),
+      transparent 70%
+    ),
+    linear-gradient(135deg, #f8f7fa 0%, #f5f4f7 50%, #f0eff2 100%);
+}
+
+.loginContainer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+      circle 300px at 20% 20%,
+      rgba(115, 103, 240, 0.03),
+      transparent
+    ),
+    radial-gradient(
+      circle 400px at 80% 80%,
+      rgba(115, 103, 240, 0.04),
+      transparent
+    );
+  pointer-events: none;
+}
+
+.loginCard {
+  width: min(900px, 92vw);
+  background: linear-gradient(to bottom, #ffffff 0%, #fefefe 100%);
+  box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(115, 103, 240, 0.1);
+  border-radius: 18px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.loginCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #7367f0 0%, #5e52d5 50%, #4a3fd0 100%);
+  border-radius: 18px 18px 0 0;
+}
+
+.brandHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(219, 218, 222, 0.6);
+  position: relative;
+}
+
+.brandLogos {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brandLogo {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.brandLogo:hover {
+  transform: scale(1.05);
+}
+
+.brandDivider {
+  width: 2px;
+  height: 32px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    #ddd6fe,
+    #c4b5fd,
+    #ddd6fe,
+    transparent
+  );
+  border-radius: 1px;
+}
+
+.helpButton {
+  border: none;
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #7367f0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(115, 103, 240, 0.15);
+}
+
+.helpButton:hover {
+  background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(115, 103, 240, 0.25);
+}
+
+.loginContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.visualPane {
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.heroImage {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
+  border-radius: 14px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heroImage:hover {
+  transform: translateY(-5px);
+}
+
+.formPane {
+  padding: 1rem 0.5rem;
+}
+
+.formHeader {
+  margin-bottom: 1.5rem;
+}
+
+.formTitle {
+  margin: 0 0 0.5rem 0;
+  color: #4b465c;
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.formSubtitle {
+  color: #6f6b7d;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.rememberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.rememberCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6f6b7d;
+  user-select: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rememberCheck:hover {
+  color: #7367f0;
+}
+
+.rememberCheck input[type="checkbox"] {
+  inline-size: 18px;
+  block-size: 18px;
+  accent-color: #7367f0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.forgotLink {
+  color: #7367f0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.forgotLink:hover {
+  color: #5e52d5;
+  text-decoration: underline;
+}
+
+.footerMeta {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: #6f6b7d;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(219, 218, 222, 0.6);
+  font-size: 0.75rem;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.visualPane,
+.formPane {
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.formPane {
+  animation-delay: 0.2s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .heroImage {
+    max-height: 220px;
+  }
+  
+  .loginCard {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .loginContent {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .visualPane {
+    order: 2;
+  }
+  
+  .formPane {
+    order: 1;
+  }
+  
+  .brandLogo {
+    height: 46px;
+  }
+  
+  .loginCard {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+  
+  .formTitle {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .heroImage {
+    max-height: 160px;
+  }
+  
+  .loginCard {
+    padding: 1rem;
+    border-radius: 14px;
+  }
+  
+  .brandHeader {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  
+  .brandLogo {
+    height: 56px;
+  }
+  
+  .brandLogos {
+    gap: 0.75rem;
+  }
+  
+  .formPane {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .formHeader {
+    margin-bottom: 1rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 1rem;
+  }
+  
+  .rememberRow {
+    margin-bottom: 1rem;
+  }
+  
+  .footerMeta {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+  }
+  
+  .helpButton {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(115, 103, 240, 0.2);
+  }
+}
+

@@ -1,0 +1,503 @@
+/**
+ * Dark Mode Fixes - إصلاحات إضافية للوضع الداكن
+ * تحسين التباين والوضوح في جميع المكونات
+ */
+
+/* ========================================
+   DATA TABLE DARK MODE
+   ======================================== */
+
+[data-theme="dark"] .data-table-container,
+[data-theme="dark"] [class*="table-container"] {
+  background: rgba(30, 41, 59, 0.95) !important;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+[data-theme="dark"] .data-table-header,
+[data-theme="dark"] [class*="table-header"] {
+  background: rgba(51, 65, 85, 0.8) !important;
+  border-bottom: 2px solid rgba(71, 85, 105, 0.6);
+  padding: 1rem;
+}
+
+/* Table Actions (Search, Filter, etc) */
+[data-theme="dark"] .table-actions,
+[data-theme="dark"] [class*="table-actions"] {
+  background: transparent;
+}
+
+[data-theme="dark"] .table-actions input,
+[data-theme="dark"] [class*="table-actions"] input {
+  background: rgba(51, 65, 85, 0.8) !important;
+  border-color: rgba(71, 85, 105, 0.6) !important;
+  color: #f1f5f9 !important;
+}
+
+/* Table Rows - Better contrast */
+[data-theme="dark"] table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+[data-theme="dark"] table tbody tr:nth-child(odd) {
+  background: rgba(30, 41, 59, 0.7) !important;
+}
+
+[data-theme="dark"] table tbody tr:nth-child(even) {
+  background: rgba(30, 41, 59, 0.9) !important;
+}
+
+[data-theme="dark"] table tbody tr:hover {
+  background: rgba(51, 65, 85, 0.8) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Table Cell Text */
+[data-theme="dark"] table td {
+  color: #e2e8f0 !important;
+  font-weight: 500;
+}
+
+[data-theme="dark"] table th {
+  color: #f1f5f9 !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+}
+
+/* ========================================
+   ACTION BUTTONS IN TABLES
+   ======================================== */
+
+[data-theme="dark"] table button,
+[data-theme="dark"] table .action-button {
+  background: rgba(71, 85, 105, 0.8) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(100, 116, 139, 0.5) !important;
+}
+
+[data-theme="dark"] table button:hover,
+[data-theme="dark"] table .action-button:hover {
+  background: rgba(100, 116, 139, 0.9) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(148, 163, 184, 0.7) !important;
+}
+
+/* Edit Button */
+[data-theme="dark"] table button[class*="edit"],
+[data-theme="dark"] table .btn-edit {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+[data-theme="dark"] table button[class*="edit"]:hover,
+[data-theme="dark"] table .btn-edit:hover {
+  background: rgba(59, 130, 246, 0.3) !important;
+  color: #bfdbfe !important;
+}
+
+/* Delete Button */
+[data-theme="dark"] table button[class*="delete"],
+[data-theme="dark"] table button[class*="remove"],
+[data-theme="dark"] table .btn-delete {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+[data-theme="dark"] table button[class*="delete"]:hover,
+[data-theme="dark"] table button[class*="remove"]:hover,
+[data-theme="dark"] table .btn-delete:hover {
+  background: rgba(239, 68, 68, 0.3) !important;
+  color: #fecaca !important;
+}
+
+/* ========================================
+   PAGINATION DARK MODE
+   ======================================== */
+
+[data-theme="dark"] .pagination,
+[data-theme="dark"] [class*="pagination"] {
+  background: rgba(30, 41, 59, 0.8);
+  border-top: 2px solid rgba(71, 85, 105, 0.4);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+[data-theme="dark"] .pagination-info,
+[data-theme="dark"] [class*="pagination"] span:not([class*="button"]) {
+  color: #cbd5e1 !important;
+}
+
+/* ========================================
+   EMPTY STATE DARK MODE
+   ======================================== */
+
+[data-theme="dark"] .empty-state,
+[data-theme="dark"] [class*="empty-state"] {
+  background: rgba(30, 41, 59, 0.6);
+  border: 2px dashed rgba(71, 85, 105, 0.5);
+  color: #94a3b8;
+  padding: 3rem;
+  text-align: center;
+  border-radius: 12px;
+}
+
+[data-theme="dark"] .empty-state-icon,
+[data-theme="dark"] [class*="empty-state"] [class*="icon"] {
+  color: #64748b;
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .empty-state-title,
+[data-theme="dark"] [class*="empty-state"] h3 {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .empty-state-description,
+[data-theme="dark"] [class*="empty-state"] p {
+  color: #94a3b8 !important;
+}
+
+/* ========================================
+   CHECKBOXES DARK MODE
+   ======================================== */
+
+[data-theme="dark"] input[type="checkbox"] {
+  background: rgba(51, 65, 85, 0.9) !important;
+  border-color: rgba(71, 85, 105, 0.6) !important;
+}
+
+[data-theme="dark"] input[type="checkbox"]:checked {
+  background: #7367f0 !important;
+  border-color: #7367f0 !important;
+}
+
+/* ========================================
+   LOADING STATES DARK MODE
+   ======================================== */
+
+[data-theme="dark"] .skeleton,
+[data-theme="dark"] [class*="skeleton"] {
+  background: linear-gradient(
+    90deg,
+    rgba(51, 65, 85, 0.6) 25%,
+    rgba(71, 85, 105, 0.6) 50%,
+    rgba(51, 65, 85, 0.6) 75%
+  );
+  background-size: 200% 100%;
+}
+
+[data-theme="dark"] .loading-spinner {
+  border-color: rgba(71, 85, 105, 0.3);
+  border-top-color: #7367f0;
+}
+
+/* ========================================
+   TOOLTIPS DARK MODE
+   ======================================== */
+
+[data-theme="dark"] [class*="tooltip"],
+[data-theme="dark"] [role="tooltip"] {
+  background: rgba(15, 23, 42, 0.98) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(71, 85, 105, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
+   LABELS & BADGES DARK MODE
+   ======================================== */
+
+[data-theme="dark"] .label,
+[data-theme="dark"] [class*="label"]:not([for]) {
+  color: #cbd5e1 !important;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .badge {
+  background: rgba(71, 85, 105, 0.8);
+  color: #e2e8f0;
+  border: 1px solid rgba(100, 116, 139, 0.5);
+}
+
+/* Status Badges */
+[data-theme="dark"] .badge-success,
+[data-theme="dark"] [class*="badge"][class*="success"] {
+  background: rgba(34, 197, 94, 0.2) !important;
+  color: #86efac !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+}
+
+[data-theme="dark"] .badge-warning,
+[data-theme="dark"] [class*="badge"][class*="warning"] {
+  background: rgba(251, 146, 60, 0.2) !important;
+  color: #fdba74 !important;
+  border-color: rgba(251, 146, 60, 0.4) !important;
+}
+
+[data-theme="dark"] .badge-error,
+[data-theme="dark"] [class*="badge"][class*="error"],
+[data-theme="dark"] [class*="badge"][class*="danger"] {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+[data-theme="dark"] .badge-info,
+[data-theme="dark"] [class*="badge"][class*="info"] {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+/* ========================================
+   TEXT CONTRAST IMPROVEMENTS
+   ======================================== */
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: #f1f5f9 !important;
+  font-weight: 700;
+}
+
+[data-theme="dark"] p,
+[data-theme="dark"] span:not([class*="material-icons"]) {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .text-secondary {
+  color: #94a3b8 !important;
+}
+
+/* ========================================
+   GRADIENT TEXT IMPROVEMENTS
+   ======================================== */
+
+[data-theme="dark"] .text-gradient,
+[data-theme="dark"] [class*="text-gradient"] {
+  background: linear-gradient(135deg, #a78bfa 0%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .text-gradient-primary {
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========================================
+   FIX: Remove excessive text-shadow
+   ======================================== */
+
+[data-theme="dark"] table *,
+[data-theme="dark"] button *,
+[data-theme="dark"] input,
+[data-theme="dark"] select {
+  text-shadow: none !important;
+}
+
+/* ========================================
+   ADDITIONAL CONTRAST IMPROVEMENTS
+   ======================================== */
+
+/* Ensure search input is visible */
+[data-theme="dark"] input[type="search"],
+[data-theme="dark"] input[placeholder*="بحث"],
+[data-theme="dark"] input[placeholder*="الجدول"] {
+  background: rgba(51, 65, 85, 0.95) !important;
+  border-color: rgba(71, 85, 105, 0.7) !important;
+  color: #f1f5f9 !important;
+}
+
+/* Better placeholder visibility */
+[data-theme="dark"] input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 0.8 !important;
+}
+
+/* Export/Action button improvements */
+[data-theme="dark"] button[class*="export"],
+[data-theme="dark"] button[class*="action"] {
+  background: rgba(71, 85, 105, 0.9) !important;
+  color: #e2e8f0 !important;
+}
+
+/* Header text in cards */
+[data-theme="dark"] .card h2,
+[data-theme="dark"] .card h3,
+[data-theme="dark"] [class*="card"] h2,
+[data-theme="dark"] [class*="card"] h3 {
+  color: #f1f5f9 !important;
+}
+
+/* Section titles */
+[data-theme="dark"] [class*="title"],
+[data-theme="dark"] [class*="heading"] {
+  color: #f1f5f9 !important;
+}
+
+/* ========================================
+   DATA TABLE MODERN COMPACT DESIGN
+   ======================================== */
+
+/* DataTable Card - Seamless Dark Mode Integration */
+[data-theme="dark"] [class*="Card"],
+[data-theme="dark"] .data-table-container {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: rgba(71, 85, 105, 0.4) !important;
+}
+
+/* Table Container - Rounded corners */
+.table-responsive {
+  border-radius: 0 0 0.75rem 0.75rem !important;
+}
+
+/* Compact padding for Card components */
+[class*="CardHeader"] {
+  padding-bottom: 0.75rem !important;
+}
+
+[class*="CardBody"] {
+  padding: 0 !important;
+}
+
+/* ========================================
+   FORCE DARK MODE ON ALL WHITE BACKGROUNDS
+   ======================================== */
+
+/* Override any remaining white backgrounds in dark mode */
+[data-theme="dark"] [class*="bg-white"],
+[data-theme="dark"] .bg-white {
+  background: rgba(30, 41, 59, 0.5) !important;
+}
+
+/* Ensure all cards use dark background */
+[data-theme="dark"] [class*="Card"],
+[data-theme="dark"] [class*="card"],
+[data-theme="dark"] .card {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: rgba(71, 85, 105, 0.4) !important;
+  color: rgb(203, 213, 225) !important;
+}
+
+/* Modal backgrounds in dark mode */
+[data-theme="dark"] [class*="modal-content"],
+[data-theme="dark"] .modal-content {
+  background: rgba(30, 41, 59, 0.95) !important;
+  border-color: rgba(71, 85, 105, 0.5) !important;
+}
+
+/* ========================================
+   MODAL INPUT FIELDS - CRITICAL FIX
+   ======================================== */
+
+/* Target all inputs in modals with maximum specificity */
+[data-theme="dark"] [role="dialog"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] [role="dialog"] textarea,
+[data-theme="dark"] [role="dialog"] select,
+[data-theme="dark"] div[class*="modal"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] div[class*="modal"] textarea,
+[data-theme="dark"] div[class*="modal"] select {
+  background: rgba(71, 85, 105, 0.6) !important;
+  border-color: rgba(100, 116, 139, 0.7) !important;
+  color: rgb(248, 250, 252) !important;
+}
+
+[data-theme="dark"] [role="dialog"] input:hover:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] [role="dialog"] textarea:hover,
+[data-theme="dark"] [role="dialog"] select:hover {
+  background: rgba(71, 85, 105, 0.75) !important;
+  border-color: rgba(115, 103, 240, 0.5) !important;
+}
+
+[data-theme="dark"] [role="dialog"] input:focus:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] [role="dialog"] textarea:focus,
+[data-theme="dark"] [role="dialog"] select:focus {
+  background: rgba(71, 85, 105, 0.9) !important;
+  border-color: rgba(115, 103, 240, 0.9) !important;
+  box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.25) !important;
+}
+
+[data-theme="dark"] [role="dialog"] input::placeholder,
+[data-theme="dark"] [role="dialog"] textarea::placeholder {
+  color: rgb(203, 213, 225) !important;
+  opacity: 0.8 !important;
+}
+
+/* Dropdown menus in dark mode */
+[data-theme="dark"] [class*="dropdown"],
+[data-theme="dark"] [class*="menu-dropdown"] {
+  background: rgba(30, 41, 59, 0.98) !important;
+  border-color: rgba(71, 85, 105, 0.5) !important;
+}
+
+/* ========================================
+   CRITICAL: DATA TABLE CARD DARK MODE FIX
+   ======================================== */
+
+/* Force DataTable Card to be dark - استهداف دقيق جداً */
+[data-theme="dark"] .data-table-card,
+[data-theme="dark"] .animate-scale-in,
+[data-theme="dark"] [class*="Card"][class*="animate-scale-in"] {
+  background: rgba(30, 41, 59, 0.5) !important;
+  background-color: rgba(30, 41, 59, 0.5) !important;
+  border-color: rgba(71, 85, 105, 0.4) !important;
+}
+
+/* CardHeader in DataTable */
+[data-theme="dark"] .data-table-card [class*="CardHeader"],
+[data-theme="dark"] [class*="CardHeader"],
+[data-theme="dark"] .pb-3.group {
+  background: rgba(15, 23, 42, 0.5) !important;
+  background-color: rgba(15, 23, 42, 0.5) !important;
+  border-color: rgba(71, 85, 105, 0.4) !important;
+}
+
+/* Ensure text is visible */
+[data-theme="dark"] [class*="Card"] h5,
+[data-theme="dark"] [class*="Card"] span,
+[data-theme="dark"] [class*="Card"] label {
+  color: rgb(226, 232, 240) !important;
+}
+
+/* Input fields in dark cards - Improved contrast & Lightness */
+[data-theme="dark"] [class*="Card"] input,
+[data-theme="dark"] [class*="Card"] select,
+[data-theme="dark"] [class*="Card"] textarea {
+  background: rgba(71, 85, 105, 0.6) !important;
+  border-color: rgba(100, 116, 139, 0.7) !important;
+  color: rgb(248, 250, 252) !important;
+}
+
+[data-theme="dark"] [class*="Card"] input:hover,
+[data-theme="dark"] [class*="Card"] select:hover,
+[data-theme="dark"] [class*="Card"] textarea:hover {
+  background: rgba(71, 85, 105, 0.75) !important;
+  border-color: rgba(115, 103, 240, 0.5) !important;
+}
+
+[data-theme="dark"] [class*="Card"] input:focus,
+[data-theme="dark"] [class*="Card"] select:focus,
+[data-theme="dark"] [class*="Card"] textarea:focus {
+  background: rgba(71, 85, 105, 0.85) !important;
+  border-color: rgba(115, 103, 240, 0.9) !important;
+  box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.2) !important;
+}
+
+[data-theme="dark"] [class*="Card"] input::placeholder,
+[data-theme="dark"] [class*="Card"] textarea::placeholder {
+  color: rgb(203, 213, 225) !important;
+  opacity: 0.75 !important;
+}
+

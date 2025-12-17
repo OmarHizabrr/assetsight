@@ -3,6 +3,7 @@
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
@@ -14,7 +15,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 function DepartmentsPageContent() {
   const pathname = usePathname();
@@ -37,7 +38,7 @@ function DepartmentsPageContent() {
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedDepartmentsForBulkEdit, setSelectedDepartmentsForBulkEdit] = useState<BaseModel[]>([]);
-  const [bulkEditFormData, setBulkEditFormData] = useState<BaseModel>(new BaseModel({}));
+  const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
 
   useEffect(() => {
     loadDepartments();
@@ -113,59 +114,40 @@ function DepartmentsPageContent() {
 
   const handleBulkEdit = (selectedItems: BaseModel[]) => {
     setSelectedDepartmentsForBulkEdit(selectedItems);
-    setBulkEditFormData(new BaseModel({}));
+    const formDataArray = selectedItems.map(item => new BaseModel(item.getData()));
+    setBulkEditFormDataArray(formDataArray);
     setIsBulkEditModalOpen(true);
   };
 
-  const handleBulkEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedDepartmentsForBulkEdit.length === 0) return;
-
+  const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
     try {
       setBulkEditLoading(true);
-      const updates: Record<string, any> = {};
-      const formDataObj = bulkEditFormData.getData();
-      
-      Object.keys(formDataObj).forEach(key => {
-        const value = formDataObj[key];
-        if (value !== '' && value !== null && value !== undefined) {
-          updates[key] = value;
-        }
-      });
 
-      if (Object.keys(updates).length === 0) {
-        showWarning("لم يتم تحديد أي حقول للتحديث");
-        setBulkEditLoading(false);
-        return;
-      }
-
-      const updatePromises = selectedDepartmentsForBulkEdit.map(async (dept) => {
-        const deptId = dept.get('id');
-        if (!deptId) return;
-        const docRef = firestoreApi.getDocument("departments", deptId);
-        await firestoreApi.updateData(docRef, updates);
+      const updatePromises = dataArray.map(async (item) => {
+        const department = selectedDepartmentsForBulkEdit.find(d => d.get('id') === item.id);
+        if (!department || !item.id) return;
+        
+        const docRef = firestoreApi.getDocument("departments", item.id);
+        await firestoreApi.updateData(docRef, {
+          name: item.name || '',
+          description: item.description || '',
+          notes: item.notes || '',
+        });
       });
 
       await Promise.all(updatePromises);
       
       setIsBulkEditModalOpen(false);
       setSelectedDepartmentsForBulkEdit([]);
-      setBulkEditFormData(new BaseModel({}));
+      setBulkEditFormDataArray([]);
       loadDepartments();
       showSuccess(`تم تحديث ${selectedDepartmentsForBulkEdit.length} إدارة بنجاح`);
     } catch (error) {
-      console.error("Error in bulk edit:", error);
       showError("حدث خطأ أثناء التحديث الجماعي");
     } finally {
       setBulkEditLoading(false);
     }
   };
-
-  const updateBulkEditField = useCallback((key: string, value: any) => {
-    const newData = new BaseModel(bulkEditFormData.getData());
-    newData.put(key, value);
-    setBulkEditFormData(newData);
-  }, [bulkEditFormData]);
 
   const handleImportData = async (data: Array<Record<string, any>>) => {
     setImportLoading(true);
@@ -262,27 +244,31 @@ function DepartmentsPageContent() {
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10 relative">
+      <div className="mb-10 relative animate-fade-in-down">
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-full blur-3xl -z-10 animate-pulse-soft"></div>
+        <div className="absolute top-10 left-10 w-48 h-48 bg-gradient-to-br from-success-500/5 to-warning-500/5 rounded-full blur-3xl -z-10 animate-pulse-soft" style={{ animationDelay: '0.5s' }}></div>
+        
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-110 material-transition animate-float">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <MaterialIcon name="business" className="text-white relative z-10" size="3xl" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
+                <MaterialIcon name="business" className="text-white relative z-10 group-hover:scale-110 material-transition" size="3xl" />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm animate-pulse-soft"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm animate-pulse-soft" style={{ animationDelay: '0.3s' }}></div>
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
+                  <h1 className="text-4xl sm:text-5xl font-black text-gradient-primary">
                     الإدارات
                   </h1>
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200 animate-fade-in">
                     <MaterialIcon name="business" className="text-primary-600" size="sm" />
                     <span className="text-xs font-semibold text-primary-700">{departments.length}</span>
                   </div>
                 </div>
-                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
+                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2 animate-fade-in">
                   <MaterialIcon name="info" className="text-slate-400" size="sm" />
                   <span>إدارة وإضافة الإدارات في النظام</span>
                 </p>
@@ -290,12 +276,12 @@ function DepartmentsPageContent() {
             </div>
           </div>
           {canAdd && (
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 animate-fade-in-left">
               <Button
                 onClick={() => setIsImportModalOpen(true)}
                 size="lg"
                 variant="outline"
-                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold border-2 hover:border-primary-400"
+                className="shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:scale-105 material-transition font-bold border-2 hover:border-primary-400 hover:bg-primary-50"
               >
                 <span className="flex items-center gap-2">
                   <MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />
@@ -446,67 +432,47 @@ function DepartmentsPageContent() {
         />
 
         {/* Bulk Edit Modal */}
-        <Modal
+        <BulkEditModal
           isOpen={isBulkEditModalOpen}
           onClose={() => {
             setIsBulkEditModalOpen(false);
             setSelectedDepartmentsForBulkEdit([]);
-            setBulkEditFormData(new BaseModel({}));
+            setBulkEditFormDataArray([]);
           }}
           title={`تحرير جماعي (${selectedDepartmentsForBulkEdit.length} إدارة)`}
-          size="md"
-          footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsBulkEditModalOpen(false);
-                  setSelectedDepartmentsForBulkEdit([]);
-                  setBulkEditFormData(new BaseModel({}));
-                }}
-                size="lg"
-                className="w-full sm:w-auto font-bold"
-                disabled={bulkEditLoading}
-              >
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                form="bulk-edit-form"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
-                isLoading={bulkEditLoading}
-              >
-                تطبيق على {selectedDepartmentsForBulkEdit.length} إدارة
-              </Button>
-            </div>
-          }
-        >
-          <div className="mb-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
-            <p className="text-sm text-primary-800 font-medium">
-              <MaterialIcon name="info" className="inline ml-2" size="sm" />
-              سيتم تطبيق التغييرات على جميع الإدارات المختارة. اترك الحقول التي لا تريد تغييرها فارغة.
-            </p>
-          </div>
-          <form id="bulk-edit-form" onSubmit={handleBulkEditSubmit} className="space-y-6">
-            <Textarea
-              label="الوصف"
-              value={bulkEditFormData.get('description')}
-              onChange={(e) => updateBulkEditField('description', e.target.value)}
-              rows={2}
-              placeholder="أدخل الوصف (اختياري)"
-            />
-            <Textarea
-              label="الملاحظات"
-              value={bulkEditFormData.get('notes')}
-              onChange={(e) => updateBulkEditField('notes', e.target.value)}
-              rows={2}
-              placeholder="أدخل الملاحظات (اختياري)"
-            />
-          </form>
-        </Modal>
+          items={selectedDepartmentsForBulkEdit.map((dept, index) => ({
+            id: dept.get('id') || `dept-${index}`,
+            label: dept.get('name') || `إدارة ${index + 1}`,
+            data: bulkEditFormDataArray[index]?.getData() || dept.getData(),
+          }))}
+          fields={[
+            {
+              name: 'name',
+              label: 'اسم الإدارة',
+              type: 'text',
+              placeholder: 'أدخل اسم الإدارة',
+              icon: 'apartment',
+              required: true,
+            },
+            {
+              name: 'description',
+              label: 'الوصف',
+              type: 'textarea',
+              placeholder: 'أدخل الوصف',
+              icon: 'description',
+            },
+            {
+              name: 'notes',
+              label: 'الملاحظات',
+              type: 'textarea',
+              placeholder: 'أدخل الملاحظات',
+              icon: 'note',
+            },
+          ]}
+          onSubmit={handleBulkEditSubmit}
+          isLoading={bulkEditLoading}
+          infoMessage="يمكنك تعديل كل إدارة بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
     </MainLayout>
   );
 }

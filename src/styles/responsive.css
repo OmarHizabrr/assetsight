@@ -1,0 +1,576 @@
+/* ============================================
+   Responsive Design Enhancements - Phase 4
+   Mobile, Tablet, Desktop Optimization
+   ============================================ */
+
+/* ============================================
+   Mobile Optimizations (max-width: 640px)
+   ============================================ */
+@media (max-width: 640px) {
+  /* Typography - Mobile */
+  h1 {
+    font-size: 1.875rem !important; /* 30px */
+    line-height: 1.2 !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important; /* 24px */
+    line-height: 1.3 !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important; /* 20px */
+    line-height: 1.4 !important;
+  }
+
+  /* Touch Targets - Minimum 44x44px */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  .btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  /* Card Improvements - Mobile */
+  .card {
+    border-radius: 1rem !important;
+    padding: 1rem !important;
+  }
+
+  /* Grid Improvements - Mobile */
+  .grid {
+    gap: 1rem !important;
+  }
+
+  /* Spacing - Mobile */
+  .mb-10 {
+    margin-bottom: 2rem !important;
+  }
+
+  .py-8 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .px-4 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Header - Mobile */
+  header {
+    padding: 0.75rem 1rem !important;
+  }
+
+  /* Sidebar - Mobile */
+  aside {
+    width: 85vw !important;
+    max-width: 320px !important;
+  }
+
+  /* Navigation - Mobile */
+  nav ul li {
+    margin-bottom: 0.5rem !important;
+  }
+
+  nav a {
+    padding: 0.875rem 1rem !important;
+    font-size: 0.9375rem !important;
+  }
+
+  /* Tables - Mobile */
+  .table-responsive {
+    border-radius: 0.75rem !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .table {
+    font-size: 0.875rem !important;
+    min-width: 600px !important;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.75rem 0.5rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Forms - Mobile */
+  form {
+    padding: 1rem !important;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem !important;
+  }
+
+  /* Buttons - Mobile */
+  .btn-group {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .btn-group button {
+    width: 100% !important;
+  }
+
+  /* Modals - Mobile */
+  .modal-dialog {
+    margin: 0.5rem !important;
+    max-width: calc(100vw - 1rem) !important;
+  }
+
+  .modal-content {
+    border-radius: 1rem !important;
+    max-height: 95vh !important;
+  }
+
+  .modal-header {
+    padding: 1rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  .modal-body {
+    padding: 1rem !important;
+    max-height: calc(95vh - 140px) !important;
+    overflow-y: auto !important;
+  }
+
+  .modal-footer {
+    padding: 1rem !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .modal-footer button {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Inputs - Mobile */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 0.875rem 1rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  /* Cards - Mobile */
+  .card-body {
+    padding: 1rem !important;
+  }
+
+  .card-header {
+    padding: 1rem !important;
+  }
+
+  /* Stats Cards - Mobile */
+  .stat-card {
+    padding: 1.25rem !important;
+  }
+
+  .stat-card .stat-value {
+    font-size: 2rem !important;
+  }
+
+  /* Page Headers - Mobile */
+  .page-header {
+    margin-bottom: 1.5rem !important;
+    padding: 1rem !important;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem !important;
+  }
+
+  /* Animations - Reduce on Mobile for Performance */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+
+  /* Disable hover effects on touch devices */
+  .hover-lift-smooth:hover,
+  .hover-scale-smooth:hover,
+  .hover-glow-primary:hover,
+  .hover-glow-success:hover,
+  .hover-glow-error:hover,
+  .hover-glow-warning:hover,
+  .hover-glow-accent:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+  }
+}
+
+/* ============================================
+   Tablet Optimizations (641px - 1023px)
+   ============================================ */
+@media (min-width: 641px) and (max-width: 1023px) {
+  /* Typography - Tablet */
+  h1 {
+    font-size: 2.25rem !important;
+  }
+
+  h2 {
+    font-size: 1.875rem !important;
+  }
+
+  /* Grid - Tablet */
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Cards - Tablet */
+  .card {
+    padding: 1.5rem !important;
+  }
+
+  /* Tables - Tablet */
+  .table {
+    font-size: 0.9375rem !important;
+  }
+
+  /* Sidebar - Tablet */
+  aside {
+    width: 280px !important;
+  }
+
+  /* Modals - Tablet */
+  .modal-dialog {
+    max-width: 90vw !important;
+  }
+
+  /* Forms - Tablet */
+  form {
+    max-width: 100% !important;
+  }
+}
+
+/* ============================================
+   Desktop Optimizations (min-width: 1024px)
+   ============================================ */
+@media (min-width: 1024px) {
+  /* Typography - Desktop */
+  h1 {
+    font-size: 3rem !important;
+  }
+
+  h2 {
+    font-size: 2.25rem !important;
+  }
+
+  /* Grid - Desktop */
+  .grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  /* Cards - Desktop */
+  .card {
+    padding: 2rem !important;
+  }
+
+  /* Tables - Desktop */
+  .table {
+    font-size: 1rem !important;
+  }
+
+  /* Sidebar - Desktop */
+  aside {
+    width: 256px !important;
+  }
+
+  /* Modals - Desktop */
+  .modal-dialog {
+    max-width: 500px !important;
+  }
+
+  .modal-lg .modal-dialog {
+    max-width: 800px !important;
+  }
+
+  .modal-xl .modal-dialog {
+    max-width: 1140px !important;
+  }
+
+  /* Enhanced Hover Effects - Desktop Only */
+  .hover-lift-smooth:hover {
+    transform: translateY(-4px) !important;
+  }
+
+  .hover-scale-smooth:hover {
+    transform: scale(1.05) !important;
+  }
+}
+
+/* ============================================
+   Large Desktop Optimizations (min-width: 1280px)
+   ============================================ */
+@media (min-width: 1280px) {
+  /* Container - Large Desktop */
+  .container {
+    max-width: 1280px !important;
+  }
+
+  /* Typography - Large Desktop */
+  h1 {
+    font-size: 3.5rem !important;
+  }
+
+  /* Grid - Large Desktop */
+  .grid-cols-4 {
+    gap: 2rem !important;
+  }
+
+  /* Cards - Large Desktop */
+  .card {
+    padding: 2.5rem !important;
+  }
+}
+
+/* ============================================
+   Extra Large Desktop (min-width: 1536px)
+   ============================================ */
+@media (min-width: 1536px) {
+  /* Container - Extra Large */
+  .container {
+    max-width: 1536px !important;
+  }
+
+  /* Typography - Extra Large */
+  h1 {
+    font-size: 4rem !important;
+  }
+}
+
+/* ============================================
+   Landscape Mobile Optimizations
+   ============================================ */
+@media (max-width: 896px) and (orientation: landscape) {
+  /* Header - Landscape Mobile */
+  header {
+    min-height: 3.5rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  /* Modals - Landscape Mobile */
+  .modal-dialog {
+    max-height: 90vh !important;
+  }
+
+  .modal-body {
+    max-height: calc(90vh - 120px) !important;
+  }
+
+  /* Sidebar - Landscape Mobile */
+  aside {
+    width: 75vw !important;
+  }
+}
+
+/* ============================================
+   Touch Device Optimizations
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  .hover-lift-smooth:hover,
+  .hover-scale-smooth:hover,
+  .hover-glow-primary:hover,
+  .hover-glow-success:hover,
+  .hover-glow-error:hover,
+  .hover-glow-warning:hover,
+  .hover-glow-accent:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+  }
+
+  /* Active states for touch */
+  button:active,
+  a:active,
+  .btn:active {
+    transform: scale(0.95) !important;
+    opacity: 0.8 !important;
+  }
+
+  /* Larger touch targets */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  .btn {
+    min-height: 48px !important;
+    min-width: 48px !important;
+    padding: 0.875rem 1.25rem !important;
+  }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@media print {
+  /* Hide non-essential elements */
+  header,
+  aside,
+  footer,
+  .no-print,
+  button,
+  .btn {
+    display: none !important;
+  }
+
+  /* Optimize for printing */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .card {
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+  }
+
+  .table {
+    border-collapse: collapse !important;
+  }
+
+  .table th,
+  .table td {
+    border: 1px solid #ddd !important;
+    padding: 0.5rem !important;
+  }
+}
+
+/* ============================================
+   High DPI Displays
+   ============================================ */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders */
+  .card,
+  .btn,
+  input,
+  textarea,
+  select {
+    border-width: 0.5px !important;
+  }
+}
+
+/* ============================================
+   Reduced Motion Support
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-fade-in-up,
+  .animate-fade-in-down,
+  .animate-fade-in-left,
+  .animate-fade-in-right,
+  .animate-scale-in,
+  .animate-rotate-in,
+  .animate-slide-up,
+  .animate-slide-down,
+  .animate-slide-left,
+  .animate-slide-right,
+  .animate-pulse-soft,
+  .animate-glow-pulse,
+  .animate-shimmer,
+  .animate-spin-slow,
+  .animate-float,
+  .animate-gradient {
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   Dark Mode Support (Future)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  /* Will be implemented in future phase */
+  /* Currently keeping light theme as default */
+}
+
+/* ============================================
+   Container Queries (Modern Browsers)
+   ============================================ */
+@container (min-width: 640px) {
+  .card {
+    padding: 1.5rem !important;
+  }
+}
+
+@container (min-width: 1024px) {
+  .card {
+    padding: 2rem !important;
+  }
+}
+
+/* ============================================
+   Utility Classes for Responsive Design
+   ============================================ */
+
+/* Mobile Only */
+.mobile-only {
+  display: block !important;
+}
+
+@media (min-width: 641px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* Desktop Only */
+.desktop-only {
+  display: none !important;
+}
+
+@media (min-width: 1024px) {
+  .desktop-only {
+    display: block !important;
+  }
+}
+
+/* Tablet Only */
+.tablet-only {
+  display: none !important;
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .tablet-only {
+    display: block !important;
+  }
+}
+
+/* Touch Device Only */
+.touch-only {
+  display: none !important;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .touch-only {
+    display: block !important;
+  }
+}
+
+/* Non-Touch Device Only */
+.no-touch-only {
+  display: block !important;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .no-touch-only {
+    display: none !important;
+  }
+}
+

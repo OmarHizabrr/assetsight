@@ -1,0 +1,547 @@
+/* ============================================
+   Performance Optimizations - Phase 6
+   CSS Optimization, Animation Performance, GPU Acceleration
+   ============================================ */
+
+/* ============================================
+   GPU Acceleration
+   ============================================ */
+
+/* Enable GPU acceleration for transforms */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize animations for performance */
+.animate-optimized {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ============================================
+   Critical CSS - Above the Fold
+   ============================================ */
+
+/* Critical styles for initial render */
+.critical-render {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* ============================================
+   Animation Performance
+   ============================================ */
+
+/* Use transform instead of position for better performance */
+.transform-animation {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Optimize transitions */
+.transition-optimized {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Reduce repaints */
+.no-repaint {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+/* ============================================
+   Image Optimization
+   ============================================ */
+
+/* Lazy loading images */
+img[loading="lazy"] {
+  content-visibility: auto;
+}
+
+/* Image optimization */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* ============================================
+   Scroll Performance
+   ============================================ */
+
+/* Smooth scrolling with performance */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Virtual scrolling optimization */
+.virtual-scroll {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+}
+
+/* ============================================
+   Layout Performance
+   ============================================ */
+
+/* Contain layout */
+.contain-layout {
+  contain: layout;
+}
+
+/* Contain paint */
+.contain-paint {
+  contain: paint;
+}
+
+/* Contain size */
+.contain-size {
+  contain: size;
+}
+
+/* Contain all */
+.contain-all {
+  contain: strict;
+}
+
+/* ============================================
+   Font Loading Optimization
+   ============================================ */
+
+/* Font display optimization - Applied via font-display property in actual @font-face declarations */
+
+/* ============================================
+   Reduce Motion for Performance
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+   Print Optimization
+   ============================================ */
+
+@media print {
+  /* Remove animations for printing */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Optimize colors for printing */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ============================================
+   Mobile Performance
+   ============================================ */
+
+@media (max-width: 640px) {
+  /* Reduce animations on mobile */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+  
+  /* Disable expensive effects on mobile */
+  .glass-morphism,
+  .glass-morphism-dark,
+  .glass-morphism-primary {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+  }
+}
+
+/* ============================================
+   Low-end Device Optimization
+   ============================================ */
+
+@media (prefers-reduced-data: reduce) {
+  /* Reduce background images */
+  * {
+    background-image: none !important;
+  }
+  
+  /* Reduce animations */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================
+   Content Visibility
+   ============================================ */
+
+/* Optimize off-screen content */
+.off-screen {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* ============================================
+   Will-Change Optimization
+   ============================================ */
+
+/* Use will-change sparingly */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-scroll {
+  will-change: scroll-position;
+}
+
+/* Remove will-change after animation */
+.will-change-auto {
+  will-change: auto;
+}
+
+/* ============================================
+   Layer Promotion
+   ============================================ */
+
+/* Promote to compositor layer */
+.layer-promote {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* ============================================
+   Debounce Expensive Operations
+   ============================================ */
+
+/* Throttle scroll events */
+.scroll-throttle {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* ============================================
+   Memory Optimization
+   ============================================ */
+
+/* Reduce memory usage */
+.memory-optimized {
+  contain: layout style paint;
+}
+
+/* ============================================
+   Rendering Optimization
+   ============================================ */
+
+/* Optimize rendering */
+.render-optimized {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ============================================
+   CSS Containment
+   ============================================ */
+
+/* Layout containment */
+.layout-contained {
+  contain: layout;
+}
+
+/* Style containment */
+.style-contained {
+  contain: style;
+}
+
+/* Paint containment */
+.paint-contained {
+  contain: paint;
+}
+
+/* Size containment */
+.size-contained {
+  contain: size;
+}
+
+/* Strict containment */
+.strict-contained {
+  contain: strict;
+}
+
+/* Content containment */
+.content-contained {
+  contain: content;
+}
+
+/* ========================================
+   ADDITIONAL PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* Optimize DataTable rendering */
+.data-table-card,
+[class*="DataTable"] {
+  contain: layout style paint;
+  will-change: auto;
+}
+
+/* Optimize Card rendering */
+[class*="Card"] {
+  contain: layout style;
+}
+
+/* Optimize Modal rendering */
+[role="dialog"],
+[class*="Modal"] {
+  contain: layout style paint;
+}
+
+/* Optimize Button rendering */
+button,
+[class*="Button"] {
+  contain: layout style;
+}
+
+/* Optimize Input rendering */
+input,
+textarea,
+select {
+  contain: layout style;
+}
+
+/* Reduce layout shifts */
+img,
+video {
+  aspect-ratio: attr(width) / attr(height);
+}
+
+/* Optimize scroll performance */
+.smooth-scroll,
+[class*="scroll"] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+/* Optimize animation performance */
+@keyframes optimized-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes optimized-scale {
+  from { 
+    opacity: 0;
+    transform: scale(0.95) translateZ(0);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
+}
+
+.animate-optimized-fade {
+  animation: optimized-fade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
+}
+
+.animate-optimized-scale {
+  animation: optimized-scale 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+/* Remove will-change after animation */
+.animate-optimized-fade,
+.animate-optimized-scale {
+  animation-fill-mode: both;
+}
+
+.animate-optimized-fade:not(:hover),
+.animate-optimized-scale:not(:hover) {
+  will-change: auto;
+}
+
+/* ========================================
+   ADDITIONAL PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* Optimize font loading */
+@font-face {
+  font-display: swap;
+}
+
+/* Optimize image loading */
+img {
+  loading: lazy;
+  decoding: async;
+}
+
+/* Optimize video loading */
+video {
+  preload: metadata;
+}
+
+/* Optimize iframe loading */
+iframe {
+  loading: lazy;
+}
+
+/* Reduce repaints on scroll */
+[class*="sticky"],
+[class*="fixed"] {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Optimize table rendering */
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Optimize list rendering */
+ul,
+ol {
+  contain: layout;
+}
+
+/* Optimize form rendering */
+form {
+  contain: layout style;
+}
+
+/* Optimize modal rendering */
+[role="dialog"] {
+  contain: layout style paint;
+  isolation: isolate;
+}
+
+/* Optimize dropdown rendering */
+[role="menu"],
+[role="listbox"] {
+  contain: layout style;
+}
+
+/* Optimize tooltip rendering */
+[role="tooltip"] {
+  contain: layout style paint;
+  pointer-events: none;
+}
+
+/* Optimize toast rendering */
+[role="alert"],
+[role="status"] {
+  contain: layout style paint;
+}
+
+/* Reduce paint complexity */
+[class*="Card"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimize gradient rendering */
+[class*="gradient"] {
+  will-change: background-position;
+}
+
+/* Optimize shadow rendering */
+[class*="shadow"] {
+  will-change: box-shadow;
+}
+
+/* Optimize border rendering */
+[class*="border"] {
+  will-change: border-color;
+}
+
+/* Optimize color transitions */
+[class*="transition"] {
+  will-change: background-color, color, border-color;
+}
+
+/* Remove will-change when not needed */
+*:not(:hover):not(:focus):not(:active) {
+  will-change: auto;
+}
+
+/* Optimize text rendering */
+body,
+input,
+textarea,
+select,
+button {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimize selection rendering */
+::selection {
+  background: var(--color-primary-500);
+  color: white;
+}
+
+/* Optimize backdrop rendering */
+[class*="backdrop"],
+[class*="overlay"] {
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+/* Optimize animation rendering */
+@keyframes optimized-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-20px) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+  }
+}
+
+.animate-optimized-slide {
+  animation: optimized-slide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+/* Optimize RTL rendering */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] * {
+  text-align: inherit;
+}
+
+/* Optimize print rendering */
+@media print {
+  * {
+    will-change: auto !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
