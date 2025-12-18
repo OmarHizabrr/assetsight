@@ -97,6 +97,10 @@ table {
 table th,
 table td {
   border-radius: 0 !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  word-break: normal !important;
 }
 
 table th:first-child,

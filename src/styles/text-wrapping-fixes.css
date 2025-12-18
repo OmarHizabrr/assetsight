@@ -1,0 +1,113 @@
+/* ========================================
+   TEXT WRAPPING FIXES - إصلاحات التفاف النصوص
+   تحسين عرض النصوص في الجداول والمودلات في العرض الكامل
+   ======================================== */
+
+/* General table text wrapping */
+table th,
+table td,
+.table th,
+.table td {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  max-width: none !important;
+}
+
+/* Modal content text wrapping */
+.modal-body,
+.modal-content,
+[class*="Modal"] {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+}
+
+/* Bulk Edit Modal specific fixes */
+[class*="BulkEdit"] table th,
+[class*="BulkEdit"] table td,
+[class*="BulkEdit"] .grid {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  word-break: normal !important;
+}
+
+/* DataTable specific fixes */
+.datatables-basic th,
+.datatables-basic td {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  max-width: none !important;
+}
+
+/* Remove truncate class restrictions in full width */
+@media (min-width: 1920px) {
+  .truncate {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+  
+  .max-w-\[300px\] {
+    max-width: none !important;
+  }
+  
+  table th,
+  table td {
+    max-width: none !important;
+    min-width: auto !important;
+  }
+}
+
+/* Full width display improvements */
+@media (min-width: 1600px) {
+  .table-responsive {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+  }
+  
+  .modal-content {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+  }
+  
+  /* Ensure text doesn't break unnecessarily */
+  table th,
+  table td {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto;
+  }
+}
+
+/* Arabic text specific improvements */
+[dir="rtl"] table th,
+[dir="rtl"] table td,
+[dir="rtl"] .modal-body {
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  white-space: normal !important;
+}
+
+/* Grid layouts in modals */
+.modal-body .grid,
+[class*="grid"] {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Input and form elements in full width */
+@media (min-width: 1920px) {
+  .modal-body input,
+  .modal-body textarea,
+  .modal-body select {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+

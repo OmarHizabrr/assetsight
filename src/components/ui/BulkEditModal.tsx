@@ -281,7 +281,9 @@ export function BulkEditModal({
               <span className="text-xs font-black text-slate-600 uppercase tracking-wider sr-only">توسيع</span>
             </div>
             <div className="flex-1 grid gap-4" style={{
-              gridTemplateColumns: `repeat(${fields.length}, minmax(180px, max-content))`,
+              gridTemplateColumns: `repeat(${fields.length}, minmax(180px, 1fr))`,
+              width: '100%',
+              overflow: 'visible'
             }}>
               {fields.map((field, fieldIndex) => (
                 <div key={field.name} className="flex items-center gap-2 animate-fade-in min-w-0" style={{ animationDelay: `${fieldIndex * 30}ms` }}>
@@ -292,7 +294,12 @@ export function BulkEditModal({
                       size="sm"
                     />
                   </div>
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wide truncate">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wide" style={{
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word',
+                    whiteSpace: 'normal',
+                    wordBreak: 'normal'
+                  }}>
                     {field.label}
                   </span>
                 </div>
@@ -308,6 +315,9 @@ export function BulkEditModal({
             maxHeight: items.length <= 5 ? 'none' : 'calc(100vh - 350px)',
             minHeight: items.length <= 3 ? 'auto' : '400px',
             overflowX: 'auto',
+            overflowY: 'auto',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word'
           }}
         >
           {items.map((item, index) => {
@@ -386,7 +396,9 @@ export function BulkEditModal({
 
                     {/* Fields in columns - متساوية العرض وتتوسع تلقائياً */}
                     <div className="flex-1 min-w-0 grid gap-4" style={{
-                      gridTemplateColumns: `repeat(${fields.length}, minmax(180px, max-content))`,
+                      gridTemplateColumns: `repeat(${fields.length}, minmax(180px, 1fr))`,
+                      width: '100%',
+                      overflow: 'visible'
                     }}>
                     {fields.map((field) => {
                       const fieldValue = formData[item.id]?.[field.name] ?? item.data[field.name] ?? '';
@@ -398,7 +410,14 @@ export function BulkEditModal({
                           className={`flex flex-col gap-1.5 transition-all duration-300 w-full min-w-0 ${
                             isExpanded ? 'opacity-100 max-h-none' : 'opacity-60 max-h-12 overflow-hidden'
                           }`}
-                          style={{ minWidth: '180px' }}
+                          style={{ 
+                            minWidth: '180px',
+                            maxWidth: '100%',
+                            wordWrap: 'break-word',
+                            overflowWrap: 'break-word',
+                            whiteSpace: 'normal',
+                            wordBreak: 'normal'
+                          }}
                         >
                           {field.component ? (
                             <div className={`transform origin-top transition-all duration-300 w-full ${
@@ -442,6 +461,10 @@ export function BulkEditModal({
                                   width: '100%',
                                   minWidth: '160px',
                                   maxWidth: '100%',
+                                  wordWrap: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  whiteSpace: 'normal',
+                                  wordBreak: 'normal'
                                 }}
                               />
                             </div>
@@ -479,6 +502,11 @@ export function BulkEditModal({
                                 style={{
                                   width: '100%',
                                   minWidth: '180px',
+                                  maxWidth: '100%',
+                                  wordWrap: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  whiteSpace: 'normal',
+                                  wordBreak: 'normal'
                                 }}
                               />
                             </div>

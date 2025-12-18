@@ -490,6 +490,10 @@
   table th,
   table td {
     padding: 0.5rem 0.25rem !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    word-break: normal !important;
   }
   
   /* إخفاء بعض الأعمدة في الشاشات الصغيرة */
@@ -552,6 +556,10 @@
   table th,
   table td {
     padding: 0.75rem 0.5rem !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    word-break: normal !important;
   }
 }
 
@@ -580,6 +588,10 @@
   table th,
   table td {
     padding: 0.5rem 0.75rem !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    word-break: normal !important;
   }
 }
 

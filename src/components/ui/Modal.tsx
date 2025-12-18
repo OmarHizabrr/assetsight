@@ -188,8 +188,8 @@ export function Modal({
             borderRadius: '1.5rem',
             border: isDarkMode ? '2px solid rgba(115, 103, 240, 0.4)' : '2px solid rgba(115, 103, 240, 0.2)',
             boxShadow: 'var(--shadow-modal)',
-            overflow: 'hidden',
-            overflowY: 'hidden',
+            overflow: 'visible',
+            overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
             maxHeight: '92vh',
@@ -199,6 +199,8 @@ export function Modal({
             position: 'relative',
             width: customWidth === 'auto' ? 'fit-content' : '100%',
             minWidth: customWidth === 'auto' ? 'min-content' : 0,
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
           }}
         >
           {/* Enhanced decorative gradient overlay */}
@@ -351,7 +353,7 @@ export function Modal({
               color: isDarkMode ? 'rgb(226, 232, 240)' : '#6f6b7d',
               padding: '1.75rem',
               overflowY: 'auto',
-              overflowX: 'hidden',
+              overflowX: 'auto',
               flex: '1 1 auto',
               background: isDarkMode 
                 ? 'linear-gradient(to bottom, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 50%, rgba(15, 23, 42, 0.4) 100%)'
@@ -365,9 +367,21 @@ export function Modal({
               // Body takes remaining space, footer is outside scroll
               flexGrow: 1,
               flexShrink: 1,
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              whiteSpace: 'normal',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', minHeight: 'min-content' }}>
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '1.25rem', 
+              minHeight: 'min-content',
+              width: '100%',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              whiteSpace: 'normal'
+            }}>
               {children}
             </div>
           </div>

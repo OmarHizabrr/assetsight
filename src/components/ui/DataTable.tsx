@@ -1029,7 +1029,7 @@ export function DataTable({
       <CardBody padding="none" className="p-0">
         <div className="table-responsive overflow-x-auto smooth-scroll" style={{ maxWidth: '100%', WebkitOverflowScrolling: 'touch' }}>
         {/* Desktop Table */}
-        <table className="table datatables-basic gpu-accelerated" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', minWidth: '600px', willChange: 'transform' }}>
+        <table className="table datatables-basic gpu-accelerated" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', minWidth: '600px', willChange: 'transform', tableLayout: 'auto' }}>
           <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900/80">
             <tr className="bg-slate-50 dark:bg-slate-900/80">
               {onDelete && (
@@ -1082,7 +1082,10 @@ export function DataTable({
                       borderTopRightRadius: isFirstColumn ? '1.5rem' : '0',
                       borderTopLeftRadius: isLastColumn ? '1.5rem' : '0',
                       backdropFilter: 'blur(10px)',
-                      minWidth: '120px'
+                      minWidth: '120px',
+                      whiteSpace: 'normal',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word'
                     }}
                     className="responsive-th"
                     onMouseEnter={(e) => {
@@ -1324,15 +1327,23 @@ export function DataTable({
                           color: '#4b465c',
                           verticalAlign: 'middle',
                           borderBottom: '1px solid #f0eff2',
-                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          wordWrap: 'break-word',
+                          overflowWrap: 'break-word',
+                          whiteSpace: 'normal',
+                          maxWidth: 'none',
+                          minWidth: '120px'
                         }}
                       >
                         <div 
-                          className="truncate max-w-[300px]"
                           style={{ 
                             fontWeight: 400,
                             lineHeight: '1.6',
-                            wordBreak: 'break-word'
+                            wordBreak: 'normal',
+                            overflowWrap: 'break-word',
+                            wordWrap: 'break-word',
+                            whiteSpace: 'normal',
+                            maxWidth: '100%'
                           }}
                           title={typeof rawValue === 'string' ? rawValue : String(rawValue || '')}
                         >
