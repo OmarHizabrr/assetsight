@@ -4,6 +4,7 @@ import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "./Button";
+import { useDarkMode } from "@/hooks/useDarkMode";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ export function ConfirmModal({
   variant = 'danger',
   loading = false,
 }: ConfirmModalProps) {
+  const { isDark } = useDarkMode();
+  
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -52,23 +55,23 @@ export function ConfirmModal({
   const variantStyles = {
     danger: {
       icon: 'warning',
-      iconColor: '#ea5455',
-      iconBg: '#ffebee',
-      titleColor: '#ea5455',
+      iconColor: isDark ? '#f87171' : '#ea5455',
+      iconBg: isDark ? 'rgba(239, 68, 68, 0.2)' : '#ffebee',
+      titleColor: isDark ? '#f87171' : '#ea5455',
       confirmBg: '#ea5455',
     },
     warning: {
       icon: 'warning',
-      iconColor: '#ff9f43',
-      iconBg: '#fff4e6',
-      titleColor: '#ff9f43',
+      iconColor: isDark ? '#fbbf24' : '#ff9f43',
+      iconBg: isDark ? 'rgba(251, 191, 36, 0.2)' : '#fff4e6',
+      titleColor: isDark ? '#fbbf24' : '#ff9f43',
       confirmBg: '#ff9f43',
     },
     info: {
       icon: 'info',
-      iconColor: '#7367f0',
-      iconBg: '#eae8fd',
-      titleColor: '#7367f0',
+      iconColor: isDark ? '#a78bfa' : '#7367f0',
+      iconBg: isDark ? 'rgba(115, 103, 240, 0.2)' : '#eae8fd',
+      titleColor: isDark ? '#a78bfa' : '#7367f0',
       confirmBg: '#7367f0',
     },
   };
@@ -115,6 +118,8 @@ export function ConfirmModal({
           zIndex: 9998,
           width: '100vw',
           height: '100vh',
+          backgroundColor: isDark ? 'rgba(0, 0, 0, 0.75)' : 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(8px)',
         }}
       />
 
@@ -132,10 +137,14 @@ export function ConfirmModal({
           className="modal-content animate-scale-in" 
           style={{ 
             maxWidth: '500px',
-            backgroundColor: 'white',
+            backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'white',
             borderRadius: '1.5rem',
-            border: '2px solid rgba(115, 103, 240, 0.2)',
-            boxShadow: '0 25px 80px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(115, 103, 240, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+            border: isDark 
+              ? '2px solid rgba(71, 85, 105, 0.6)' 
+              : '2px solid rgba(115, 103, 240, 0.2)',
+            boxShadow: isDark
+              ? '0 25px 80px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(71, 85, 105, 0.3)'
+              : '0 25px 80px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(115, 103, 240, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
@@ -157,13 +166,15 @@ export function ConfirmModal({
               overflowY: 'auto',
               overflowX: 'hidden',
               flex: '1 1 auto',
-              background: 'linear-gradient(to bottom, #fafafa 0%, #ffffff 50%, #fafafa 100%)',
+              background: isDark
+                ? 'linear-gradient(to bottom, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.95) 100%)'
+                : 'linear-gradient(to bottom, #fafafa 0%, #ffffff 50%, #fafafa 100%)',
               minHeight: 0,
               position: 'relative',
               zIndex: 1,
               WebkitOverflowScrolling: 'touch',
               scrollbarWidth: 'thin',
-              scrollbarColor: '#7367f0 #f8f7fa',
+              scrollbarColor: isDark ? '#7367f0 #1e293b' : '#7367f0 #f8f7fa',
               flexGrow: 1,
               flexShrink: 1,
             }}
@@ -211,7 +222,7 @@ export function ConfirmModal({
             <p
               className="font-medium"
               style={{
-                color: '#4b465c',
+                color: isDark ? 'rgb(226, 232, 240)' : '#4b465c',
                 fontSize: '1rem',
                 lineHeight: '1.7',
                 marginBottom: 0,
@@ -229,8 +240,12 @@ export function ConfirmModal({
               justifyContent: 'flex-end',
               gap: '1rem',
               padding: '1.5rem 1.75rem',
-              borderTop: '2px solid rgba(240, 239, 242, 0.8)',
-              background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.98) 0%, rgba(250, 250, 250, 0.95) 100%)',
+              borderTop: isDark 
+                ? '2px solid rgba(71, 85, 105, 0.6)' 
+                : '2px solid rgba(240, 239, 242, 0.8)',
+              background: isDark
+                ? 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%)'
+                : 'linear-gradient(to bottom, rgba(255, 255, 255, 0.98) 0%, rgba(250, 250, 250, 0.95) 100%)',
               flexShrink: 0,
               flexGrow: 0,
               flexBasis: 'auto',
@@ -240,7 +255,9 @@ export function ConfirmModal({
               right: 0,
               zIndex: 20,
               backdropFilter: 'blur(10px)',
-              boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+              boxShadow: isDark
+                ? '0 -4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(71, 85, 105, 0.3)'
+                : '0 -4px 20px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
               width: '100%',
               marginTop: 'auto', // Push footer to bottom
             }}

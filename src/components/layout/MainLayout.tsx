@@ -834,12 +834,19 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <div className="absolute inset-0 pointer-events-none">
             {/* Base pattern */}
             <div className="absolute inset-0 opacity-[0.03]">
-              <Image
-                src={miscMaskLight}
+              <img
+                src={typeof miscMaskLight === 'string' ? miscMaskLight : miscMaskLight.src}
                 alt="Background Pattern"
-                fill
-                className="object-cover"
-                quality={50}
+                className="object-cover w-full h-full"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+                loading="lazy"
               />
             </div>
             

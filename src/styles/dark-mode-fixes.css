@@ -501,3 +501,19 @@
   opacity: 0.75 !important;
 }
 
+/* ========================================
+   LOGIN PAGE DARK MODE
+   ======================================== */
+
+/* Login page inputs */
+[data-theme="dark"] input[type="text"]::placeholder,
+[data-theme="dark"] input[type="password"]::placeholder {
+  color: rgb(148, 163, 184) !important;
+  opacity: 0.8 !important;
+}
+
+/* Login page background elements */
+[data-theme="dark"] .absolute.w-96.h-96 {
+  opacity: 0.3;
+}
+

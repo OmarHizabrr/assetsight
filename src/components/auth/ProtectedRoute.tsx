@@ -7,6 +7,7 @@ import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDarkMode } from "@/hooks/useDarkMode";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import Image from "next/image";
@@ -251,6 +252,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { isDark } = useDarkMode();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -307,7 +309,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#f8f7fa] px-4 py-12">
+      <div 
+        className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-12"
+        style={{
+          background: isDark
+            ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)'
+            : '#f8f7fa',
+        }}
+      >
         {/* Background Mask Image */}
         <div className="absolute inset-0 z-0 opacity-20">
           <Image
@@ -357,22 +366,52 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
                     />
                   </div>
                   <div className="text-center space-y-2">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                    <h1 
+                      className="text-4xl font-bold"
+                      style={{
+                        color: isDark 
+                          ? 'rgba(248, 250, 252, 0.9)' 
+                          : 'rgba(15, 23, 42, 0.8)',
+                        textShadow: isDark
+                          ? '0 2px 8px rgba(0, 0, 0, 0.3)'
+                          : '0 2px 8px rgba(255, 255, 255, 0.5)',
+                      }}
+                    >
                       AssetSight
                     </h1>
-                    <p className="text-slate-600 text-base font-medium">نظام إدارة الأصول والممتلكات</p>
+                    <p 
+                      className="text-base font-medium"
+                      style={{ color: isDark ? 'rgb(203, 213, 225)' : 'rgb(71, 85, 105)' }}
+                    >
+                      نظام إدارة الأصول والممتلكات
+                    </p>
                   </div>
                 </div>
 
                 {/* Welcome Card */}
-                <Card variant="elevated" className="w-full shadow-2xl shadow-primary/20 border border-slate-200/80 bg-white/95 backdrop-blur-sm">
+                <Card 
+                  variant="elevated" 
+                  className="w-full shadow-2xl shadow-primary/20 backdrop-blur-sm"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                    borderColor: isDark ? 'rgba(71, 85, 105, 0.6)' : 'rgba(226, 232, 240, 0.8)',
+                  }}
+                >
                   <CardBody className="p-8 space-y-6">
                     <div className="text-center space-y-4">
                       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 mx-auto">
                         <MaterialIcon name="person" className="text-white" size="3xl" />
                       </div>
-                      <h2 className="text-3xl font-bold text-slate-900">مرحباً بك!</h2>
-                      <p className="text-slate-600 text-lg leading-relaxed">
+                      <h2 
+                        className="text-3xl font-bold"
+                        style={{ color: isDark ? 'rgb(248, 250, 252)' : 'rgb(15, 23, 42)' }}
+                      >
+                        مرحباً بك!
+                      </h2>
+                      <p 
+                        className="text-lg leading-relaxed"
+                        style={{ color: isDark ? 'rgb(203, 213, 225)' : 'rgb(71, 85, 105)' }}
+                      >
                         للوصول إلى النظام والاستفادة من جميع الميزات، يرجى تسجيل الدخول باستخدام بياناتك المسجلة
                       </p>
                     </div>
@@ -391,28 +430,99 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
                     </div>
 
                     {/* Features */}
-                    <div className="pt-6 border-t border-slate-200 space-y-4">
-                      <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide text-center">
+                    <div 
+                      className="pt-6 border-t space-y-4"
+                      style={{
+                        borderTopColor: isDark ? 'rgba(71, 85, 105, 0.6)' : 'rgb(226, 232, 240)',
+                      }}
+                    >
+                      <p 
+                        className="text-sm font-semibold uppercase tracking-wide text-center"
+                        style={{ color: isDark ? 'rgb(148, 163, 184)' : 'rgb(100, 116, 139)' }}
+                      >
                         ميزات النظام
                       </p>
                       <div className="grid grid-cols-1 gap-3">
-                        <div className="flex items-center gap-3 p-4 bg-primary-50 rounded-xl border border-primary-100 hover:bg-primary-100 material-transition">
+                        <div 
+                          className="flex items-center gap-3 p-4 rounded-xl border material-transition"
+                          style={{
+                            backgroundColor: isDark ? 'rgba(115, 103, 240, 0.1)' : 'rgb(238, 242, 255)',
+                            borderColor: isDark ? 'rgba(115, 103, 240, 0.3)' : 'rgb(199, 210, 254)',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (isDark) {
+                              e.currentTarget.style.backgroundColor = 'rgba(115, 103, 240, 0.15)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (isDark) {
+                              e.currentTarget.style.backgroundColor = 'rgba(115, 103, 240, 0.1)';
+                            }
+                          }}
+                        >
                           <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center">
                             <MaterialIcon name="inventory" className="text-white" size="md" />
                           </div>
-                          <span className="text-sm font-semibold text-slate-700">إدارة الأصول</span>
+                          <span 
+                            className="text-sm font-semibold"
+                            style={{ color: isDark ? 'rgb(226, 232, 240)' : 'rgb(51, 65, 85)' }}
+                          >
+                            إدارة الأصول
+                          </span>
                         </div>
-                        <div className="flex items-center gap-3 p-4 bg-accent-50 rounded-xl border border-accent-100 hover:bg-accent-100 material-transition">
+                        <div 
+                          className="flex items-center gap-3 p-4 rounded-xl border material-transition"
+                          style={{
+                            backgroundColor: isDark ? 'rgba(217, 70, 239, 0.1)' : 'rgb(250, 232, 255)',
+                            borderColor: isDark ? 'rgba(217, 70, 239, 0.3)' : 'rgb(240, 171, 252)',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (isDark) {
+                              e.currentTarget.style.backgroundColor = 'rgba(217, 70, 239, 0.15)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (isDark) {
+                              e.currentTarget.style.backgroundColor = 'rgba(217, 70, 239, 0.1)';
+                            }
+                          }}
+                        >
                           <div className="w-10 h-10 rounded-lg bg-accent-500 flex items-center justify-center">
                             <MaterialIcon name="assessment" className="text-white" size="md" />
                           </div>
-                          <span className="text-sm font-semibold text-slate-700">التقارير والإحصائيات</span>
+                          <span 
+                            className="text-sm font-semibold"
+                            style={{ color: isDark ? 'rgb(226, 232, 240)' : 'rgb(51, 65, 85)' }}
+                          >
+                            التقارير والإحصائيات
+                          </span>
                         </div>
-                        <div className="flex items-center gap-3 p-4 bg-success-50 rounded-xl border border-success-100 hover:bg-success-100 material-transition">
+                        <div 
+                          className="flex items-center gap-3 p-4 rounded-xl border material-transition"
+                          style={{
+                            backgroundColor: isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgb(220, 252, 231)',
+                            borderColor: isDark ? 'rgba(34, 197, 94, 0.3)' : 'rgb(134, 239, 172)',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (isDark) {
+                              e.currentTarget.style.backgroundColor = 'rgba(34, 197, 94, 0.15)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (isDark) {
+                              e.currentTarget.style.backgroundColor = 'rgba(34, 197, 94, 0.1)';
+                            }
+                          }}
+                        >
                           <div className="w-10 h-10 rounded-lg bg-success-500 flex items-center justify-center">
                             <MaterialIcon name="track_changes" className="text-white" size="md" />
                           </div>
-                          <span className="text-sm font-semibold text-slate-700">تتبع الجرد</span>
+                          <span 
+                            className="text-sm font-semibold"
+                            style={{ color: isDark ? 'rgb(226, 232, 240)' : 'rgb(51, 65, 85)' }}
+                          >
+                            تتبع الجرد
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -421,7 +531,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
                 {/* Footer */}
                 <div className="mt-8 text-center">
-                  <p className="text-xs text-slate-500">
+                  <p 
+                    className="text-xs"
+                    style={{ color: isDark ? 'rgb(148, 163, 184)' : 'rgb(100, 116, 139)' }}
+                  >
                     © {new Date().getFullYear()} AssetSight. جميع الحقوق محفوظة.
                   </p>
                 </div>

@@ -182,7 +182,7 @@ export function Modal({
         }}
       >
         <div 
-          className="modal-content"
+          className="modal-content modal-content-enhanced"
           style={{
             backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'white',
             borderRadius: '1.5rem',
@@ -200,7 +200,6 @@ export function Modal({
             width: customWidth === 'auto' ? 'fit-content' : '100%',
             minWidth: customWidth === 'auto' ? 'min-content' : 0,
           }}
-          className="modal-content-enhanced"
         >
           {/* Enhanced decorative gradient overlay */}
           <div

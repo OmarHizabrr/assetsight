@@ -48,10 +48,14 @@ export function Card({
   
   const combinedClassName = classParts.join(' ').trim().replace(/\s+/g, ' ');
   
+  // Extract style from props to handle it separately
+  const { style, ...restProps } = props;
+  
   return (
     <div 
       className={combinedClassName} 
-      {...props} 
+      style={style}
+      {...restProps} 
       suppressHydrationWarning
     >
       {/* Enhanced gradient overlay on hover - مستوحى من DawamWeb */}

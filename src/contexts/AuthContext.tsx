@@ -82,13 +82,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // الخطوة الأولى: البحث عن المستخدم بالرقم الوظيفي
-      const userDocs = await firestoreApi.getDocuments(
-        firestoreApi.getCollection("users"),
-        {
-          whereField: "employee_number",
-          isEqualTo: employeeNumber
-        }
-      );
+      let userDocs;
+      try {
+        userDocs = await firestoreApi.getDocuments(
+          firestoreApi.getCollection("users"),
+          {
+            whereField: "employee_number",
+            isEqualTo: employeeNumber
+          }
+        );
+      } catch (queryError) {
+        // في حالة فشل الاستعلام، إرجاع رسالة خطأ واضحة
+        console.error("خطأ في استعلام قاعدة البيانات:", queryError);
+        throw new Error("حدث خطأ في الاتصال بقاعدة البيانات. يرجى المحاولة مرة أخرى");
+      }
       
       // البحث عن مستخدم نشط
       const foundUser = userDocs.find(doc => {
@@ -98,6 +105,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // إذا لم يتم العثور على المستخدم، رسالة خطأ محددة للرقم الوظيفي
       if (!foundUser) {
+        // التحقق إذا كان هناك مستخدم غير نشط
+        const inactiveUser = userDocs.find(doc => {
+          const userData = doc.data();
+          return (userData.is_active === 0 || userData.is_active === false);
+        });
+        
+        if (inactiveUser) {
+          throw new Error("حسابك غير نشط. يرجى التواصل مع المدير");
+        }
+        
         throw new Error("رقم الموظف غير صحيح");
       }
 
@@ -111,7 +128,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // مقارنة كلمة المرور (نص عادي - يمكن تحسينه لاحقاً باستخدام hashing)
-      const passwordMatch = storedPassword.trim() === password.trim();
+      // تطبيع كلا من كلمة المرور المخزنة والمدخلة
+      const normalizedStoredPassword = String(storedPassword).trim();
+      const normalizedInputPassword = password.trim();
+      const passwordMatch = normalizedStoredPassword === normalizedInputPassword;
       
       // إذا كانت كلمة المرور خاطئة، رسالة خطأ محددة لكلمة المرور
       if (!passwordMatch) {
