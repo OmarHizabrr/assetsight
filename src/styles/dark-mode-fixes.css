@@ -517,3 +517,63 @@
   opacity: 0.3;
 }
 
+/* ========================================
+   FOOTER DARK MODE
+   ======================================== */
+
+[data-theme="dark"] footer {
+  background: rgba(15, 23, 42, 0.85) !important;
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border-top: 1px solid rgba(71, 85, 105, 0.6) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: 0 -1px 0 0 rgba(71, 85, 105, 0.3) inset, 0 -2px 8px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Footer text colors in dark mode */
+[data-theme="dark"] footer span {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] footer .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] footer .text-slate-500 {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] footer .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] footer .text-slate-600 {
+  color: #475569 !important;
+}
+
+/* Footer logo container in dark mode */
+[data-theme="dark"] footer div[class*="rounded-xl"] {
+  background: rgba(51, 65, 85, 0.7) !important;
+  background-color: rgba(51, 65, 85, 0.7) !important;
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Footer gradient text in dark mode */
+[data-theme="dark"] footer .bg-gradient-to-r {
+  background: linear-gradient(to right, #a78bfa, #c4b5fd, #ddd6fe) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Footer gradient overlay in dark mode */
+[data-theme="dark"] footer div[class*="absolute"][class*="inset-0"] {
+  background: linear-gradient(to top, rgba(115, 103, 240, 0.05) 0%, transparent 100%) !important;
+  opacity: 0.3 !important;
+}
+
+/* Footer backdrop blur in dark mode */
+[data-theme="dark"] footer {
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+

@@ -936,11 +936,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 />
               </div>
               <span className={`font-bold bg-gradient-to-r ${isDarkMode ? 'from-primary-400 via-primary-300 to-accent-400' : 'from-primary-600 via-primary-700 to-accent-600'} bg-clip-text text-transparent`}>AssetSight</span>
-              <span className={`${isDarkMode ? 'text-slate-400' : 'text-slate-400'} font-semibold`}>© {new Date().getFullYear()}</span>
+              <span className={`${isDarkMode ? 'text-slate-400' : 'text-slate-500'} font-semibold`}>© {new Date().getFullYear()}</span>
             </div>
             <div className={`flex items-center gap-4 text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} font-semibold`}>
               <span>نظام إدارة الأصول</span>
-              <span className={`hidden sm:inline ${isDarkMode ? 'text-slate-600' : 'text-slate-300'}`}>•</span>
+              <span className={`hidden sm:inline ${isDarkMode ? 'text-slate-500' : 'text-slate-300'}`}>•</span>
               <span className="hidden sm:inline">جميع الحقوق محفوظة</span>
             </div>
           </div>
