@@ -490,7 +490,7 @@ function AssetNamesPageContent() {
             setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
           }}
           title={editingAssetName ? "تعديل اسم الأصل" : "إضافة اسم جديد"}
-          size="md"
+          size="lg"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button

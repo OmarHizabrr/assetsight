@@ -409,7 +409,7 @@ function CurrenciesPageContent() {
             setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
           }}
           title={editingCurrency ? "تعديل عملة" : "إضافة عملة جديدة"}
-          size="md"
+          size="lg"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button

@@ -1,0 +1,212 @@
+/* ========================================
+   TABLE FULL WIDTH FIXES
+   إصلاحات لضمان استغلال الجدول للمساحة الكاملة
+   ======================================== */
+
+/* Ensure main content uses full width */
+main {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure content container uses full width */
+main > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* DataTable Card - Full Width */
+[class*="data-table-card"],
+[class*="Card"][class*="data-table"],
+.data-table-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Card containing DataTable - Full Width */
+main [class*="Card"]:has([class*="DataTable"]),
+main [class*="Card"]:has(.datatables-basic),
+main [class*="Card"]:has(.table-responsive) {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* DataTable wrapper - Full Width */
+[class*="DataTable"],
+.data-table-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Table responsive container - Full Width */
+.table-responsive {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Table itself - Full Width */
+table,
+.table,
+.datatables-basic {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
+}
+
+/* CardBody containing table - Full Width */
+[class*="CardBody"]:has(.table-responsive),
+[class*="CardBody"]:has(table),
+[class*="CardBody"]:has(.datatables-basic) {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Remove any max-width constraints on admin pages */
+body[class*="admin"] main,
+body[class*="admin"] main > div,
+body[class*="admin"] main [class*="Card"] {
+  max-width: 100% !important;
+}
+
+/* Ensure proper spacing while maintaining full width */
+main > div:first-child {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Reduce spacing between page elements */
+main > div:first-child + div {
+  margin-top: 0 !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Filter section spacing */
+main > div[class*="mb-"]:not(:first-child) {
+  margin-bottom: 1rem !important;
+}
+
+/* Ensure all page sections use full width */
+main > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Compact spacing for admin pages */
+main > div.mb-10,
+main > div.mb-6,
+main > div.mb-8 {
+  margin-bottom: 1rem !important;
+}
+
+/* DataTable specific full width fixes */
+.datatables-basic {
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
+.datatables-basic th,
+.datatables-basic td {
+  min-width: auto !important;
+}
+
+/* Responsive improvements */
+@media (min-width: 1024px) {
+  /* On large screens, ensure table uses available space */
+  .table-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  table,
+  .table,
+  .datatables-basic {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  /* On extra large screens, table should expand to fill space */
+  main [class*="Card"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .table-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  /* On 2xl screens, ensure maximum space utilization */
+  main {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+  
+  main > div {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  [class*="Card"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Override any container max-width constraints */
+.container,
+.max-w-7xl,
+.max-w-6xl,
+.max-w-5xl,
+.max-w-4xl,
+.max-w-3xl,
+.max-w-2xl,
+.max-w-xl,
+.max-w-lg,
+.max-w-md,
+.max-w-sm {
+  max-width: 100% !important;
+}
+
+/* Ensure padding doesn't reduce available space */
+main > div {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+@media (min-width: 640px) {
+  main > div {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  main > div {
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  main > div {
+    padding-left: 2.5rem !important;
+    padding-right: 2.5rem !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  main > div {
+    padding-left: 3rem !important;
+    padding-right: 3rem !important;
+  }
+}
+

@@ -316,7 +316,7 @@ function AssetStatusesPageContent() {
             setFormData(new BaseModel({ name: '', description: '', notes: '' }));
           }}
           title={editingStatus ? "تعديل حالة" : "إضافة حالة جديدة"}
-          size="md"
+          size="lg"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button

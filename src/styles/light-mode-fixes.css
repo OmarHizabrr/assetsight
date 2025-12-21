@@ -829,3 +829,885 @@
   opacity: 0.3 !important;
 }
 
+/* ========================================
+   CRITICAL: BLUE/PRIMARY COLOR CONTRAST FIXES
+   إصلاحات حاسمة لتباين الألوان الزرقاء/البنفسجية
+   ======================================== */
+
+/* Primary background colors with proper text contrast in light mode */
+[data-theme="light"] .bg-primary-50,
+[data-theme=""] .bg-primary-50,
+:root:not([data-theme="dark"]) .bg-primary-50,
+[data-theme="light"] [class*="bg-primary-50"],
+[data-theme=""] [class*="bg-primary-50"],
+:root:not([data-theme="dark"]) [class*="bg-primary-50"],
+[data-theme="light"] .bg-primary-100,
+[data-theme=""] .bg-primary-100,
+:root:not([data-theme="dark"]) .bg-primary-100,
+[data-theme="light"] [class*="bg-primary-100"],
+[data-theme=""] [class*="bg-primary-100"],
+:root:not([data-theme="dark"]) [class*="bg-primary-100"] {
+  background: #f5f3ff !important;
+  background-color: #f5f3ff !important;
+  border-color: #e9d5ff !important;
+}
+
+/* Text on primary backgrounds - ensure high contrast in light mode */
+[data-theme="light"] .bg-primary-50 .text-primary-600,
+[data-theme=""] .bg-primary-50 .text-primary-600,
+:root:not([data-theme="dark"]) .bg-primary-50 .text-primary-600,
+[data-theme="light"] .bg-primary-50 .text-primary-700,
+[data-theme=""] .bg-primary-50 .text-primary-700,
+:root:not([data-theme="dark"]) .bg-primary-50 .text-primary-700,
+[data-theme="light"] .bg-primary-50 .text-primary-800,
+[data-theme=""] .bg-primary-50 .text-primary-800,
+:root:not([data-theme="dark"]) .bg-primary-50 .text-primary-800,
+[data-theme="light"] [class*="bg-primary-50"] .text-primary-600,
+[data-theme=""] [class*="bg-primary-50"] .text-primary-600,
+:root:not([data-theme="dark"]) [class*="bg-primary-50"] .text-primary-600,
+[data-theme="light"] [class*="bg-primary-50"] .text-primary-700,
+[data-theme=""] [class*="bg-primary-50"] .text-primary-700,
+:root:not([data-theme="dark"]) [class*="bg-primary-50"] .text-primary-700,
+[data-theme="light"] [class*="bg-primary-50"] .text-primary-800,
+[data-theme=""] [class*="bg-primary-50"] .text-primary-800,
+:root:not([data-theme="dark"]) [class*="bg-primary-50"] .text-primary-800,
+[data-theme="light"] .bg-primary-100 .text-primary-600,
+[data-theme=""] .bg-primary-100 .text-primary-600,
+:root:not([data-theme="dark"]) .bg-primary-100 .text-primary-600,
+[data-theme="light"] .bg-primary-100 .text-primary-700,
+[data-theme=""] .bg-primary-100 .text-primary-700,
+:root:not([data-theme="dark"]) .bg-primary-100 .text-primary-700,
+[data-theme="light"] .bg-primary-100 .text-primary-800,
+[data-theme=""] .bg-primary-100 .text-primary-800,
+:root:not([data-theme="dark"]) .bg-primary-100 .text-primary-800,
+[data-theme="light"] [class*="bg-primary-100"] .text-primary-600,
+[data-theme=""] [class*="bg-primary-100"] .text-primary-600,
+:root:not([data-theme="dark"]) [class*="bg-primary-100"] .text-primary-600,
+[data-theme="light"] [class*="bg-primary-100"] .text-primary-700,
+[data-theme=""] [class*="bg-primary-100"] .text-primary-700,
+:root:not([data-theme="dark"]) [class*="bg-primary-100"] .text-primary-700,
+[data-theme="light"] [class*="bg-primary-100"] .text-primary-800,
+[data-theme=""] [class*="bg-primary-100"] .text-primary-800,
+:root:not([data-theme="dark"]) [class*="bg-primary-100"] .text-primary-800 {
+  color: #5e52d5 !important;
+}
+
+/* Blue background colors (info colors) with proper contrast in light mode */
+[data-theme="light"] .bg-blue-50,
+[data-theme=""] .bg-blue-50,
+:root:not([data-theme="dark"]) .bg-blue-50,
+[data-theme="light"] [class*="bg-blue-50"],
+[data-theme=""] [class*="bg-blue-50"],
+:root:not([data-theme="dark"]) [class*="bg-blue-50"],
+[data-theme="light"] .bg-blue-100,
+[data-theme=""] .bg-blue-100,
+:root:not([data-theme="dark"]) .bg-blue-100,
+[data-theme="light"] [class*="bg-blue-100"],
+[data-theme=""] [class*="bg-blue-100"],
+:root:not([data-theme="dark"]) [class*="bg-blue-100"],
+[data-theme="light"] .bg-info-50,
+[data-theme=""] .bg-info-50,
+:root:not([data-theme="dark"]) .bg-info-50,
+[data-theme="light"] [class*="bg-info-50"],
+[data-theme=""] [class*="bg-info-50"],
+:root:not([data-theme="dark"]) [class*="bg-info-50"],
+[data-theme="light"] .bg-info-100,
+[data-theme=""] .bg-info-100,
+:root:not([data-theme="dark"]) .bg-info-100,
+[data-theme="light"] [class*="bg-info-100"],
+[data-theme=""] [class*="bg-info-100"],
+:root:not([data-theme="dark"]) [class*="bg-info-100"] {
+  background: #eff6ff !important;
+  background-color: #eff6ff !important;
+  border-color: #dbeafe !important;
+}
+
+/* Text on blue/info backgrounds in light mode */
+[data-theme="light"] .bg-blue-50 *,
+[data-theme=""] .bg-blue-50 *,
+:root:not([data-theme="dark"]) .bg-blue-50 *,
+[data-theme="light"] [class*="bg-blue-50"] *,
+[data-theme=""] [class*="bg-blue-50"] *,
+:root:not([data-theme="dark"]) [class*="bg-blue-50"] *,
+[data-theme="light"] .bg-blue-100 *,
+[data-theme=""] .bg-blue-100 *,
+:root:not([data-theme="dark"]) .bg-blue-100 *,
+[data-theme="light"] [class*="bg-blue-100"] *,
+[data-theme=""] [class*="bg-blue-100"] *,
+:root:not([data-theme="dark"]) [class*="bg-blue-100"] *,
+[data-theme="light"] .bg-info-50 *,
+[data-theme=""] .bg-info-50 *,
+:root:not([data-theme="dark"]) .bg-info-50 *,
+[data-theme="light"] [class*="bg-info-50"] *,
+[data-theme=""] [class*="bg-info-50"] *,
+:root:not([data-theme="dark"]) [class*="bg-info-50"] *,
+[data-theme="light"] .bg-info-100 *,
+[data-theme=""] .bg-info-100 *,
+:root:not([data-theme="dark"]) .bg-info-100 *,
+[data-theme="light"] [class*="bg-info-100"] *,
+[data-theme=""] [class*="bg-info-100"] *,
+:root:not([data-theme="dark"]) [class*="bg-info-100"] * {
+  color: #1e40af !important;
+}
+
+/* Selected row in tables with primary background in light mode */
+[data-theme="light"] tr.bg-primary-50,
+[data-theme=""] tr.bg-primary-50,
+:root:not([data-theme="dark"]) tr.bg-primary-50,
+[data-theme="light"] tr[class*="bg-primary-50"],
+[data-theme=""] tr[class*="bg-primary-50"],
+:root:not([data-theme="dark"]) tr[class*="bg-primary-50"],
+[data-theme="light"] .bg-primary-50,
+[data-theme=""] .bg-primary-50,
+:root:not([data-theme="dark"]) .bg-primary-50 {
+  background: #f5f3ff !important;
+}
+
+[data-theme="light"] tr.bg-primary-50 td,
+[data-theme=""] tr.bg-primary-50 td,
+:root:not([data-theme="dark"]) tr.bg-primary-50 td,
+[data-theme="light"] tr[class*="bg-primary-50"] td,
+[data-theme=""] tr[class*="bg-primary-50"] td,
+:root:not([data-theme="dark"]) tr[class*="bg-primary-50"] td,
+[data-theme="light"] .bg-primary-50 td,
+[data-theme=""] .bg-primary-50 td,
+:root:not([data-theme="dark"]) .bg-primary-50 td {
+  color: #5e52d5 !important;
+}
+
+/* Hover states on primary backgrounds in light mode */
+[data-theme="light"] .hover\:bg-primary-50:hover,
+[data-theme=""] .hover\:bg-primary-50:hover,
+:root:not([data-theme="dark"]) .hover\:bg-primary-50:hover,
+[data-theme="light"] [class*="hover:bg-primary-50"]:hover,
+[data-theme=""] [class*="hover:bg-primary-50"]:hover,
+:root:not([data-theme="dark"]) [class*="hover:bg-primary-50"]:hover,
+[data-theme="light"] .hover\:bg-primary-100:hover,
+[data-theme=""] .hover\:bg-primary-100:hover,
+:root:not([data-theme="dark"]) .hover\:bg-primary-100:hover,
+[data-theme="light"] [class*="hover:bg-primary-100"]:hover,
+[data-theme=""] [class*="hover:bg-primary-100"]:hover,
+:root:not([data-theme="dark"]) [class*="hover:bg-primary-100"]:hover {
+  background: #ede9fe !important;
+  color: #5e52d5 !important;
+}
+
+/* Buttons with primary hover states in light mode */
+[data-theme="light"] button.hover\:bg-primary-50:hover,
+[data-theme=""] button.hover\:bg-primary-50:hover,
+:root:not([data-theme="dark"]) button.hover\:bg-primary-50:hover,
+[data-theme="light"] button[class*="hover:bg-primary-50"]:hover,
+[data-theme=""] button[class*="hover:bg-primary-50"]:hover,
+:root:not([data-theme="dark"]) button[class*="hover:bg-primary-50"]:hover {
+  background: #ede9fe !important;
+  color: #5e52d5 !important;
+}
+
+/* Outline and ghost buttons in light mode */
+[data-theme="light"] button[class*="outline"],
+[data-theme=""] button[class*="outline"],
+:root:not([data-theme="dark"]) button[class*="outline"],
+[data-theme="light"] button[class*="ghost"],
+[data-theme=""] button[class*="ghost"],
+:root:not([data-theme="dark"]) button[class*="ghost"] {
+  border-color: #7367f0 !important;
+  color: #5e52d5 !important;
+}
+
+[data-theme="light"] button[class*="outline"]:hover,
+[data-theme=""] button[class*="outline"]:hover,
+:root:not([data-theme="dark"]) button[class*="outline"]:hover,
+[data-theme="light"] button[class*="ghost"]:hover,
+[data-theme=""] button[class*="ghost"]:hover,
+:root:not([data-theme="dark"]) button[class*="ghost"]:hover {
+  background: #f5f3ff !important;
+  border-color: #5e52d5 !important;
+  color: #4a3fd0 !important;
+}
+
+/* Tabs with primary colors in light mode */
+[data-theme="light"] [class*="tab"][class*="bg-primary-50"],
+[data-theme=""] [class*="tab"][class*="bg-primary-50"],
+:root:not([data-theme="dark"]) [class*="tab"][class*="bg-primary-50"],
+[data-theme="light"] [class*="tab"][class*="text-primary-700"],
+[data-theme=""] [class*="tab"][class*="text-primary-700"],
+:root:not([data-theme="dark"]) [class*="tab"][class*="text-primary-700"] {
+  background: #f5f3ff !important;
+  color: #5e52d5 !important;
+  border-color: #e9d5ff !important;
+}
+
+/* SearchableSelect and Input with primary colors in light mode */
+[data-theme="light"] [class*="SearchableSelect"] .bg-primary-50,
+[data-theme=""] [class*="SearchableSelect"] .bg-primary-50,
+:root:not([data-theme="dark"]) [class*="SearchableSelect"] .bg-primary-50,
+[data-theme="light"] [class*="Input"] .bg-primary-50,
+[data-theme=""] [class*="Input"] .bg-primary-50,
+:root:not([data-theme="dark"]) [class*="Input"] .bg-primary-50 {
+  background: #f5f3ff !important;
+  color: #5e52d5 !important;
+}
+
+/* Badges with primary/info colors in light mode */
+[data-theme="light"] .badge[class*="primary"],
+[data-theme=""] .badge[class*="primary"],
+:root:not([data-theme="dark"]) .badge[class*="primary"],
+[data-theme="light"] [class*="badge"][class*="primary"],
+[data-theme=""] [class*="badge"][class*="primary"],
+:root:not([data-theme="dark"]) [class*="badge"][class*="primary"] {
+  background: #f5f3ff !important;
+  color: #5e52d5 !important;
+  border-color: #e9d5ff !important;
+}
+
+/* Toast with info background in light mode */
+[data-theme="light"] [class*="Toast"] .bg-info-100,
+[data-theme=""] [class*="Toast"] .bg-info-100,
+:root:not([data-theme="dark"]) [class*="Toast"] .bg-info-100,
+[data-theme="light"] [class*="toast"] .bg-info-100,
+[data-theme=""] [class*="toast"] .bg-info-100,
+:root:not([data-theme="dark"]) [class*="toast"] .bg-info-100 {
+  background: #eff6ff !important;
+  color: #1e40af !important;
+  border-color: #dbeafe !important;
+}
+
+/* ========================================
+   HEADER PROFILE BUTTON OVERLAY FIXES
+   إصلاحات overlay زر البروفايل في الـ Header
+   ======================================== */
+
+/* Profile button hover overlay - ensure proper contrast in light mode */
+[data-theme="light"] button[class*="group"] .bg-gradient-to-r[class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"],
+[data-theme=""] button[class*="group"] .bg-gradient-to-r[class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"],
+:root:not([data-theme="dark"]) button[class*="group"] .bg-gradient-to-r[class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0) 100%) !important;
+}
+
+[data-theme="light"] button[class*="group"]:hover .bg-gradient-to-r[class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"],
+[data-theme=""] button[class*="group"]:hover .bg-gradient-to-r[class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"],
+:root:not([data-theme="dark"]) button[class*="group"]:hover .bg-gradient-to-r[class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0.05) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0.05) 100%) !important;
+}
+
+/* Ensure profile button maintains white background in light mode */
+[data-theme="light"] button[class*="bg-white/80"],
+[data-theme=""] button[class*="bg-white/80"],
+:root:not([data-theme="dark"]) button[class*="bg-white/80"] {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  color: #4b465c !important;
+}
+
+[data-theme="light"] button[class*="bg-white/80"]:hover,
+[data-theme=""] button[class*="bg-white/80"]:hover,
+:root:not([data-theme="dark"]) button[class*="bg-white/80"]:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #5e52d5 !important;
+}
+
+/* ========================================
+   PROFILE DROPDOWN MENU OVERLAY FIXES
+   إصلاحات overlay قائمة البروفايل المنسدلة
+   ======================================== */
+
+/* Profile dropdown overlay - light mode */
+[data-theme="light"] div[class*="bg-gradient-to-l"][class*="from-primary-50/0"][class*="to-primary-50/100"],
+[data-theme=""] div[class*="bg-gradient-to-l"][class*="from-primary-50/0"][class*="to-primary-50/100"],
+:root:not([data-theme="dark"]) div[class*="bg-gradient-to-l"][class*="from-primary-50/0"][class*="to-primary-50/100"] {
+  background: linear-gradient(to left, rgba(245, 243, 255, 0) 0%, rgba(245, 243, 255, 1) 100%) !important;
+}
+
+[data-theme="light"] button:hover div[class*="bg-gradient-to-l"][class*="from-primary-50/0"][class*="to-primary-50/100"],
+[data-theme=""] button:hover div[class*="bg-gradient-to-l"][class*="from-primary-50/0"][class*="to-primary-50/100"],
+:root:not([data-theme="dark"]) button:hover div[class*="bg-gradient-to-l"][class*="from-primary-50/0"][class*="to-primary-50/100"] {
+  background: linear-gradient(to left, rgba(245, 243, 255, 0) 0%, rgba(245, 243, 255, 1) 100%) !important;
+  opacity: 1 !important;
+}
+
+/* Profile dropdown button text - light mode */
+[data-theme="light"] button[class*="hover:from-primary-50"],
+[data-theme=""] button[class*="hover:from-primary-50"],
+:root:not([data-theme="dark"]) button[class*="hover:from-primary-50"] {
+  color: #4b465c !important;
+}
+
+[data-theme="light"] button[class*="hover:from-primary-50"]:hover,
+[data-theme=""] button[class*="hover:from-primary-50"]:hover,
+:root:not([data-theme="dark"]) button[class*="hover:from-primary-50"]:hover {
+  color: #5e52d5 !important;
+}
+
+/* Profile dropdown icon container - light mode */
+[data-theme="light"] div[class*="from-primary-100"][class*="to-primary-200"],
+[data-theme=""] div[class*="from-primary-100"][class*="to-primary-200"],
+:root:not([data-theme="dark"]) div[class*="from-primary-100"][class*="to-primary-200"] {
+  background: linear-gradient(to bottom right, #ede9fe 0%, #ddd6fe 100%) !important;
+}
+
+[data-theme="light"] div[class*="from-primary-100"][class*="to-primary-200"]:hover,
+[data-theme=""] div[class*="from-primary-100"][class*="to-primary-200"]:hover,
+:root:not([data-theme="dark"]) div[class*="from-primary-100"][class*="to-primary-200"]:hover {
+  background: linear-gradient(to bottom right, #ddd6fe 0%, #c4b5fd 100%) !important;
+}
+
+[data-theme="light"] div[class*="from-primary-100"] .text-primary-600,
+[data-theme=""] div[class*="from-primary-100"] .text-primary-600,
+:root:not([data-theme="dark"]) div[class*="from-primary-100"] .text-primary-600,
+[data-theme="light"] div[class*="from-primary-100"] .text-primary-700,
+[data-theme=""] div[class*="from-primary-100"] .text-primary-700,
+:root:not([data-theme="dark"]) div[class*="from-primary-100"] .text-primary-700 {
+  color: #5e52d5 !important;
+}
+
+/* Sidebar menu items overlay - light mode */
+[data-theme="light"] div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/8"],
+[data-theme=""] div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/8"],
+:root:not([data-theme="dark"]) div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/8"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0) 100%) !important;
+}
+
+[data-theme="light"] a[class*="group"]:hover div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/8"],
+[data-theme=""] a[class*="group"]:hover div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/8"],
+:root:not([data-theme="dark"]) a[class*="group"]:hover div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/8"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0.08) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0.08) 100%) !important;
+}
+
+/* Sidebar icon container - light mode */
+[data-theme="light"] div[class*="from-slate-100"][class*="to-slate-200"],
+[data-theme=""] div[class*="from-slate-100"][class*="to-slate-200"],
+:root:not([data-theme="dark"]) div[class*="from-slate-100"][class*="to-slate-200"] {
+  background: linear-gradient(to bottom right, #f1f5f9 0%, #e2e8f0 100%) !important;
+}
+
+[data-theme="light"] div[class*="from-slate-100"][class*="to-slate-200"]:hover,
+[data-theme=""] div[class*="from-slate-100"][class*="to-slate-200"]:hover,
+:root:not([data-theme="dark"]) div[class*="from-slate-100"][class*="to-slate-200"]:hover,
+[data-theme="light"] div[class*="group-hover:from-primary-100"][class*="group-hover:to-primary-200"],
+[data-theme=""] div[class*="group-hover:from-primary-100"][class*="group-hover:to-primary-200"],
+:root:not([data-theme="dark"]) div[class*="group-hover:from-primary-100"][class*="group-hover:to-primary-200"] {
+  background: linear-gradient(to bottom right, #ede9fe 0%, #ddd6fe 100%) !important;
+}
+
+[data-theme="light"] div[class*="from-slate-100"] .text-slate-600,
+[data-theme=""] div[class*="from-slate-100"] .text-slate-600,
+:root:not([data-theme="dark"]) div[class*="from-slate-100"] .text-slate-600 {
+  color: #475569 !important;
+}
+
+[data-theme="light"] div[class*="from-slate-100"]:hover .text-primary-700,
+[data-theme=""] div[class*="from-slate-100"]:hover .text-primary-700,
+:root:not([data-theme="dark"]) div[class*="from-slate-100"]:hover .text-primary-700 {
+  color: #5e52d5 !important;
+}
+
+/* ========================================
+   THEME TOGGLE BUTTON FIXES
+   إصلاحات زر تبديل المظهر
+   ======================================== */
+
+/* ThemeToggle button - light mode */
+[data-theme="light"] button[class*="bg-white/80"][class*="hover:bg-white"],
+[data-theme=""] button[class*="bg-white/80"][class*="hover:bg-white"],
+:root:not([data-theme="dark"]) button[class*="bg-white/80"][class*="hover:bg-white"] {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  border-color: rgba(226, 232, 240, 0.6) !important;
+  color: #4b465c !important;
+}
+
+[data-theme="light"] button[class*="bg-white/80"][class*="hover:bg-white"]:hover,
+[data-theme=""] button[class*="bg-white/80"][class*="hover:bg-white"]:hover,
+:root:not([data-theme="dark"]) button[class*="bg-white/80"][class*="hover:bg-white"]:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(115, 103, 240, 0.2) !important;
+}
+
+/* ThemeToggle overlay - light mode */
+[data-theme="light"] button[class*="group"] div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"],
+[data-theme=""] button[class*="group"] div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"],
+:root:not([data-theme="dark"]) button[class*="group"] div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0) 100%) !important;
+}
+
+[data-theme="light"] button[class*="group"]:hover div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"],
+[data-theme=""] button[class*="group"]:hover div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"],
+:root:not([data-theme="dark"]) button[class*="group"]:hover div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0.05) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0.05) 100%) !important;
+}
+
+/* ThemeToggle icon container - light mode */
+[data-theme="light"] button[class*="group"] div[class*="from-slate-100"][class*="to-slate-200"],
+[data-theme=""] button[class*="group"] div[class*="from-slate-100"][class*="to-slate-200"],
+:root:not([data-theme="dark"]) button[class*="group"] div[class*="from-slate-100"][class*="to-slate-200"] {
+  background: linear-gradient(to bottom right, #f1f5f9 0%, #e2e8f0 100%) !important;
+}
+
+[data-theme="light"] button[class*="group"]:hover div[class*="from-slate-100"][class*="to-slate-200"],
+[data-theme=""] button[class*="group"]:hover div[class*="from-slate-100"][class*="to-slate-200"],
+:root:not([data-theme="dark"]) button[class*="group"]:hover div[class*="from-slate-100"][class*="to-slate-200"],
+[data-theme="light"] button[class*="group"]:hover div[class*="group-hover:from-primary-100"][class*="group-hover:to-primary-200"],
+[data-theme=""] button[class*="group"]:hover div[class*="group-hover:from-primary-100"][class*="group-hover:to-primary-200"],
+:root:not([data-theme="dark"]) button[class*="group"]:hover div[class*="group-hover:from-primary-100"][class*="group-hover:to-primary-200"] {
+  background: linear-gradient(to bottom right, #ede9fe 0%, #ddd6fe 100%) !important;
+}
+
+/* ThemeToggle text colors - light mode */
+[data-theme="light"] button[class*="group"] .text-slate-600,
+[data-theme=""] button[class*="group"] .text-slate-600,
+:root:not([data-theme="dark"]) button[class*="group"] .text-slate-600 {
+  color: #475569 !important;
+}
+
+[data-theme="light"] button[class*="group"] .text-slate-700,
+[data-theme=""] button[class*="group"] .text-slate-700,
+:root:not([data-theme="dark"]) button[class*="group"] .text-slate-700 {
+  color: #4b465c !important;
+}
+
+[data-theme="light"] button[class*="group"]:hover .text-primary-700,
+[data-theme=""] button[class*="group"]:hover .text-primary-700,
+:root:not([data-theme="dark"]) button[class*="group"]:hover .text-primary-700 {
+  color: #5e52d5 !important;
+}
+
+/* ========================================
+   PROFILE BUTTON WHEN OPEN - LIGHT MODE
+   إصلاحات زر البروفايل عند الفتح - الوضع النهاري
+   ======================================== */
+
+/* Profile button when open - ensure text visibility */
+[data-theme="light"] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"],
+[data-theme=""] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"],
+:root:not([data-theme="dark"]) button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"] {
+  background: linear-gradient(to right, #f5f3ff 0%, rgba(237, 233, 254, 0.5) 100%) !important;
+  border-color: rgba(115, 103, 240, 0.25) !important;
+  color: #5e52d5 !important;
+}
+
+[data-theme="light"] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"] *,
+[data-theme=""] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"] *,
+:root:not([data-theme="dark"]) button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"] * {
+  color: #5e52d5 !important;
+}
+
+[data-theme="light"] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"]:hover,
+[data-theme=""] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"]:hover,
+:root:not([data-theme="dark"]) button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"]:hover {
+  background: linear-gradient(to right, #ede9fe 0%, rgba(221, 214, 254, 0.6) 100%) !important;
+  color: #4a3fd0 !important;
+}
+
+[data-theme="light"] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"]:hover *,
+[data-theme=""] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"]:hover *,
+:root:not([data-theme="dark"]) button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"]:hover * {
+  color: #4a3fd0 !important;
+}
+
+/* Profile button text when open - light mode */
+[data-theme="light"] button[class*="bg-gradient-to-r"][class*="from-primary-50"] .text-primary-700,
+[data-theme=""] button[class*="bg-gradient-to-r"][class*="from-primary-50"] .text-primary-700,
+:root:not([data-theme="dark"]) button[class*="bg-gradient-to-r"][class*="from-primary-50"] .text-primary-700,
+[data-theme="light"] button[class*="bg-gradient-to-r"][class*="from-primary-50"] .text-primary-600,
+[data-theme=""] button[class*="bg-gradient-to-r"][class*="from-primary-50"] .text-primary-600,
+:root:not([data-theme="dark"]) button[class*="bg-gradient-to-r"][class*="from-primary-50"] .text-primary-600 {
+  color: #5e52d5 !important;
+}
+
+[data-theme="light"] button[class*="bg-gradient-to-r"][class*="from-primary-50"]:hover .text-primary-700,
+[data-theme=""] button[class*="bg-gradient-to-r"][class*="from-primary-50"]:hover .text-primary-700,
+:root:not([data-theme="dark"]) button[class*="bg-gradient-to-r"][class*="from-primary-50"]:hover .text-primary-700,
+[data-theme="light"] button[class*="bg-gradient-to-r"][class*="from-primary-50"]:hover .text-primary-600,
+[data-theme=""] button[class*="bg-gradient-to-r"][class*="from-primary-50"]:hover .text-primary-600,
+:root:not([data-theme="dark"]) button[class*="bg-gradient-to-r"][class*="from-primary-50"]:hover .text-primary-600 {
+  color: #4a3fd0 !important;
+}
+
+/* ========================================
+   COMPREHENSIVE TEXT-BACKGROUND CONTRAST FIXES
+   إصلاحات شاملة لتوافق النصوص مع الخلفيات
+   ======================================== */
+
+/* Ensure all text on colored backgrounds is visible in light mode */
+[data-theme="light"] .bg-primary-50,
+[data-theme=""] .bg-primary-50,
+:root:not([data-theme="dark"]) .bg-primary-50,
+[data-theme="light"] .bg-primary-100,
+[data-theme=""] .bg-primary-100,
+:root:not([data-theme="dark"]) .bg-primary-100,
+[data-theme="light"] .bg-blue-50,
+[data-theme=""] .bg-blue-50,
+:root:not([data-theme="dark"]) .bg-blue-50,
+[data-theme="light"] .bg-blue-100,
+[data-theme=""] .bg-blue-100,
+:root:not([data-theme="dark"]) .bg-blue-100,
+[data-theme="light"] [class*="bg-primary-50"],
+[data-theme=""] [class*="bg-primary-50"],
+:root:not([data-theme="dark"]) [class*="bg-primary-50"],
+[data-theme="light"] [class*="bg-primary-100"],
+[data-theme=""] [class*="bg-primary-100"],
+:root:not([data-theme="dark"]) [class*="bg-primary-100"],
+[data-theme="light"] [class*="bg-blue-50"],
+[data-theme=""] [class*="bg-blue-50"],
+:root:not([data-theme="dark"]) [class*="bg-blue-50"],
+[data-theme="light"] [class*="bg-blue-100"],
+[data-theme=""] [class*="bg-blue-100"],
+:root:not([data-theme="dark"]) [class*="bg-blue-100"] {
+  color: #5e52d5 !important;
+}
+
+/* All child elements text colors - light mode */
+[data-theme="light"] .bg-primary-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] .bg-primary-50 *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) .bg-primary-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] .bg-primary-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] .bg-primary-100 *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) .bg-primary-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] .bg-blue-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] .bg-blue-50 *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) .bg-blue-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] .bg-blue-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] .bg-blue-100 *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) .bg-blue-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] [class*="bg-primary-50"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] [class*="bg-primary-50"] *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) [class*="bg-primary-50"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] [class*="bg-primary-100"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] [class*="bg-primary-100"] *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) [class*="bg-primary-100"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] [class*="bg-blue-50"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] [class*="bg-blue-50"] *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) [class*="bg-blue-50"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] [class*="bg-blue-100"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] [class*="bg-blue-100"] *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) [class*="bg-blue-100"] *:not([class*="material-icons"]):not(button):not(a) {
+  color: #5e52d5 !important;
+}
+
+/* Text on slate/gray backgrounds - light mode */
+[data-theme="light"] .bg-slate-50,
+[data-theme=""] .bg-slate-50,
+:root:not([data-theme="dark"]) .bg-slate-50,
+[data-theme="light"] .bg-slate-100,
+[data-theme=""] .bg-slate-100,
+:root:not([data-theme="dark"]) .bg-slate-100,
+[data-theme="light"] .bg-gray-50,
+[data-theme=""] .bg-gray-50,
+:root:not([data-theme="dark"]) .bg-gray-50,
+[data-theme="light"] .bg-gray-100,
+[data-theme=""] .bg-gray-100,
+:root:not([data-theme="dark"]) .bg-gray-100 {
+  color: #4b465c !important;
+}
+
+[data-theme="light"] .bg-slate-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] .bg-slate-50 *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) .bg-slate-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] .bg-slate-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] .bg-slate-100 *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) .bg-slate-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] .bg-gray-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] .bg-gray-50 *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) .bg-gray-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="light"] .bg-gray-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme=""] .bg-gray-100 *:not([class*="material-icons"]):not(button):not(a),
+:root:not([data-theme="dark"]) .bg-gray-100 *:not([class*="material-icons"]):not(button):not(a) {
+  color: #4b465c !important;
+}
+
+/* Override text-primary-* classes on colored backgrounds - light mode */
+[data-theme="light"] .bg-primary-50 .text-primary-500,
+[data-theme=""] .bg-primary-50 .text-primary-500,
+:root:not([data-theme="dark"]) .bg-primary-50 .text-primary-500,
+[data-theme="light"] .bg-primary-50 .text-primary-400,
+[data-theme=""] .bg-primary-50 .text-primary-400,
+:root:not([data-theme="dark"]) .bg-primary-50 .text-primary-400,
+[data-theme="light"] .bg-primary-50 .text-primary-300,
+[data-theme=""] .bg-primary-50 .text-primary-300,
+:root:not([data-theme="dark"]) .bg-primary-50 .text-primary-300,
+[data-theme="light"] .bg-primary-100 .text-primary-500,
+[data-theme=""] .bg-primary-100 .text-primary-500,
+:root:not([data-theme="dark"]) .bg-primary-100 .text-primary-500,
+[data-theme="light"] .bg-primary-100 .text-primary-400,
+[data-theme=""] .bg-primary-100 .text-primary-400,
+:root:not([data-theme="dark"]) .bg-primary-100 .text-primary-400,
+[data-theme="light"] .bg-primary-100 .text-primary-300,
+[data-theme=""] .bg-primary-100 .text-primary-300,
+:root:not([data-theme="dark"]) .bg-primary-100 .text-primary-300,
+[data-theme="light"] .bg-blue-50 .text-blue-500,
+[data-theme=""] .bg-blue-50 .text-blue-500,
+:root:not([data-theme="dark"]) .bg-blue-50 .text-blue-500,
+[data-theme="light"] .bg-blue-50 .text-blue-400,
+[data-theme=""] .bg-blue-50 .text-blue-400,
+:root:not([data-theme="dark"]) .bg-blue-50 .text-blue-400,
+[data-theme="light"] .bg-blue-50 .text-blue-300,
+[data-theme=""] .bg-blue-50 .text-blue-300,
+:root:not([data-theme="dark"]) .bg-blue-50 .text-blue-300,
+[data-theme="light"] .bg-blue-100 .text-blue-500,
+[data-theme=""] .bg-blue-100 .text-blue-500,
+:root:not([data-theme="dark"]) .bg-blue-100 .text-blue-500,
+[data-theme="light"] .bg-blue-100 .text-blue-400,
+[data-theme=""] .bg-blue-100 .text-blue-400,
+:root:not([data-theme="dark"]) .bg-blue-100 .text-blue-400,
+[data-theme="light"] .bg-blue-100 .text-blue-300,
+[data-theme=""] .bg-blue-100 .text-blue-300,
+:root:not([data-theme="dark"]) .bg-blue-100 .text-blue-300 {
+  color: #5e52d5 !important;
+}
+
+/* Ensure text-slate-* on colored backgrounds is visible - light mode */
+[data-theme="light"] .bg-primary-50 .text-slate-600,
+[data-theme=""] .bg-primary-50 .text-slate-600,
+:root:not([data-theme="dark"]) .bg-primary-50 .text-slate-600,
+[data-theme="light"] .bg-primary-50 .text-slate-700,
+[data-theme=""] .bg-primary-50 .text-slate-700,
+:root:not([data-theme="dark"]) .bg-primary-50 .text-slate-700,
+[data-theme="light"] .bg-primary-50 .text-slate-800,
+[data-theme=""] .bg-primary-50 .text-slate-800,
+:root:not([data-theme="dark"]) .bg-primary-50 .text-slate-800,
+[data-theme="light"] .bg-primary-100 .text-slate-600,
+[data-theme=""] .bg-primary-100 .text-slate-600,
+:root:not([data-theme="dark"]) .bg-primary-100 .text-slate-600,
+[data-theme="light"] .bg-primary-100 .text-slate-700,
+[data-theme=""] .bg-primary-100 .text-slate-700,
+:root:not([data-theme="dark"]) .bg-primary-100 .text-slate-700,
+[data-theme="light"] .bg-primary-100 .text-slate-800,
+[data-theme=""] .bg-primary-100 .text-slate-800,
+:root:not([data-theme="dark"]) .bg-primary-100 .text-slate-800,
+[data-theme="light"] .bg-blue-50 .text-slate-600,
+[data-theme=""] .bg-blue-50 .text-slate-600,
+:root:not([data-theme="dark"]) .bg-blue-50 .text-slate-600,
+[data-theme="light"] .bg-blue-50 .text-slate-700,
+[data-theme=""] .bg-blue-50 .text-slate-700,
+:root:not([data-theme="dark"]) .bg-blue-50 .text-slate-700,
+[data-theme="light"] .bg-blue-50 .text-slate-800,
+[data-theme=""] .bg-blue-50 .text-slate-800,
+:root:not([data-theme="dark"]) .bg-blue-50 .text-slate-800,
+[data-theme="light"] .bg-blue-100 .text-slate-600,
+[data-theme=""] .bg-blue-100 .text-slate-600,
+:root:not([data-theme="dark"]) .bg-blue-100 .text-slate-600,
+[data-theme="light"] .bg-blue-100 .text-slate-700,
+[data-theme=""] .bg-blue-100 .text-slate-700,
+:root:not([data-theme="dark"]) .bg-blue-100 .text-slate-700,
+[data-theme="light"] .bg-blue-100 .text-slate-800,
+[data-theme=""] .bg-blue-100 .text-slate-800,
+:root:not([data-theme="dark"]) .bg-blue-100 .text-slate-800 {
+  color: #5e52d5 !important;
+}
+
+/* ========================================
+   MODAL TEXT-BACKGROUND CONTRAST FIXES
+   إصلاحات توافق النصوص مع الخلفيات في النوافذ
+   ======================================== */
+
+/* Modal body text colors - light mode */
+[data-theme="light"] .modal-body,
+[data-theme=""] .modal-body,
+:root:not([data-theme="dark"]) .modal-body,
+[data-theme="light"] [class*="modal-body"],
+[data-theme=""] [class*="modal-body"],
+:root:not([data-theme="dark"]) [class*="modal-body"],
+[data-theme="light"] [role="dialog"] .modal-body,
+[data-theme=""] [role="dialog"] .modal-body,
+:root:not([data-theme="dark"]) [role="dialog"] .modal-body {
+  color: #4b465c !important;
+}
+
+[data-theme="light"] .modal-body *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] .modal-body *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) .modal-body *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] [class*="modal-body"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] [class*="modal-body"] *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) [class*="modal-body"] *:not(button):not(a):not([class*="material-icons"]) {
+  color: #4b465c !important;
+}
+
+/* Modal info messages with primary/blue backgrounds - light mode */
+[data-theme="light"] [role="dialog"] .bg-primary-50,
+[data-theme=""] [role="dialog"] .bg-primary-50,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-50,
+[data-theme="light"] [role="dialog"] .bg-primary-100,
+[data-theme=""] [role="dialog"] .bg-primary-100,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-100,
+[data-theme="light"] [role="dialog"] .bg-blue-50,
+[data-theme=""] [role="dialog"] .bg-blue-50,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-50,
+[data-theme="light"] [role="dialog"] .bg-blue-100,
+[data-theme=""] [role="dialog"] .bg-blue-100,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-100,
+[data-theme="light"] .modal-body .bg-primary-50,
+[data-theme=""] .modal-body .bg-primary-50,
+:root:not([data-theme="dark"]) .modal-body .bg-primary-50,
+[data-theme="light"] .modal-body .bg-primary-100,
+[data-theme=""] .modal-body .bg-primary-100,
+:root:not([data-theme="dark"]) .modal-body .bg-primary-100,
+[data-theme="light"] .modal-body .bg-blue-50,
+[data-theme=""] .modal-body .bg-blue-50,
+:root:not([data-theme="dark"]) .modal-body .bg-blue-50,
+[data-theme="light"] .modal-body .bg-blue-100,
+[data-theme=""] .modal-body .bg-blue-100,
+:root:not([data-theme="dark"]) .modal-body .bg-blue-100 {
+  background: #f5f3ff !important;
+  color: #5e52d5 !important;
+  border-color: #e9d5ff !important;
+}
+
+[data-theme="light"] [role="dialog"] .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] [role="dialog"] .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] [role="dialog"] .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] [role="dialog"] .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] [role="dialog"] .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] [role="dialog"] .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] [role="dialog"] .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] [role="dialog"] .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] .modal-body .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] .modal-body .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) .modal-body .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] .modal-body .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] .modal-body .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) .modal-body .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] .modal-body .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] .modal-body .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) .modal-body .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] .modal-body .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] .modal-body .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) .modal-body .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]) {
+  color: #5e52d5 !important;
+}
+
+/* Modal text-primary-* on colored backgrounds - light mode */
+[data-theme="light"] [role="dialog"] .bg-primary-50 .text-primary-600,
+[data-theme=""] [role="dialog"] .bg-primary-50 .text-primary-600,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-50 .text-primary-600,
+[data-theme="light"] [role="dialog"] .bg-primary-50 .text-primary-700,
+[data-theme=""] [role="dialog"] .bg-primary-50 .text-primary-700,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-50 .text-primary-700,
+[data-theme="light"] [role="dialog"] .bg-primary-50 .text-primary-800,
+[data-theme=""] [role="dialog"] .bg-primary-50 .text-primary-800,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-50 .text-primary-800,
+[data-theme="light"] [role="dialog"] .bg-primary-100 .text-primary-600,
+[data-theme=""] [role="dialog"] .bg-primary-100 .text-primary-600,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-100 .text-primary-600,
+[data-theme="light"] [role="dialog"] .bg-primary-100 .text-primary-700,
+[data-theme=""] [role="dialog"] .bg-primary-100 .text-primary-700,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-100 .text-primary-700,
+[data-theme="light"] [role="dialog"] .bg-primary-100 .text-primary-800,
+[data-theme=""] [role="dialog"] .bg-primary-100 .text-primary-800,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-primary-100 .text-primary-800,
+[data-theme="light"] [role="dialog"] .bg-blue-50 .text-blue-600,
+[data-theme=""] [role="dialog"] .bg-blue-50 .text-blue-600,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-50 .text-blue-600,
+[data-theme="light"] [role="dialog"] .bg-blue-50 .text-blue-700,
+[data-theme=""] [role="dialog"] .bg-blue-50 .text-blue-700,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-50 .text-blue-700,
+[data-theme="light"] [role="dialog"] .bg-blue-50 .text-blue-900,
+[data-theme=""] [role="dialog"] .bg-blue-50 .text-blue-900,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-50 .text-blue-900,
+[data-theme="light"] [role="dialog"] .bg-blue-100 .text-blue-600,
+[data-theme=""] [role="dialog"] .bg-blue-100 .text-blue-600,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-100 .text-blue-600,
+[data-theme="light"] [role="dialog"] .bg-blue-100 .text-blue-700,
+[data-theme=""] [role="dialog"] .bg-blue-100 .text-blue-700,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-100 .text-blue-700,
+[data-theme="light"] [role="dialog"] .bg-blue-100 .text-blue-900,
+[data-theme=""] [role="dialog"] .bg-blue-100 .text-blue-900,
+:root:not([data-theme="dark"]) [role="dialog"] .bg-blue-100 .text-blue-900,
+[data-theme="light"] .modal-body .bg-primary-50 .text-primary-600,
+[data-theme=""] .modal-body .bg-primary-50 .text-primary-600,
+:root:not([data-theme="dark"]) .modal-body .bg-primary-50 .text-primary-600,
+[data-theme="light"] .modal-body .bg-primary-50 .text-primary-700,
+[data-theme=""] .modal-body .bg-primary-50 .text-primary-700,
+:root:not([data-theme="dark"]) .modal-body .bg-primary-50 .text-primary-700,
+[data-theme="light"] .modal-body .bg-primary-50 .text-primary-800,
+[data-theme=""] .modal-body .bg-primary-50 .text-primary-800,
+:root:not([data-theme="dark"]) .modal-body .bg-primary-50 .text-primary-800,
+[data-theme="light"] .modal-body .bg-primary-100 .text-primary-600,
+[data-theme=""] .modal-body .bg-primary-100 .text-primary-600,
+:root:not([data-theme="dark"]) .modal-body .bg-primary-100 .text-primary-600,
+[data-theme="light"] .modal-body .bg-primary-100 .text-primary-700,
+[data-theme=""] .modal-body .bg-primary-100 .text-primary-700,
+:root:not([data-theme="dark"]) .modal-body .bg-primary-100 .text-primary-700,
+[data-theme="light"] .modal-body .bg-primary-100 .text-primary-800,
+[data-theme=""] .modal-body .bg-primary-100 .text-primary-800,
+:root:not([data-theme="dark"]) .modal-body .bg-primary-100 .text-primary-800,
+[data-theme="light"] .modal-body .bg-blue-50 .text-blue-600,
+[data-theme=""] .modal-body .bg-blue-50 .text-blue-600,
+:root:not([data-theme="dark"]) .modal-body .bg-blue-50 .text-blue-600,
+[data-theme="light"] .modal-body .bg-blue-50 .text-blue-700,
+[data-theme=""] .modal-body .bg-blue-50 .text-blue-700,
+:root:not([data-theme="dark"]) .modal-body .bg-blue-50 .text-blue-700,
+[data-theme="light"] .modal-body .bg-blue-50 .text-blue-900,
+[data-theme=""] .modal-body .bg-blue-50 .text-blue-900,
+:root:not([data-theme="dark"]) .modal-body .bg-blue-50 .text-blue-900,
+[data-theme="light"] .modal-body .bg-blue-100 .text-blue-600,
+[data-theme=""] .modal-body .bg-blue-100 .text-blue-600,
+:root:not([data-theme="dark"]) .modal-body .bg-blue-100 .text-blue-600,
+[data-theme="light"] .modal-body .bg-blue-100 .text-blue-700,
+[data-theme=""] .modal-body .bg-blue-100 .text-blue-700,
+:root:not([data-theme="dark"]) .modal-body .bg-blue-100 .text-blue-700,
+[data-theme="light"] .modal-body .bg-blue-100 .text-blue-900,
+[data-theme=""] .modal-body .bg-blue-100 .text-blue-900,
+:root:not([data-theme="dark"]) .modal-body .bg-blue-100 .text-blue-900 {
+  color: #5e52d5 !important;
+}
+
+/* Modal gradient backgrounds - light mode */
+[data-theme="light"] [role="dialog"] [class*="from-primary-50"],
+[data-theme=""] [role="dialog"] [class*="from-primary-50"],
+:root:not([data-theme="dark"]) [role="dialog"] [class*="from-primary-50"],
+[data-theme="light"] [role="dialog"] [class*="from-primary-100"],
+[data-theme=""] [role="dialog"] [class*="from-primary-100"],
+:root:not([data-theme="dark"]) [role="dialog"] [class*="from-primary-100"],
+[data-theme="light"] [role="dialog"] [class*="from-blue-50"],
+[data-theme=""] [role="dialog"] [class*="from-blue-50"],
+:root:not([data-theme="dark"]) [role="dialog"] [class*="from-blue-50"],
+[data-theme="light"] [role="dialog"] [class*="from-blue-100"],
+[data-theme=""] [role="dialog"] [class*="from-blue-100"],
+:root:not([data-theme="dark"]) [role="dialog"] [class*="from-blue-100"],
+[data-theme="light"] .modal-body [class*="from-primary-50"],
+[data-theme=""] .modal-body [class*="from-primary-50"],
+:root:not([data-theme="dark"]) .modal-body [class*="from-primary-50"],
+[data-theme="light"] .modal-body [class*="from-primary-100"],
+[data-theme=""] .modal-body [class*="from-primary-100"],
+:root:not([data-theme="dark"]) .modal-body [class*="from-primary-100"],
+[data-theme="light"] .modal-body [class*="from-blue-50"],
+[data-theme=""] .modal-body [class*="from-blue-50"],
+:root:not([data-theme="dark"]) .modal-body [class*="from-blue-50"],
+[data-theme="light"] .modal-body [class*="from-blue-100"],
+[data-theme=""] .modal-body [class*="from-blue-100"],
+:root:not([data-theme="dark"]) .modal-body [class*="from-blue-100"] {
+  background: #f5f3ff !important;
+  color: #5e52d5 !important;
+}
+
+[data-theme="light"] [role="dialog"] [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] [role="dialog"] [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) [role="dialog"] [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] [role="dialog"] [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] [role="dialog"] [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) [role="dialog"] [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] [role="dialog"] [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] [role="dialog"] [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) [role="dialog"] [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] [role="dialog"] [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] [role="dialog"] [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) [role="dialog"] [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] .modal-body [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] .modal-body [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) .modal-body [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] .modal-body [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] .modal-body [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) .modal-body [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] .modal-body [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] .modal-body [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) .modal-body [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="light"] .modal-body [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme=""] .modal-body [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]),
+:root:not([data-theme="dark"]) .modal-body [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]) {
+  color: #5e52d5 !important;
+}
+

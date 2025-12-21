@@ -642,7 +642,7 @@ function InventoryPageContent() {
             setCycleFormData(new BaseModel({ name: '', start_date: '', end_date: '', department_id: '', notes: '' }));
           }}
           title={editingCycle ? "تعديل دورة جرد" : "إضافة دورة جرد جديدة"}
-          size="md"
+          size="lg"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button
@@ -718,7 +718,7 @@ function InventoryPageContent() {
             setItemFormData(new BaseModel({ cycle_id: '', asset_id: '', scanned_tag: '', scanned_office_id: '', found: true, note: '' }));
           }}
           title={editingItem ? "تعديل عنصر جرد" : "إضافة عنصر جرد جديد"}
-          size="md"
+          size="lg"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button
@@ -818,7 +818,7 @@ function InventoryPageContent() {
             setBulkEditCycleFormDataArray([]);
           }}
           title={`تحرير جماعي (${selectedCyclesForBulkEdit.length} دورة)`}
-          size="xl"
+          size="full"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button
@@ -905,7 +905,7 @@ function InventoryPageContent() {
             setBulkEditItemFormDataArray([]);
           }}
           title={`تحرير جماعي (${selectedItemsForBulkEdit.length} عنصر)`}
-          size="xl"
+          size="full"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button

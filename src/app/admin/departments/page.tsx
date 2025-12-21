@@ -337,7 +337,7 @@ function DepartmentsPageContent() {
             setFormData(new BaseModel({ name: '', description: '', notes: '' }));
           }}
           title={editingDepartment ? "تعديل إدارة" : "إضافة إدارة جديدة"}
-          size="md"
+          size="lg"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button

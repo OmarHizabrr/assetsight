@@ -198,9 +198,9 @@ export function BulkEditModal({
   // حساب الحجم المناسب بناءً على عدد الحقول
   const modalSize = React.useMemo(() => {
     const fieldCount = fields.length;
-    if (fieldCount <= 1) return 'md';      // 600px
-    if (fieldCount === 2) return 'lg';     // 900px
-    return 'full';                          // 1600px - للحقول المتعددة
+    if (fieldCount <= 1) return 'lg';      // 1200px
+    if (fieldCount === 2) return 'xl';     // 1400px
+    return 'full';                          // 1800px - للحقول المتعددة
   }, [fields.length]);
 
   return (

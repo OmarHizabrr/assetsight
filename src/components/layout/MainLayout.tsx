@@ -876,8 +876,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
           
           {/* Content Container - Enhanced */}
-          <div className="relative min-h-full z-10">
-            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-10">
+          <div className="relative min-h-full z-10 w-full">
+            <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-6 lg:py-8">
               {children}
             </div>
           </div>

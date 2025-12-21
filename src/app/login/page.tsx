@@ -166,6 +166,10 @@ export default function LoginPage() {
                         textShadow: isDark
                           ? '0 0 0 rgba(248, 250, 252, 0.95), 0 2px 12px rgba(0, 0, 0, 0.5), 0 4px 20px rgba(0, 0, 0, 0.3)'
                           : '0 0 0 rgba(15, 23, 42, 0.9), 0 2px 12px rgba(255, 255, 255, 0.7), 0 4px 20px rgba(255, 255, 255, 0.4)',
+                        // تجنب استخدام background shorthand مع backgroundClip
+                        backgroundImage: 'none',
+                        backgroundClip: 'border-box',
+                        WebkitBackgroundClip: 'border-box',
                       }}
                     >
                       AssetSight

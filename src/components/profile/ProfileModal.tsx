@@ -178,7 +178,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       isOpen={isOpen}
       onClose={handleClose}
       title="تعديل البروفايل"
-      size="md"
+      size="lg"
       footer={
         <div className="flex justify-end gap-4 w-full">
           <Button

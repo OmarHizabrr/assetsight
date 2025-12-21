@@ -795,31 +795,31 @@ function UsersPageContent() {
   return (
     <MainLayout>
       {/* Page Header */}
-      <div className="mb-10 relative animate-fade-in-down">
+      <div className="mb-4 relative animate-fade-in-down w-full">
         {/* Decorative Background */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-full blur-3xl -z-10 animate-pulse-soft"></div>
         <div className="absolute top-10 left-10 w-48 h-48 bg-gradient-to-br from-success-500/5 to-warning-500/5 rounded-full blur-3xl -z-10 animate-pulse-soft" style={{ animationDelay: '0.5s' }}></div>
         
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-110 material-transition animate-float">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-0 w-full">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-3">
+              <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 overflow-hidden group hover:scale-110 material-transition animate-float">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <MaterialIcon name="people" className="text-white relative z-10 group-hover:scale-110 material-transition" size="3xl" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm animate-pulse-soft"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm animate-pulse-soft" style={{ animationDelay: '0.3s' }}></div>
+                <MaterialIcon name="people" className="text-white relative z-10 group-hover:scale-110 material-transition" size="2xl" />
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-white/20 rounded-full blur-sm animate-pulse-soft"></div>
+                <div className="absolute -bottom-2 -left-2 w-5 h-5 bg-white/10 rounded-full blur-sm animate-pulse-soft" style={{ animationDelay: '0.3s' }}></div>
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl sm:text-5xl font-black text-gradient-primary">
+                <div className="flex items-center gap-2 mb-1">
+                  <h1 className="text-3xl sm:text-4xl font-black text-gradient-primary">
                     المستخدمون
                   </h1>
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200 animate-fade-in">
+                  <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 bg-primary-50 rounded-full border border-primary-200 animate-fade-in">
                     <MaterialIcon name="people" className="text-primary-600" size="sm" />
                     <span className="text-xs font-semibold text-primary-700">{users.length}</span>
                   </div>
                 </div>
-                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2 animate-fade-in">
+                <p className="text-slate-600 text-sm sm:text-base font-semibold flex items-center gap-1.5 animate-fade-in">
                   <MaterialIcon name="info" className="text-slate-400" size="sm" />
                   <span>إدارة وإضافة المستخدمين في النظام</span>
                 </p>
@@ -827,7 +827,7 @@ function UsersPageContent() {
             </div>
           </div>
           {canAdd && (
-            <div className="flex flex-col sm:flex-row gap-3 animate-fade-in-left">
+            <div className="flex flex-col sm:flex-row gap-2 animate-fade-in-left">
               <Button
                 onClick={() => setIsImportModalOpen(true)}
                 size="lg"
@@ -867,13 +867,13 @@ function UsersPageContent() {
       </div>
 
       {/* Filter Section */}
-      <div className="mb-6 p-4 bg-white rounded-xl border-2 border-slate-200/80 shadow-sm animate-fade-in">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="flex items-center gap-2">
-            <MaterialIcon name="filter_alt" className="text-primary-600" size="lg" />
-            <span className="font-bold text-slate-700">فلتر حسب نوع المستخدم:</span>
+      <div className="mb-3 p-3 bg-white rounded-xl border-2 border-slate-200/80 shadow-sm animate-fade-in w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
+          <div className="flex items-center gap-1.5">
+            <MaterialIcon name="filter_alt" className="text-primary-600" size="md" />
+            <span className="font-bold text-slate-700 text-sm">فلتر حسب نوع المستخدم:</span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <Button
               variant={userTypeFilter === 'all' ? 'primary' : 'outline'}
               size="sm"
@@ -939,7 +939,7 @@ function UsersPageContent() {
           setShowConfirmPassword(false);
           }}
           title={editingUser ? "تعديل مستخدم" : "إضافة مستخدم جديد"}
-          size="xl"
+          size="full"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button

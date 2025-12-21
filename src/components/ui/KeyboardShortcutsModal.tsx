@@ -44,7 +44,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
       isOpen={isOpen}
       onClose={onClose}
       title="⌨️ اختصارات لوحة المفاتيح"
-      size="lg"
+      size="xl"
     >
       <div className="space-y-6">
         {categories.map(category => (

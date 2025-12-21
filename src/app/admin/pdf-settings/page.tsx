@@ -296,7 +296,7 @@ function PdfSettingsPageContent() {
             editingField === 'leftHeader' ? 'تحرير الرأس الأيسر' :
             'تحرير التذييل'
           }
-          size="lg"
+          size="full"
           footer={
             <div className="flex gap-3 justify-end">
               <Button

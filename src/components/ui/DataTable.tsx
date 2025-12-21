@@ -85,6 +85,7 @@ export interface DataTableProps {
   onArchive?: (item: BaseModel) => void;
   onAddNew?: () => void;
   onBulkEdit?: (items: BaseModel[]) => void; // دالة التحرير الجماعي
+  onBulkDelete?: (items: BaseModel[]) => void; // دالة الحذف الجماعي
   loading?: boolean;
   title?: string;
   exportFileName?: string;
@@ -101,6 +102,7 @@ export function DataTable({
   onArchive,
   onAddNew,
   onBulkEdit,
+  onBulkDelete,
   loading = false,
   title,
   exportFileName = 'export',
@@ -421,23 +423,56 @@ export function DataTable({
   };
 
   const handleDeleteSelected = () => {
-    if (!onDelete || selectedRows.size === 0) return;
+    if (selectedRows.size === 0) return;
+
+    // الحصول على جميع العناصر المحددة (من جميع الصفحات)
+    // إنشاء Map للبحث السريع
+    const selectedIdsSet = new Set(selectedRows);
+    const selectedItems: BaseModel[] = [];
     
-    const selectedItems = paginatedData.filter(item => {
+    // البحث في جميع البيانات
+    for (const item of data) {
       const id = item.get('id');
-      return id && selectedRows.has(id);
-    });
-
-    // Delete all selected items
-    selectedItems.forEach(item => {
-      if (onDelete) {
-        onDelete(item);
+      if (id) {
+        // تحويل ID إلى string للمقارنة
+        const idString = String(id);
+        if (selectedIdsSet.has(idString)) {
+          selectedItems.push(item);
+          // إزالة ID من Set لتجنب التكرار
+          selectedIdsSet.delete(idString);
+        }
       }
-    });
+    }
 
-    setSelectedRows(new Set());
-    setIsSelectAll(false);
-    setLastSelectedIndex(null);
+    // إذا بقي أي IDs في Set، يعني أن هناك عناصر محددة لكن غير موجودة في البيانات
+    if (selectedIdsSet.size > 0) {
+      console.warn('Some selected IDs not found in data:', Array.from(selectedIdsSet));
+    }
+
+    if (selectedItems.length === 0) {
+      console.warn('No items found for selected IDs. Selected:', Array.from(selectedRows), 'Total data:', data.length);
+      return;
+    }
+
+    console.log(`Deleting ${selectedItems.length} items (${selectedRows.size} were selected)`);
+
+    // استخدام onBulkDelete إذا كان متوفراً (الأولوية للحذف الجماعي)
+    if (onBulkDelete) {
+      console.log('Using onBulkDelete for', selectedItems.length, 'items');
+      onBulkDelete(selectedItems);
+    } else if (onDelete && selectedItems.length === 1) {
+      // استخدام onDelete فقط إذا كان عنصر واحد وليس متوفر onBulkDelete
+      console.log('Using onDelete for single item');
+      onDelete(selectedItems[0]);
+    } else if (onDelete) {
+      // إذا كان هناك عدة عناصر وليس متوفر onBulkDelete، نستخدم onDelete لكل عنصر
+      console.log('Using onDelete for multiple items (no onBulkDelete available)');
+      selectedItems.forEach(item => {
+        onDelete(item);
+      });
+    }
+
+    // لا نمسح التحديد هنا - سيتم مسحه بعد الحذف الناجح
   };
 
   // Reset to first page when items per page changes
@@ -907,10 +942,12 @@ export function DataTable({
     <>
     <Card 
       variant="flat" 
-      className="overflow-visible animate-scale-in border border-slate-200 dark:border-slate-700 shadow-sm data-table-card mt-0"
+      className="overflow-visible animate-scale-in border border-slate-200 dark:border-slate-700 shadow-sm data-table-card mt-0 w-full"
       style={{
         backgroundColor: 'var(--card-bg, #ffffff)',
         marginTop: '0.75rem',
+        width: '100%',
+        maxWidth: '100%',
       }}
     >
       <CardHeader 
@@ -931,11 +968,19 @@ export function DataTable({
               {onBulkEdit && (
                 <Button
                   onClick={() => {
-                    const selectedItems = data.filter(item => {
+                    const selectedItems: BaseModel[] = [];
+                    const selectedIdsSet = new Set(selectedRows);
+                    
+                    for (const item of data) {
                       const id = item.get('id');
-                      return id && selectedRows.has(String(id));
-                    });
-                    onBulkEdit(selectedItems);
+                      if (id && selectedIdsSet.has(String(id))) {
+                        selectedItems.push(item);
+                      }
+                    }
+                    
+                    if (selectedItems.length > 0) {
+                      onBulkEdit(selectedItems);
+                    }
                   }}
                   variant="primary"
                   size="sm"
@@ -945,7 +990,7 @@ export function DataTable({
                   تحرير جماعي ({selectedRows.size})
                 </Button>
               )}
-              {onDelete && (
+              {(onDelete || onBulkDelete) && (
                 <Button
                   onClick={handleDeleteSelected}
                   variant="outline"
@@ -1213,7 +1258,6 @@ export function DataTable({
                   style={{
                     borderBottom: '1px solid #f0eff2',
                     transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    backgroundColor: isSelected ? '#f0f4ff' : 'transparent',
                     animationDelay: `${index * 0.02}s`,
                     animationFillMode: 'both',
                     borderLeft: isSelected ? '4px solid #7367f0' : 'none'
@@ -1248,7 +1292,7 @@ export function DataTable({
                     e.currentTarget.style.background = 'transparent';
                       e.currentTarget.style.borderLeft = 'none';
                     } else {
-                      e.currentTarget.style.background = '#f0f4ff';
+                      // Use CSS class instead of inline style - will be handled by CSS rules
                       e.currentTarget.style.borderLeft = '4px solid #7367f0';
                     }
                     e.currentTarget.style.boxShadow = 'none';

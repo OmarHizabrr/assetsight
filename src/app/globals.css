@@ -13,6 +13,8 @@
 @import '../styles/consistency-improvements.css';
 @import '../styles/seo-improvements.css';
 @import '../styles/text-wrapping-fixes.css';
+@import '../styles/table-full-width.css';
+@import '../styles/compact-layout.css';
 
 /* ========================================
    CRITICAL SPACING OVERRIDES - تجاوز حاسم للمسافات
@@ -651,7 +653,7 @@ input, textarea {
   position: relative;
   width: auto;
   margin: 1.75rem auto;
-  max-width: 500px;
+  max-width: 800px;
   pointer-events: none;
   z-index: 10000 !important;
 }
@@ -759,20 +761,20 @@ input, textarea {
 
 /* Modal Sizes */
 .modal-sm {
-  max-width: 300px;
+  max-width: 500px;
 }
 
 .modal-lg {
-  max-width: 800px;
+  max-width: 1200px;
 }
 
 .modal-xl {
-  max-width: 1140px;
+  max-width: 1400px;
 }
 
 /* Default modal size */
 .modal-dialog:not(.modal-sm):not(.modal-lg):not(.modal-xl):not(.modal-fullscreen) {
-  max-width: 500px;
+  max-width: 800px;
 }
 
 .modal-fullscreen {
@@ -790,20 +792,31 @@ input, textarea {
 
 @media (min-width: 576px) {
   .modal-sm {
-    max-width: 300px;
+    max-width: 500px;
   }
 }
 
 @media (min-width: 992px) {
-  .modal-lg,
+  .modal-lg {
+    max-width: 1200px;
+  }
   .modal-xl {
-    max-width: 800px;
+    max-width: 1400px;
   }
 }
 
 @media (min-width: 1200px) {
   .modal-xl {
-    max-width: 1140px;
+    max-width: 1400px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .modal-lg {
+    max-width: 1400px;
+  }
+  .modal-xl {
+    max-width: 1600px;
   }
 }
 
@@ -1336,5 +1349,264 @@ main > div:first-child[class*="relative"] {
 [data-theme="dark"] main [class*="Card"] textarea::placeholder {
   color: rgb(148, 163, 184) !important;
   opacity: 1 !important;
+}
+
+/* ========================================================================
+   🎨 CRITICAL: BLUE/PRIMARY COLOR CONTRAST FIXES - GLOBAL OVERRIDES
+   إصلاحات حاسمة لتباين الألوان الزرقاء/البنفسجية - تجاوزات عامة
+   ======================================================================== */
+
+/* Ensure proper contrast for primary/blue backgrounds with text in both modes */
+.bg-primary-50,
+[class*="bg-primary-50"],
+.bg-primary-100,
+[class*="bg-primary-100"] {
+  /* Default light mode colors */
+  background-color: #f5f3ff !important;
+  border-color: #e9d5ff !important;
+}
+
+.bg-blue-50,
+[class*="bg-blue-50"],
+.bg-blue-100,
+[class*="bg-blue-100"],
+.bg-info-50,
+[class*="bg-info-50"],
+.bg-info-100,
+[class*="bg-info-100"] {
+  /* Default light mode colors */
+  background-color: #eff6ff !important;
+  border-color: #dbeafe !important;
+}
+
+/* Text colors on primary/blue backgrounds - ensure contrast */
+.bg-primary-50 .text-primary-600,
+.bg-primary-50 .text-primary-700,
+.bg-primary-50 .text-primary-800,
+[class*="bg-primary-50"] .text-primary-600,
+[class*="bg-primary-50"] .text-primary-700,
+[class*="bg-primary-50"] .text-primary-800,
+.bg-primary-100 .text-primary-600,
+.bg-primary-100 .text-primary-700,
+.bg-primary-100 .text-primary-800,
+[class*="bg-primary-100"] .text-primary-600,
+[class*="bg-primary-100"] .text-primary-700,
+[class*="bg-primary-100"] .text-primary-800 {
+  /* Default light mode - dark text on light background */
+  color: #5e52d5 !important;
+}
+
+.bg-blue-50 *,
+[class*="bg-blue-50"] *,
+.bg-blue-100 *,
+[class*="bg-blue-100"] *,
+.bg-info-50 *,
+[class*="bg-info-50"] *,
+.bg-info-100 *,
+[class*="bg-info-100"] * {
+  /* Default light mode - dark blue text on light blue background */
+  color: #1e40af !important;
+}
+
+/* Selected table rows with primary background */
+tr.bg-primary-50,
+tr[class*="bg-primary-50"] {
+  background-color: #f5f3ff !important;
+}
+
+tr.bg-primary-50 td,
+tr[class*="bg-primary-50"] td {
+  color: #5e52d5 !important;
+}
+
+/* Hover states */
+.hover\:bg-primary-50:hover,
+[class*="hover:bg-primary-50"]:hover {
+  background-color: #ede9fe !important;
+}
+
+.hover\:bg-primary-100:hover,
+[class*="hover:bg-primary-100"]:hover {
+  background-color: #ddd6fe !important;
+}
+
+/* ========================================================================
+   🎨 COMPREHENSIVE TEXT-BACKGROUND CONTRAST - GLOBAL RULES
+   قواعد شاملة لتوافق النصوص مع الخلفيات - قواعد عامة
+   ======================================================================== */
+
+/* Force text visibility on all colored backgrounds */
+.bg-primary-50,
+.bg-primary-100,
+.bg-blue-50,
+.bg-blue-100,
+.bg-info-50,
+.bg-info-100,
+[class*="bg-primary-50"],
+[class*="bg-primary-100"],
+[class*="bg-blue-50"],
+[class*="bg-blue-100"],
+[class*="bg-info-50"],
+[class*="bg-info-100"] {
+  /* Default light mode text color */
+  color: #5e52d5 !important;
+}
+
+/* All text elements inside colored backgrounds */
+.bg-primary-50 span:not([class*="material-icons"]):not(button):not(a),
+.bg-primary-50 p:not(button):not(a),
+.bg-primary-50 div:not(button):not(a),
+.bg-primary-100 span:not([class*="material-icons"]):not(button):not(a),
+.bg-primary-100 p:not(button):not(a),
+.bg-primary-100 div:not(button):not(a),
+.bg-blue-50 span:not([class*="material-icons"]):not(button):not(a),
+.bg-blue-50 p:not(button):not(a),
+.bg-blue-50 div:not(button):not(a),
+.bg-blue-100 span:not([class*="material-icons"]):not(button):not(a),
+.bg-blue-100 p:not(button):not(a),
+.bg-blue-100 div:not(button):not(a),
+[class*="bg-primary-50"] span:not([class*="material-icons"]):not(button):not(a),
+[class*="bg-primary-50"] p:not(button):not(a),
+[class*="bg-primary-50"] div:not(button):not(a),
+[class*="bg-primary-100"] span:not([class*="material-icons"]):not(button):not(a),
+[class*="bg-primary-100"] p:not(button):not(a),
+[class*="bg-primary-100"] div:not(button):not(a),
+[class*="bg-blue-50"] span:not([class*="material-icons"]):not(button):not(a),
+[class*="bg-blue-50"] p:not(button):not(a),
+[class*="bg-blue-50"] div:not(button):not(a),
+[class*="bg-blue-100"] span:not([class*="material-icons"]):not(button):not(a),
+[class*="bg-blue-100"] p:not(button):not(a),
+[class*="bg-blue-100"] div:not(button):not(a) {
+  /* Default light mode text color */
+  color: #5e52d5 !important;
+}
+
+/* Override all text color classes on colored backgrounds */
+.bg-primary-50 .text-primary-400,
+.bg-primary-50 .text-primary-300,
+.bg-primary-50 .text-primary-200,
+.bg-primary-100 .text-primary-400,
+.bg-primary-100 .text-primary-300,
+.bg-primary-100 .text-primary-200,
+.bg-blue-50 .text-blue-400,
+.bg-blue-50 .text-blue-300,
+.bg-blue-50 .text-blue-200,
+.bg-blue-100 .text-blue-400,
+.bg-blue-100 .text-blue-300,
+.bg-blue-100 .text-blue-200,
+[class*="bg-primary-50"] .text-primary-400,
+[class*="bg-primary-50"] .text-primary-300,
+[class*="bg-primary-50"] .text-primary-200,
+[class*="bg-primary-100"] .text-primary-400,
+[class*="bg-primary-100"] .text-primary-300,
+[class*="bg-primary-100"] .text-primary-200,
+[class*="bg-blue-50"] .text-blue-400,
+[class*="bg-blue-50"] .text-blue-300,
+[class*="bg-blue-50"] .text-blue-200,
+[class*="bg-blue-100"] .text-blue-400,
+[class*="bg-blue-100"] .text-blue-300,
+[class*="bg-blue-100"] .text-blue-200 {
+  /* Ensure darker text on light backgrounds */
+  color: #5e52d5 !important;
+}
+
+/* ========================================================================
+   🎨 MODAL TEXT-BACKGROUND CONTRAST - GLOBAL RULES
+   قواعد عامة لتوافق النصوص مع الخلفيات في النوافذ
+   ======================================================================== */
+
+/* Modal body default text colors */
+.modal-body,
+[class*="modal-body"],
+[role="dialog"] .modal-body {
+  color: #4b465c !important;
+}
+
+.modal-body *:not(button):not(a):not([class*="material-icons"]),
+[class*="modal-body"] *:not(button):not(a):not([class*="material-icons"]),
+[role="dialog"] .modal-body *:not(button):not(a):not([class*="material-icons"]) {
+  color: #4b465c !important;
+}
+
+/* Modal info messages with colored backgrounds */
+[role="dialog"] .bg-primary-50,
+[role="dialog"] .bg-primary-100,
+[role="dialog"] .bg-blue-50,
+[role="dialog"] .bg-blue-100,
+.modal-body .bg-primary-50,
+.modal-body .bg-primary-100,
+.modal-body .bg-blue-50,
+.modal-body .bg-blue-100,
+[role="dialog"] [class*="bg-primary-50"],
+[role="dialog"] [class*="bg-primary-100"],
+[role="dialog"] [class*="bg-blue-50"],
+[role="dialog"] [class*="bg-blue-100"] {
+  /* Default light mode colors */
+  background-color: #f5f3ff !important;
+  color: #5e52d5 !important;
+  border-color: #e9d5ff !important;
+}
+
+[role="dialog"] .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+[role="dialog"] .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+[role="dialog"] .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+[role="dialog"] .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]),
+.modal-body .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+.modal-body .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+.modal-body .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+.modal-body .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]) {
+  color: #5e52d5 !important;
+}
+
+/* Modal text-primary-* and text-blue-* on colored backgrounds */
+[role="dialog"] .bg-primary-50 .text-primary-600,
+[role="dialog"] .bg-primary-50 .text-primary-700,
+[role="dialog"] .bg-primary-50 .text-primary-800,
+[role="dialog"] .bg-primary-100 .text-primary-600,
+[role="dialog"] .bg-primary-100 .text-primary-700,
+[role="dialog"] .bg-primary-100 .text-primary-800,
+[role="dialog"] .bg-blue-50 .text-blue-600,
+[role="dialog"] .bg-blue-50 .text-blue-700,
+[role="dialog"] .bg-blue-50 .text-blue-900,
+[role="dialog"] .bg-blue-100 .text-blue-600,
+[role="dialog"] .bg-blue-100 .text-blue-700,
+[role="dialog"] .bg-blue-100 .text-blue-900,
+.modal-body .bg-primary-50 .text-primary-600,
+.modal-body .bg-primary-50 .text-primary-700,
+.modal-body .bg-primary-50 .text-primary-800,
+.modal-body .bg-primary-100 .text-primary-600,
+.modal-body .bg-primary-100 .text-primary-700,
+.modal-body .bg-primary-100 .text-primary-800,
+.modal-body .bg-blue-50 .text-blue-600,
+.modal-body .bg-blue-50 .text-blue-700,
+.modal-body .bg-blue-50 .text-blue-900,
+.modal-body .bg-blue-100 .text-blue-600,
+.modal-body .bg-blue-100 .text-blue-700,
+.modal-body .bg-blue-100 .text-blue-900 {
+  color: #5e52d5 !important;
+}
+
+/* Modal gradient backgrounds */
+[role="dialog"] [class*="from-primary-50"],
+[role="dialog"] [class*="from-primary-100"],
+[role="dialog"] [class*="from-blue-50"],
+[role="dialog"] [class*="from-blue-100"],
+.modal-body [class*="from-primary-50"],
+.modal-body [class*="from-primary-100"],
+.modal-body [class*="from-blue-50"],
+.modal-body [class*="from-blue-100"] {
+  background: #f5f3ff !important;
+  color: #5e52d5 !important;
+}
+
+[role="dialog"] [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+[role="dialog"] [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+[role="dialog"] [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+[role="dialog"] [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]),
+.modal-body [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+.modal-body [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+.modal-body [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+.modal-body [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]) {
+  color: #5e52d5 !important;
 }
 

@@ -38,9 +38,13 @@ function AssetsPageContent() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [deletingAsset, setDeletingAsset] = useState<BaseModel | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [deletingAssets, setDeletingAssets] = useState<BaseModel[]>([]);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const [editingAsset, setEditingAsset] = useState<BaseModel | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedAssetsForBulkEdit, setSelectedAssetsForBulkEdit] = useState<BaseModel[]>([]);
@@ -227,7 +231,7 @@ function AssetsPageContent() {
         }
         data.status_id = statusId;
       }
-      
+
       const assetId = editingAsset?.get('id');
       if (assetId) {
         const docRef = firestoreApi.getDocument("assets", assetId);
@@ -365,6 +369,82 @@ function AssetsPageContent() {
       showError("حدث خطأ أثناء الحذف");
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const handleBulkDelete = (selectedAssets: BaseModel[]) => {
+    if (!selectedAssets || selectedAssets.length === 0) {
+      showWarning("لم يتم تحديد أي أصول للحذف");
+      return;
+    }
+    console.log(`Bulk delete requested for ${selectedAssets.length} assets`);
+    setDeletingAssets(selectedAssets);
+    setIsBulkDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (deletingAssets.length === 0) {
+      showWarning("لم يتم تحديد أي أصول للحذف");
+      return;
+    }
+    
+    console.log(`Starting bulk delete for ${deletingAssets.length} assets`);
+    
+    try {
+      setBulkDeleteLoading(true);
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      // حذف جميع الأصول المحددة بشكل متوازي
+      const deletePromises = deletingAssets.map(async (asset, index) => {
+        const id = asset.get('id');
+        if (!id) {
+          errorCount++;
+          errors.push(`أصل #${index + 1} بدون معرف`);
+          console.warn(`Asset at index ${index} has no ID:`, asset.getData());
+          return;
+        }
+
+        try {
+          console.log(`Deleting asset ${index + 1}/${deletingAssets.length}: ${id}`);
+          const docRef = firestoreApi.getDocument("assets", id);
+          await firestoreApi.deleteData(docRef);
+          successCount++;
+          console.log(`Successfully deleted asset ${id}`);
+        } catch (error) {
+          errorCount++;
+          const assetTag = asset.get('asset_tag') || 'غير معروف';
+          const errorMsg = error instanceof Error ? error.message : 'خطأ غير معروف';
+          errors.push(`فشل حذف ${assetTag}: ${errorMsg}`);
+          console.error(`Failed to delete asset ${id}:`, error);
+        }
+      });
+
+      await Promise.all(deletePromises);
+
+      console.log(`Bulk delete completed: ${successCount} succeeded, ${errorCount} failed`);
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم حذف ${successCount} من ${deletingAssets.length} أصل بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+      } else {
+        showSuccess(`تم حذف جميع ${successCount} أصل بنجاح`);
+      }
+
+      // إعادة تحميل البيانات
+      await loadData();
+      setIsBulkDeleteModalOpen(false);
+      setDeletingAssets([]);
+      
+      // مسح التحديد بعد الحذف الناجح
+      // سيتم مسحه تلقائياً عند إعادة تحميل البيانات
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+      showError("حدث خطأ أثناء الحذف الجماعي");
+    } finally {
+      setBulkDeleteLoading(false);
     }
   };
 
@@ -552,91 +632,146 @@ function AssetsPageContent() {
 
   const handleImportData = async (data: Array<Record<string, any>>) => {
     setImportLoading(true);
+    setImportProgress({ current: 0, total: data.length });
     let successCount = 0;
     let errorCount = 0;
     const errors: string[] = [];
 
+    // إنشاء Maps للبحث السريع بدلاً من find (O(1) بدلاً من O(n))
+    const departmentsMap = new Map<string, BaseModel>();
+    const officesMap = new Map<string, BaseModel>(); // key: "deptId|officeName"
+    const usersMap = new Map<string, BaseModel>();
+    const currenciesMap = new Map<string, BaseModel>(); // key: name أو code
+    const assetNamesMap = new Map<string, BaseModel>();
+    const assetTypesMap = new Map<string, BaseModel>();
+    const assetStatusesMap = new Map<string, BaseModel>();
+
+    // تهيئة Maps من البيانات الحالية
+    departments.forEach(d => {
+      const name = d.get('name');
+      if (name) departmentsMap.set(name, d);
+    });
+    allOffices.forEach(o => {
+      const name = o.get('name');
+      const deptId = o.get('department_id');
+      if (name && deptId) officesMap.set(`${deptId}|${name}`, o);
+    });
+    users.forEach(u => {
+      const name = u.get('full_name');
+      if (name) usersMap.set(name, u);
+    });
+    currencies.forEach(c => {
+      const name = c.get('name');
+      const code = c.get('code');
+      if (name) currenciesMap.set(name, c);
+      if (code) currenciesMap.set(code, c);
+    });
+    assetNames.forEach(n => {
+      const name = n.get('name');
+      if (name) assetNamesMap.set(name, n);
+    });
+    assetTypes.forEach(t => {
+      const name = t.get('name');
+      if (name) assetTypesMap.set(name, t);
+    });
+    assetStatuses.forEach(s => {
+      const name = s.get('name');
+      if (name) assetStatusesMap.set(name, s);
+    });
+
+    // دالة مساعدة لاستخراج القيمة من الصف
+    const normalizeKey = (key: string): string => {
+      return key.toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/[_\-\.,]/g, '')
+        .trim();
+    };
+
+    const getValue = (keys: string[], row: Record<string, any>): string => {
+      // أولاً: البحث المباشر بالأسماء المحددة
+      for (const key of keys) {
+        const value = row[key];
+        if (value !== undefined && value !== null && value !== '') {
+          return value.toString().trim();
+        }
+      }
+
+      // ثانياً: البحث في جميع مفاتيح الصف
+      const normalizedKeys = keys.map(normalizeKey);
+      const rowKeys = Object.keys(row);
+      
+      for (const rowKey of rowKeys) {
+        const normalizedRowKey = normalizeKey(rowKey);
+        
+        if (normalizedKeys.some(nk => normalizedRowKey === nk)) {
+          const value = row[rowKey];
+          if (value !== undefined && value !== null && value !== '') {
+            return value.toString().trim();
+          }
+        }
+        
+        if (normalizedKeys.some(nk => normalizedRowKey.includes(nk) || nk.includes(normalizedRowKey))) {
+          const value = row[rowKey];
+          if (value !== undefined && value !== null && value !== '') {
+            return value.toString().trim();
+          }
+        }
+      }
+
+      return '';
+    };
+
+    // معالجة السجلات بشكل متوازي (batch processing)
+    const BATCH_SIZE = 50; // معالجة 50 سجل في كل مرة
+    const batches: Array<Record<string, any>[]> = [];
+    
+    for (let i = 0; i < data.length; i += BATCH_SIZE) {
+      batches.push(data.slice(i, i + BATCH_SIZE));
+    }
+
     try {
-      for (let i = 0; i < data.length; i++) {
-        const row = data[i];
-        try {
-          // دالة مساعدة لاستخراج القيمة من الصف بأسماء مختلفة - مرنة جداً
-          const normalizeKey = (key: string): string => {
-            // إزالة المسافات والرموز الخاصة وتحويل إلى صغير
-            return key.toLowerCase()
-              .replace(/\s+/g, '') // إزالة جميع المسافات
-              .replace(/[_\-\.,]/g, '') // إزالة الرموز الخاصة
-              .trim();
-          };
-
-          const getValue = (keys: string[]): string => {
-            // أولاً: البحث المباشر بالأسماء المحددة
-            for (const key of keys) {
-              const value = row[key];
-              if (value !== undefined && value !== null && value !== '') {
-                return value.toString().trim();
-              }
-            }
-
-            // ثانياً: البحث في جميع مفاتيح الصف (مرونة عالية)
-            const normalizedKeys = keys.map(normalizeKey);
-            const rowKeys = Object.keys(row);
-            
-            for (const rowKey of rowKeys) {
-              const normalizedRowKey = normalizeKey(rowKey);
-              
-              // البحث عن تطابق كامل
-              if (normalizedKeys.some(nk => normalizedRowKey === nk)) {
-                const value = row[rowKey];
-                if (value !== undefined && value !== null && value !== '') {
-                  return value.toString().trim();
-                }
-              }
-              
-              // البحث عن تطابق جزئي (يحتوي على)
-              if (normalizedKeys.some(nk => normalizedRowKey.includes(nk) || nk.includes(normalizedRowKey))) {
-                const value = row[rowKey];
-                if (value !== undefined && value !== null && value !== '') {
-                  return value.toString().trim();
-                }
-              }
-            }
-
-            return '';
-          };
+      // معالجة كل batch
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+        
+        // معالجة السجلات في هذا batch بشكل متوازي
+        const batchPromises = batch.map(async (row, rowIndex) => {
+          const globalIndex = batchIndex * BATCH_SIZE + rowIndex;
+          
+          try {
 
           // استخراج البيانات من الصف
-          const assetTag = getValue(['كود الأصل', 'asset_tag', 'Asset Tag', 'asset_tag', 'ASSET_TAG']);
-          const assetName = getValue(['اسم الأصل', 'asset_name', 'Asset Name', 'name']);
-          const assetType = getValue(['نوع الأصل', 'type', 'Type', 'asset_type']);
-          const assetStatus = getValue(['حالة الأصل', 'status', 'Status', 'asset_status']);
-          const departmentName = getValue(['الإدارة', 'department', 'Department']);
-          const officeName = getValue(['المكتب', 'office', 'Office']);
-          const custodianName = getValue(['حامل الأصل', 'custodian', 'Custodian', 'user']);
-          const currencyName = getValue(['العملة', 'currency', 'Currency']);
-          const serialNumber = getValue(['الرقم التسلسلي', 'serial_number', 'Serial Number', 'serial']);
-          const category = getValue(['الفئة', 'category', 'Category']);
-          const description = getValue(['الوصف', 'description', 'Description']);
-          const purchaseDate = getValue(['تاريخ الشراء', 'purchase_date', 'Purchase Date', 'date']);
-          const purchaseValue = getValue(['قيمة الشراء', 'purchase_value', 'Purchase Value', 'value']);
-          const currentValue = getValue(['القيمة الحالية', 'current_value', 'Current Value']);
-          const currencyId = getValue(['currency_id', 'Currency ID']);
-          const warrantyEnd = getValue(['نهاية الضمان', 'warranty_end', 'Warranty End']);
-          const depreciationMethod = getValue(['طريقة الإهلاك', 'depreciation_method', 'Depreciation Method']);
-          const expectedLifetime = getValue(['عمر الخدمة', 'expected_lifetime_years', 'Expected Lifetime']);
-          const residualValue = getValue(['القيمة المتبقية', 'residual_value', 'Residual Value']);
-          const supplier = getValue(['المورد', 'supplier', 'Supplier']);
-          const invoiceNumber = getValue(['رقم الفاتورة', 'invoice_number', 'Invoice Number']);
-          const lastMaintenanceDate = getValue(['تاريخ آخر صيانة', 'last_maintenance_date', 'Last Maintenance Date']);
-          const isActive = getValue(['نشط', 'is_active', 'Is Active', 'active']);
+          const assetTag = getValue(['كود الأصل', 'asset_tag', 'Asset Tag', 'asset_tag', 'ASSET_TAG'], row);
+          const assetName = getValue(['اسم الأصل', 'asset_name', 'Asset Name', 'name'], row);
+          const assetType = getValue(['نوع الأصل', 'type', 'Type', 'asset_type'], row);
+          const assetStatus = getValue(['حالة الأصل', 'status', 'Status', 'asset_status'], row);
+          const departmentName = getValue(['الإدارة', 'department', 'Department'], row);
+          const officeName = getValue(['المكتب', 'office', 'Office'], row);
+          const custodianName = getValue(['حامل الأصل', 'custodian', 'Custodian', 'user'], row);
+          const currencyName = getValue(['العملة', 'currency', 'Currency'], row);
+          const serialNumber = getValue(['الرقم التسلسلي', 'serial_number', 'Serial Number', 'serial'], row);
+          const category = getValue(['الفئة', 'category', 'Category'], row);
+          const description = getValue(['الوصف', 'description', 'Description'], row);
+          const purchaseDate = getValue(['تاريخ الشراء', 'purchase_date', 'Purchase Date', 'date'], row);
+          const purchaseValue = getValue(['قيمة الشراء', 'purchase_value', 'Purchase Value', 'value'], row);
+          const currentValue = getValue(['القيمة الحالية', 'current_value', 'Current Value'], row);
+          const currencyId = getValue(['currency_id', 'Currency ID'], row);
+          const warrantyEnd = getValue(['نهاية الضمان', 'warranty_end', 'Warranty End'], row);
+          const depreciationMethod = getValue(['طريقة الإهلاك', 'depreciation_method', 'Depreciation Method'], row);
+          const expectedLifetime = getValue(['عمر الخدمة', 'expected_lifetime_years', 'Expected Lifetime'], row);
+          const residualValue = getValue(['القيمة المتبقية', 'residual_value', 'Residual Value'], row);
+          const supplier = getValue(['المورد', 'supplier', 'Supplier'], row);
+          const invoiceNumber = getValue(['رقم الفاتورة', 'invoice_number', 'Invoice Number'], row);
+          const lastMaintenanceDate = getValue(['تاريخ آخر صيانة', 'last_maintenance_date', 'Last Maintenance Date'], row);
+          const isActive = getValue(['نشط', 'is_active', 'Is Active', 'active'], row);
           // الافتراضي نشط إذا لم يتم تحديده
           const finalIsActiveValue = isActive || '1';
-          const notes = getValue(['الملاحظات', 'notes', 'Notes']);
+          const notes = getValue(['الملاحظات', 'notes', 'Notes'], row);
 
-          // البحث عن asset_name_id بالاسم أو إضافته تلقائياً
+          // البحث عن asset_name_id بالاسم أو إضافته تلقائياً (استخدام Map)
           let assetNameId = '';
           if (assetName) {
-            let found = assetNames.find(n => n.get('name') === assetName);
+            let found = assetNamesMap.get(assetName);
             if (found) {
               assetNameId = found.get('id') || '';
             } else {
@@ -649,16 +784,17 @@ function AssetsPageContent() {
                 notes: '',
               });
               assetNameId = newAssetNameId;
-              // إضافة إلى القائمة المحلية
+              // إضافة إلى Map والقائمة
               const newAssetName = new BaseModel({ id: newAssetNameId, name: assetName });
+              assetNamesMap.set(assetName, newAssetName);
               setAssetNames(prev => [...prev, newAssetName]);
             }
           }
 
-          // البحث عن type_id بالاسم أو إضافته تلقائياً
+          // البحث عن type_id بالاسم أو إضافته تلقائياً (استخدام Map)
           let typeId = '';
           if (assetType) {
-            let found = assetTypes.find(t => t.get('name') === assetType);
+            let found = assetTypesMap.get(assetType);
             if (found) {
               typeId = found.get('id') || '';
             } else {
@@ -671,16 +807,17 @@ function AssetsPageContent() {
                 notes: '',
               });
               typeId = newTypeId;
-              // إضافة إلى القائمة المحلية
+              // إضافة إلى Map والقائمة
               const newType = new BaseModel({ id: newTypeId, name: assetType });
+              assetTypesMap.set(assetType, newType);
               setAssetTypes(prev => [...prev, newType]);
             }
           }
 
-          // البحث عن status_id بالاسم أو إضافته تلقائياً
+          // البحث عن status_id بالاسم أو إضافته تلقائياً (استخدام Map)
           let statusId = '';
           if (assetStatus) {
-            let found = assetStatuses.find(s => s.get('name') === assetStatus);
+            let found = assetStatusesMap.get(assetStatus);
             if (found) {
               statusId = found.get('id') || '';
             } else {
@@ -693,54 +830,131 @@ function AssetsPageContent() {
                 notes: '',
               });
               statusId = newStatusId;
-              // إضافة إلى القائمة المحلية
+              // إضافة إلى Map والقائمة
               const newStatus = new BaseModel({ id: newStatusId, name: assetStatus });
+              assetStatusesMap.set(assetStatus, newStatus);
               setAssetStatuses(prev => [...prev, newStatus]);
             }
           }
 
-          // البحث عن department_id و location_office_id
+          // البحث عن department_id و location_office_id أو إضافتهما تلقائياً (استخدام Map)
           let departmentId = '';
           let locationOfficeId = '';
           if (departmentName) {
-            const foundDept = departments.find(d => d.get('name') === departmentName);
+            let foundDept = departmentsMap.get(departmentName);
             if (foundDept) {
               departmentId = foundDept.get('id') || '';
-              if (officeName) {
-                const foundOffice = allOffices.find(o => 
-                  o.get('name') === officeName && o.get('department_id') === departmentId
-                );
-                if (foundOffice) {
-                  locationOfficeId = foundOffice.get('id') || '';
-                }
+            } else {
+              // إضافة الإدارة تلقائياً إذا لم تكن موجودة
+              const newDeptId = firestoreApi.getNewId("departments");
+              const deptDocRef = firestoreApi.getDocument("departments", newDeptId);
+              await firestoreApi.setData(deptDocRef, {
+                name: departmentName,
+                description: '',
+                notes: '',
+              });
+              departmentId = newDeptId;
+              // إضافة إلى Map والقائمة
+              const newDept = new BaseModel({ id: newDeptId, name: departmentName });
+              departmentsMap.set(departmentName, newDept);
+              setDepartments(prev => [...prev, newDept]);
+            }
+            
+            // البحث عن المكتب أو إضافته تلقائياً (استخدام Map)
+            if (officeName && departmentId) {
+              const officeKey = `${departmentId}|${officeName}`;
+              let foundOffice = officesMap.get(officeKey);
+              if (foundOffice) {
+                locationOfficeId = foundOffice.get('id') || '';
+              } else {
+                // إضافة المكتب تلقائياً إذا لم يكن موجوداً
+                const newOfficeId = firestoreApi.getNewId("offices");
+                const officeDocRef = firestoreApi.getSubDocument("departments", departmentId, "departments", newOfficeId);
+                await firestoreApi.setData(officeDocRef, {
+                  name: officeName,
+                  floor: '',
+                  room: '',
+                  notes: '',
+                });
+                locationOfficeId = newOfficeId;
+                // إضافة إلى Map والقائمة
+                const newOffice = new BaseModel({ 
+                  id: newOfficeId, 
+                  name: officeName,
+                  department_id: departmentId 
+                });
+                officesMap.set(officeKey, newOffice);
+                setAllOffices(prev => [...prev, newOffice]);
               }
             }
           }
 
-          // البحث عن custodian_user_id بالاسم
+          // البحث عن custodian_user_id بالاسم أو إضافته تلقائياً (استخدام Map)
           let custodianUserId = '';
           if (custodianName) {
-            const found = users.find(u => u.get('full_name') === custodianName);
+            let found = usersMap.get(custodianName);
             if (found) {
               custodianUserId = found.get('id') || '';
+            } else {
+              // إضافة المستخدم تلقائياً إذا لم يكن موجوداً
+              const newUserId = firestoreApi.getNewId("users");
+              const userDocRef = firestoreApi.getDocument("users", newUserId);
+              await firestoreApi.setData(userDocRef, {
+                full_name: custodianName,
+                email: '',
+                phone: '',
+                role: 'user',
+                is_active: 1,
+              });
+              custodianUserId = newUserId;
+              // إضافة إلى Map والقائمة
+              const newUser = new BaseModel({ 
+                id: newUserId, 
+                full_name: custodianName 
+              });
+              usersMap.set(custodianName, newUser);
+              setUsers(prev => [...prev, newUser]);
             }
           }
 
-          // البحث عن currency_id بالاسم أو الكود
+          // البحث عن currency_id بالاسم أو الكود أو إضافته تلقائياً (استخدام Map)
           let finalCurrencyId = currencyId || '';
           if (!finalCurrencyId && currencyName) {
-            const found = currencies.find(c => 
-              c.get('name') === currencyName || c.get('code') === currencyName
-            );
+            let found = currenciesMap.get(currencyName);
             if (found) {
               finalCurrencyId = found.get('id') || '';
             } else {
-              // استخدام العملة الافتراضية
-              const defaultCurrency = currencies.find(c => 
-                c.getValue<number>('is_default') === 1 || c.getValue<boolean>('is_default') === true
-              );
-              if (defaultCurrency) {
-                finalCurrencyId = defaultCurrency.get('id') || '';
+              // إضافة العملة تلقائياً إذا لم تكن موجودة
+              const newCurrencyId = firestoreApi.getNewId("currencies");
+              const currencyDocRef = firestoreApi.getDocument("currencies", newCurrencyId);
+              const currencyCode = currencyName.length >= 3 
+                ? currencyName.substring(0, 3).toUpperCase() 
+                : currencyName.toUpperCase();
+              await firestoreApi.setData(currencyDocRef, {
+                name: currencyName,
+                code: currencyCode,
+                symbol: currencyName.substring(0, 1) || currencyCode.substring(0, 1),
+                is_default: 0,
+              });
+              finalCurrencyId = newCurrencyId;
+              // إضافة إلى Map والقائمة
+              const newCurrency = new BaseModel({ 
+                id: newCurrencyId, 
+                name: currencyName,
+                code: currencyCode,
+              });
+              currenciesMap.set(currencyName, newCurrency);
+              if (currencyCode !== currencyName) {
+                currenciesMap.set(currencyCode, newCurrency);
+              }
+              setCurrencies(prev => [...prev, newCurrency]);
+            }
+          } else if (!finalCurrencyId) {
+            // استخدام العملة الافتراضية إذا لم يتم تحديد عملة
+            for (const currency of currencies) {
+              if (currency.getValue<number>('is_default') === 1 || currency.getValue<boolean>('is_default') === true) {
+                finalCurrencyId = currency.get('id') || '';
+                break;
               }
             }
           }
@@ -778,19 +992,45 @@ function AssetsPageContent() {
           };
           
           await firestoreApi.setData(docRef, assetData);
-          successCount++;
+          
+          // تحديث التقدم
+          setImportProgress(prev => ({ ...prev, current: prev.current + 1 }));
+          
+          return { success: true, index: globalIndex };
         } catch (error) {
-          errorCount++;
-          errors.push(`سطر ${i + 2}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+          const errorMsg = `سطر ${globalIndex + 2}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`;
+          return { success: false, index: globalIndex, error: errorMsg };
         }
-      }
+      });
+
+      // انتظار اكتمال جميع السجلات في هذا batch
+      const batchResults = await Promise.all(batchPromises);
+      
+      // معالجة النتائج
+      batchResults.forEach(result => {
+        if (result.success) {
+          successCount++;
+        } else {
+          errorCount++;
+          if (result.error) {
+            errors.push(result.error);
+          }
+        }
+      });
+      
+      // تحديث التقدم بعد كل batch
+      setImportProgress({ current: (batchIndex + 1) * BATCH_SIZE, total: data.length });
+    }
+
+      // تحديث التقدم النهائي
+      setImportProgress({ current: data.length, total: data.length });
 
       if (errorCount > 0) {
-        const errorMessage = errors.slice(0, 3).join('، ');
-        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
-        showWarning(`تم استيراد ${successCount} أصل بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+        const errorMessage = errors.slice(0, 5).join('، ');
+        const moreErrors = errors.length > 5 ? ` و ${errors.length - 5} خطأ آخر` : '';
+        showWarning(`تم استيراد ${successCount} من ${data.length} أصل بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 10000);
       } else {
-        showSuccess(`تم استيراد ${successCount} أصل بنجاح`);
+        showSuccess(`تم استيراد جميع ${successCount} أصل بنجاح`);
       }
 
       loadData();
@@ -950,6 +1190,7 @@ function AssetsPageContent() {
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
         onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+        onBulkDelete={canDelete ? handleBulkDelete : undefined}
         loading={loading}
       />
 
@@ -964,7 +1205,7 @@ function AssetsPageContent() {
             setNewAssetStatus('');
           }}
           title={editingAsset ? "تعديل أصل" : "إضافة أصل جديد"}
-          size="xl"
+          size="full"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button
@@ -1409,6 +1650,22 @@ function AssetsPageContent() {
           cancelText="إلغاء"
           variant="danger"
           loading={deleteLoading}
+        />
+
+        {/* Confirm Bulk Delete Modal */}
+        <ConfirmModal
+          isOpen={isBulkDeleteModalOpen}
+          onClose={() => {
+            setIsBulkDeleteModalOpen(false);
+            setDeletingAssets([]);
+          }}
+          onConfirm={confirmBulkDelete}
+          title="تأكيد الحذف الجماعي"
+          message={`هل أنت متأكد من حذف ${deletingAssets.length} أصل محدد؟ لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع الأصول المحددة بشكل دائم.`}
+          confirmText={`حذف ${deletingAssets.length} أصل`}
+          cancelText="إلغاء"
+          variant="danger"
+          loading={bulkDeleteLoading}
         />
 
         {/* Import Excel Modal */}

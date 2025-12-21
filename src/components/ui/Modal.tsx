@@ -22,7 +22,7 @@ export function Modal({
   onClose,
   title,
   children,
-  size = 'md',
+  size = 'lg',
   showCloseButton = true,
   centered = false,
   footer,
@@ -107,11 +107,11 @@ export function Modal({
 
   // تحسين Sizes ليكون responsive - مستوحى من DawamWeb
   const sizes = {
-    sm: { maxWidth: '400px', width: '90vw', minHeight: 'auto' },
-    md: { maxWidth: '600px', width: '92vw', minHeight: 'auto' },
-    lg: { maxWidth: '900px', width: '95vw', minHeight: 'auto' },
-    xl: { maxWidth: '1200px', width: '96vw', minHeight: 'auto' },
-    full: { maxWidth: '1600px', width: '98vw', minHeight: 'auto' },
+    sm: { maxWidth: '500px', width: '92vw', minHeight: 'auto' },
+    md: { maxWidth: '800px', width: '94vw', minHeight: 'auto' },
+    lg: { maxWidth: '1200px', width: '96vw', minHeight: 'auto' },
+    xl: { maxWidth: '1400px', width: '97vw', minHeight: 'auto' },
+    full: { maxWidth: '1800px', width: '98vw', minHeight: 'auto' },
   };
 
   const modalDialogClass = `modal-dialog modal-dialog-centered`;
@@ -239,7 +239,7 @@ export function Modal({
             className="modal-header"
             style={{
               background: 'linear-gradient(135deg, #7367f0 0%, #5e52d5 40%, #4a3fd0 70%, #3c35a8 100%)',
-              padding: '1.25rem 1.75rem',
+              padding: '1rem 1.5rem',
               borderBottom: 'none',
               display: 'flex',
               alignItems: 'center',
@@ -270,13 +270,13 @@ export function Modal({
                 style={{ 
                   color: 'white', 
                   fontWeight: 700, 
-                  fontSize: '1.5rem',
+                  fontSize: '1.25rem',
                   margin: 0,
                   position: 'relative',
                   zIndex: 1,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.75rem',
+                  gap: '0.5rem',
                 }}
               >
                 <div
@@ -351,7 +351,7 @@ export function Modal({
             className="modal-body"
             style={{ 
               color: isDarkMode ? 'rgb(226, 232, 240)' : '#6f6b7d',
-              padding: '1.75rem',
+              padding: '1.25rem 1.5rem',
               overflowY: 'auto',
               overflowX: 'auto',
               flex: '1 1 auto',
@@ -375,7 +375,7 @@ export function Modal({
             <div style={{ 
               display: 'flex', 
               flexDirection: 'column', 
-              gap: '1.25rem', 
+              gap: '1rem', 
               minHeight: 'min-content',
               width: '100%',
               wordWrap: 'break-word',
@@ -391,7 +391,7 @@ export function Modal({
             <div 
               className="modal-footer"
               style={{
-                padding: '1.5rem 1.75rem',
+                padding: '1rem 1.5rem',
                 borderTop: isDarkMode 
                   ? '2px solid rgba(71, 85, 105, 0.6)' 
                   : '2px solid rgba(240, 239, 242, 0.8)',
@@ -401,7 +401,7 @@ export function Modal({
                 display: 'flex',
                 justifyContent: 'flex-end',
                 alignItems: 'center',
-                gap: '1rem',
+                gap: '0.75rem',
                 flexShrink: 0,
                 flexGrow: 0,
                 flexBasis: 'auto',

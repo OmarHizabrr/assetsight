@@ -14,12 +14,17 @@ main > div.mb-10:first-child,
 main > div:first-child.mb-10,
 .admin-page-header,
 [class*="admin"] .mb-10:first-child {
-  margin-bottom: 1.5rem !important; /* بدلاً من 2.5rem */
+  margin-bottom: 1rem !important; /* بدلاً من 2.5rem */
 }
 
 /* استهداف عام لجميع mb-10 في main */
 main .mb-10 {
-  margin-bottom: 1.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+/* تقليل mb-6 أيضاً */
+main .mb-6 {
+  margin-bottom: 1rem !important;
 }
 
 /* تقليل المسافات داخل الـ Header */

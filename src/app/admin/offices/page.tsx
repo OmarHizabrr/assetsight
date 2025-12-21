@@ -442,7 +442,7 @@ function OfficesPageContent() {
             setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
           }}
           title={editingOffice ? "تعديل مكتب" : "إضافة مكتب جديد"}
-          size="md"
+          size="lg"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button

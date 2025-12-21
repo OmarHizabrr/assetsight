@@ -577,3 +577,515 @@
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
 }
 
+/* ========================================
+   CRITICAL: BLUE/PRIMARY COLOR CONTRAST FIXES
+   إصلاحات حاسمة لتباين الألوان الزرقاء/البنفسجية
+   ======================================== */
+
+/* Primary background colors with proper text contrast in dark mode */
+[data-theme="dark"] .bg-primary-50,
+[data-theme="dark"] [class*="bg-primary-50"],
+[data-theme="dark"] .bg-primary-100,
+[data-theme="dark"] [class*="bg-primary-100"] {
+  background: rgba(59, 130, 246, 0.15) !important;
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #bfdbfe !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Text on primary backgrounds - ensure high contrast */
+[data-theme="dark"] .bg-primary-50 *,
+[data-theme="dark"] [class*="bg-primary-50"] *,
+[data-theme="dark"] .bg-primary-100 *,
+[data-theme="dark"] [class*="bg-primary-100"] * {
+  color: #bfdbfe !important;
+}
+
+[data-theme="dark"] .bg-primary-50 .text-primary-600,
+[data-theme="dark"] .bg-primary-50 .text-primary-700,
+[data-theme="dark"] .bg-primary-50 .text-primary-800,
+[data-theme="dark"] [class*="bg-primary-50"] .text-primary-600,
+[data-theme="dark"] [class*="bg-primary-50"] .text-primary-700,
+[data-theme="dark"] [class*="bg-primary-50"] .text-primary-800,
+[data-theme="dark"] .bg-primary-100 .text-primary-600,
+[data-theme="dark"] .bg-primary-100 .text-primary-700,
+[data-theme="dark"] .bg-primary-100 .text-primary-800,
+[data-theme="dark"] [class*="bg-primary-100"] .text-primary-600,
+[data-theme="dark"] [class*="bg-primary-100"] .text-primary-700,
+[data-theme="dark"] [class*="bg-primary-100"] .text-primary-800 {
+  color: #bfdbfe !important;
+}
+
+/* Blue background colors (info colors) with proper contrast */
+[data-theme="dark"] .bg-blue-50,
+[data-theme="dark"] [class*="bg-blue-50"],
+[data-theme="dark"] .bg-blue-100,
+[data-theme="dark"] [class*="bg-blue-100"],
+[data-theme="dark"] .bg-info-50,
+[data-theme="dark"] [class*="bg-info-50"],
+[data-theme="dark"] .bg-info-100,
+[data-theme="dark"] [class*="bg-info-100"] {
+  background: rgba(59, 130, 246, 0.15) !important;
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #bfdbfe !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Text on blue/info backgrounds */
+[data-theme="dark"] .bg-blue-50 *,
+[data-theme="dark"] [class*="bg-blue-50"] *,
+[data-theme="dark"] .bg-blue-100 *,
+[data-theme="dark"] [class*="bg-blue-100"] *,
+[data-theme="dark"] .bg-info-50 *,
+[data-theme="dark"] [class*="bg-info-50"] *,
+[data-theme="dark"] .bg-info-100 *,
+[data-theme="dark"] [class*="bg-info-100"] * {
+  color: #bfdbfe !important;
+}
+
+/* Hover states on primary backgrounds */
+[data-theme="dark"] .hover\:bg-primary-50:hover,
+[data-theme="dark"] [class*="hover:bg-primary-50"]:hover,
+[data-theme="dark"] .hover\:bg-primary-100:hover,
+[data-theme="dark"] [class*="hover:bg-primary-100"]:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #dbeafe !important;
+}
+
+/* Selected row in tables with primary background */
+[data-theme="dark"] tr.bg-primary-50,
+[data-theme="dark"] tr[class*="bg-primary-50"],
+[data-theme="dark"] .bg-primary-50 {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #bfdbfe !important;
+}
+
+[data-theme="dark"] tr.bg-primary-50 td,
+[data-theme="dark"] tr[class*="bg-primary-50"] td,
+[data-theme="dark"] .bg-primary-50 td {
+  color: #bfdbfe !important;
+}
+
+/* Pagination buttons with primary colors */
+[data-theme="dark"] [class*="pagination"] button.bg-primary-600,
+[data-theme="dark"] [class*="pagination"] button[class*="bg-primary-600"] {
+  background: linear-gradient(135deg, #7367f0 0%, #5e52d5 100%) !important;
+  color: white !important;
+}
+
+/* Buttons with primary hover states */
+[data-theme="dark"] button.hover\:bg-primary-50:hover,
+[data-theme="dark"] button[class*="hover:bg-primary-50"]:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #dbeafe !important;
+}
+
+/* Outline and ghost buttons in dark mode */
+[data-theme="dark"] button[class*="outline"],
+[data-theme="dark"] button[class*="ghost"] {
+  border-color: rgba(115, 103, 240, 0.5) !important;
+  color: #a78bfa !important;
+}
+
+[data-theme="dark"] button[class*="outline"]:hover,
+[data-theme="dark"] button[class*="ghost"]:hover {
+  background: rgba(115, 103, 240, 0.15) !important;
+  border-color: rgba(115, 103, 240, 0.7) !important;
+  color: #c4b5fd !important;
+}
+
+/* Tabs with primary colors */
+[data-theme="dark"] [class*="tab"][class*="bg-primary-50"],
+[data-theme="dark"] [class*="tab"][class*="text-primary-700"] {
+  background: rgba(115, 103, 240, 0.15) !important;
+  color: #c4b5fd !important;
+  border-color: rgba(115, 103, 240, 0.4) !important;
+}
+
+/* SearchableSelect and Input with primary colors */
+[data-theme="dark"] [class*="SearchableSelect"] .bg-primary-50,
+[data-theme="dark"] [class*="Input"] .bg-primary-50 {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #bfdbfe !important;
+}
+
+/* Badges with primary/info colors */
+[data-theme="dark"] .badge[class*="primary"],
+[data-theme="dark"] [class*="badge"][class*="primary"] {
+  background: rgba(115, 103, 240, 0.2) !important;
+  color: #c4b5fd !important;
+  border-color: rgba(115, 103, 240, 0.4) !important;
+}
+
+/* Toast with info background */
+[data-theme="dark"] [class*="Toast"] .bg-info-100,
+[data-theme="dark"] [class*="toast"] .bg-info-100 {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #bfdbfe !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* ========================================
+   HEADER PROFILE BUTTON OVERLAY FIXES
+   إصلاحات overlay زر البروفايل في الـ Header
+   ======================================== */
+
+/* Profile button hover overlay - ensure visibility in dark mode */
+[data-theme="dark"] button[class*="group"] .bg-gradient-to-r[class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0) 100%) !important;
+}
+
+[data-theme="dark"] button[class*="group"]:hover .bg-gradient-to-r[class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0.1) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0.1) 100%) !important;
+}
+
+/* Ensure profile button text is visible in dark mode */
+[data-theme="dark"] button[class*="bg-white/80"] {
+  background: rgba(30, 41, 59, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] button[class*="bg-white/80"]:hover {
+  background: rgba(30, 41, 59, 0.95) !important;
+  color: #e2e8f0 !important;
+}
+
+/* ========================================
+   PROFILE DROPDOWN MENU OVERLAY FIXES
+   إصلاحات overlay قائمة البروفايل المنسدلة
+   ======================================== */
+
+/* Profile dropdown overlay - dark mode */
+[data-theme="dark"] div[class*="bg-gradient-to-l"][class*="from-primary-50/0"][class*="to-primary-50/100"] {
+  background: linear-gradient(to left, rgba(115, 103, 240, 0) 0%, rgba(115, 103, 240, 0.15) 100%) !important;
+}
+
+[data-theme="dark"] button:hover div[class*="bg-gradient-to-l"][class*="from-primary-50/0"][class*="to-primary-50/100"] {
+  background: linear-gradient(to left, rgba(115, 103, 240, 0) 0%, rgba(115, 103, 240, 0.2) 100%) !important;
+  opacity: 1 !important;
+}
+
+/* Profile dropdown button text - dark mode */
+[data-theme="dark"] button[class*="hover:from-primary-50"] {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] button[class*="hover:from-primary-50"]:hover {
+  color: #c4b5fd !important;
+}
+
+/* Profile dropdown icon container - dark mode */
+[data-theme="dark"] div[class*="from-primary-100"][class*="to-primary-200"] {
+  background: linear-gradient(to bottom right, rgba(115, 103, 240, 0.2) 0%, rgba(115, 103, 240, 0.3) 100%) !important;
+}
+
+[data-theme="dark"] div[class*="from-primary-100"][class*="to-primary-200"]:hover {
+  background: linear-gradient(to bottom right, rgba(115, 103, 240, 0.3) 0%, rgba(115, 103, 240, 0.4) 100%) !important;
+}
+
+[data-theme="dark"] div[class*="from-primary-100"] .text-primary-600,
+[data-theme="dark"] div[class*="from-primary-100"] .text-primary-700 {
+  color: #c4b5fd !important;
+}
+
+/* Sidebar menu items overlay - dark mode */
+[data-theme="dark"] div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/8"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0) 100%) !important;
+}
+
+[data-theme="dark"] a[class*="group"]:hover div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/8"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0.1) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0.1) 100%) !important;
+}
+
+/* Sidebar icon container - dark mode */
+[data-theme="dark"] div[class*="from-slate-100"][class*="to-slate-200"] {
+  background: linear-gradient(to bottom right, rgba(51, 65, 85, 0.6) 0%, rgba(71, 85, 105, 0.7) 100%) !important;
+}
+
+[data-theme="dark"] div[class*="from-slate-100"][class*="to-slate-200"]:hover,
+[data-theme="dark"] div[class*="group-hover:from-primary-100"][class*="group-hover:to-primary-200"] {
+  background: linear-gradient(to bottom right, rgba(115, 103, 240, 0.2) 0%, rgba(115, 103, 240, 0.3) 100%) !important;
+}
+
+[data-theme="dark"] div[class*="from-slate-100"] .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] div[class*="from-slate-100"]:hover .text-primary-700 {
+  color: #c4b5fd !important;
+}
+
+/* ========================================
+   THEME TOGGLE BUTTON FIXES
+   إصلاحات زر تبديل المظهر
+   ======================================== */
+
+/* ThemeToggle button - dark mode */
+[data-theme="dark"] button[class*="bg-white/80"][class*="hover:bg-white"] {
+  background: rgba(30, 41, 59, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  border-color: rgba(71, 85, 105, 0.6) !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] button[class*="bg-white/80"][class*="hover:bg-white"]:hover {
+  background: rgba(30, 41, 59, 0.95) !important;
+  border-color: rgba(115, 103, 240, 0.3) !important;
+}
+
+/* ThemeToggle overlay - dark mode */
+[data-theme="dark"] button[class*="group"] div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0) 100%) !important;
+}
+
+[data-theme="dark"] button[class*="group"]:hover div[class*="bg-gradient-to-r"][class*="from-primary-500/0"][class*="group-hover:from-primary-500/5"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0.1) 0%, rgba(115, 103, 240, 0) 50%, rgba(115, 103, 240, 0.1) 100%) !important;
+}
+
+/* ThemeToggle icon container - dark mode */
+[data-theme="dark"] button[class*="group"] div[class*="from-slate-100"][class*="to-slate-200"] {
+  background: linear-gradient(to bottom right, rgba(51, 65, 85, 0.6) 0%, rgba(71, 85, 105, 0.7) 100%) !important;
+}
+
+[data-theme="dark"] button[class*="group"]:hover div[class*="from-slate-100"][class*="to-slate-200"],
+[data-theme="dark"] button[class*="group"]:hover div[class*="group-hover:from-primary-100"][class*="group-hover:to-primary-200"] {
+  background: linear-gradient(to bottom right, rgba(115, 103, 240, 0.2) 0%, rgba(115, 103, 240, 0.3) 100%) !important;
+}
+
+/* ThemeToggle text colors - dark mode */
+[data-theme="dark"] button[class*="group"] .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] button[class*="group"] .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] button[class*="group"]:hover .text-primary-700 {
+  color: #c4b5fd !important;
+}
+
+/* ========================================
+   PROFILE BUTTON WHEN OPEN - DARK MODE
+   إصلاحات زر البروفايل عند الفتح - الوضع الداكن
+   ======================================== */
+
+/* Profile button when open - ensure text visibility */
+[data-theme="dark"] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"] {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0.15) 0%, rgba(115, 103, 240, 0.2) 100%) !important;
+  border-color: rgba(115, 103, 240, 0.3) !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"] * {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"]:hover {
+  background: linear-gradient(to right, rgba(115, 103, 240, 0.2) 0%, rgba(115, 103, 240, 0.25) 100%) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] button[class*="bg-gradient-to-r"][class*="from-primary-50"][class*="to-primary-100/50"]:hover * {
+  color: #f1f5f9 !important;
+}
+
+/* Profile button text when open - dark mode */
+[data-theme="dark"] button[class*="bg-gradient-to-r"][class*="from-primary-50"] .text-primary-700,
+[data-theme="dark"] button[class*="bg-gradient-to-r"][class*="from-primary-50"] .text-primary-600 {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] button[class*="bg-gradient-to-r"][class*="from-primary-50"]:hover .text-primary-700,
+[data-theme="dark"] button[class*="bg-gradient-to-r"][class*="from-primary-50"]:hover .text-primary-600 {
+  color: #f1f5f9 !important;
+}
+
+/* ========================================
+   COMPREHENSIVE TEXT-BACKGROUND CONTRAST FIXES
+   إصلاحات شاملة لتوافق النصوص مع الخلفيات
+   ======================================== */
+
+/* Ensure all text on colored backgrounds is visible in dark mode */
+[data-theme="dark"] .bg-primary-50,
+[data-theme="dark"] .bg-primary-100,
+[data-theme="dark"] .bg-blue-50,
+[data-theme="dark"] .bg-blue-100,
+[data-theme="dark"] .bg-info-50,
+[data-theme="dark"] .bg-info-100,
+[data-theme="dark"] [class*="bg-primary-50"],
+[data-theme="dark"] [class*="bg-primary-100"],
+[data-theme="dark"] [class*="bg-blue-50"],
+[data-theme="dark"] [class*="bg-blue-100"],
+[data-theme="dark"] [class*="bg-info-50"],
+[data-theme="dark"] [class*="bg-info-100"] {
+  color: #bfdbfe !important;
+}
+
+/* All child elements text colors */
+[data-theme="dark"] .bg-primary-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] .bg-primary-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] .bg-blue-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] .bg-blue-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] [class*="bg-primary-50"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] [class*="bg-primary-100"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] [class*="bg-blue-50"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] [class*="bg-blue-100"] *:not([class*="material-icons"]):not(button):not(a) {
+  color: #bfdbfe !important;
+}
+
+/* Text on slate/gray backgrounds */
+[data-theme="dark"] .bg-slate-50,
+[data-theme="dark"] .bg-slate-100,
+[data-theme="dark"] .bg-gray-50,
+[data-theme="dark"] .bg-gray-100,
+[data-theme="dark"] [class*="bg-slate-50"],
+[data-theme="dark"] [class*="bg-slate-100"],
+[data-theme="dark"] [class*="bg-gray-50"],
+[data-theme="dark"] [class*="bg-gray-100"] {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .bg-slate-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] .bg-slate-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] .bg-gray-50 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] .bg-gray-100 *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] [class*="bg-slate-50"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] [class*="bg-slate-100"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] [class*="bg-gray-50"] *:not([class*="material-icons"]):not(button):not(a),
+[data-theme="dark"] [class*="bg-gray-100"] *:not([class*="material-icons"]):not(button):not(a) {
+  color: #e2e8f0 !important;
+}
+
+/* Override text-primary-* classes on colored backgrounds */
+[data-theme="dark"] .bg-primary-50 .text-primary-500,
+[data-theme="dark"] .bg-primary-50 .text-primary-400,
+[data-theme="dark"] .bg-primary-50 .text-primary-300,
+[data-theme="dark"] .bg-primary-100 .text-primary-500,
+[data-theme="dark"] .bg-primary-100 .text-primary-400,
+[data-theme="dark"] .bg-primary-100 .text-primary-300,
+[data-theme="dark"] .bg-blue-50 .text-blue-500,
+[data-theme="dark"] .bg-blue-50 .text-blue-400,
+[data-theme="dark"] .bg-blue-50 .text-blue-300,
+[data-theme="dark"] .bg-blue-100 .text-blue-500,
+[data-theme="dark"] .bg-blue-100 .text-blue-400,
+[data-theme="dark"] .bg-blue-100 .text-blue-300 {
+  color: #bfdbfe !important;
+}
+
+/* Ensure text-slate-* on colored backgrounds is visible */
+[data-theme="dark"] .bg-primary-50 .text-slate-600,
+[data-theme="dark"] .bg-primary-50 .text-slate-700,
+[data-theme="dark"] .bg-primary-50 .text-slate-800,
+[data-theme="dark"] .bg-primary-100 .text-slate-600,
+[data-theme="dark"] .bg-primary-100 .text-slate-700,
+[data-theme="dark"] .bg-primary-100 .text-slate-800,
+[data-theme="dark"] .bg-blue-50 .text-slate-600,
+[data-theme="dark"] .bg-blue-50 .text-slate-700,
+[data-theme="dark"] .bg-blue-50 .text-slate-800,
+[data-theme="dark"] .bg-blue-100 .text-slate-600,
+[data-theme="dark"] .bg-blue-100 .text-slate-700,
+[data-theme="dark"] .bg-blue-100 .text-slate-800 {
+  color: #bfdbfe !important;
+}
+
+/* ========================================
+   MODAL TEXT-BACKGROUND CONTRAST FIXES
+   إصلاحات توافق النصوص مع الخلفيات في النوافذ
+   ======================================== */
+
+/* Modal body text colors - dark mode */
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] [class*="modal-body"],
+[data-theme="dark"] [role="dialog"] .modal-body {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .modal-body *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] [class*="modal-body"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] [role="dialog"] .modal-body *:not(button):not(a):not([class*="material-icons"]) {
+  color: #e2e8f0 !important;
+}
+
+/* Modal info messages with primary/blue backgrounds - dark mode */
+[data-theme="dark"] [role="dialog"] .bg-primary-50,
+[data-theme="dark"] [role="dialog"] .bg-primary-100,
+[data-theme="dark"] [role="dialog"] .bg-blue-50,
+[data-theme="dark"] [role="dialog"] .bg-blue-100,
+[data-theme="dark"] [role="dialog"] [class*="bg-primary-50"],
+[data-theme="dark"] [role="dialog"] [class*="bg-primary-100"],
+[data-theme="dark"] [role="dialog"] [class*="bg-blue-50"],
+[data-theme="dark"] [role="dialog"] [class*="bg-blue-100"],
+[data-theme="dark"] .modal-body .bg-primary-50,
+[data-theme="dark"] .modal-body .bg-primary-100,
+[data-theme="dark"] .modal-body .bg-blue-50,
+[data-theme="dark"] .modal-body .bg-blue-100 {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #bfdbfe !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+[data-theme="dark"] [role="dialog"] .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] [role="dialog"] .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] [role="dialog"] .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] [role="dialog"] .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] .modal-body .bg-primary-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] .modal-body .bg-primary-100 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] .modal-body .bg-blue-50 *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] .modal-body .bg-blue-100 *:not(button):not(a):not([class*="material-icons"]) {
+  color: #bfdbfe !important;
+}
+
+/* Modal text-primary-* on colored backgrounds - dark mode */
+[data-theme="dark"] [role="dialog"] .bg-primary-50 .text-primary-600,
+[data-theme="dark"] [role="dialog"] .bg-primary-50 .text-primary-700,
+[data-theme="dark"] [role="dialog"] .bg-primary-50 .text-primary-800,
+[data-theme="dark"] [role="dialog"] .bg-primary-100 .text-primary-600,
+[data-theme="dark"] [role="dialog"] .bg-primary-100 .text-primary-700,
+[data-theme="dark"] [role="dialog"] .bg-primary-100 .text-primary-800,
+[data-theme="dark"] [role="dialog"] .bg-blue-50 .text-blue-600,
+[data-theme="dark"] [role="dialog"] .bg-blue-50 .text-blue-700,
+[data-theme="dark"] [role="dialog"] .bg-blue-50 .text-blue-900,
+[data-theme="dark"] [role="dialog"] .bg-blue-100 .text-blue-600,
+[data-theme="dark"] [role="dialog"] .bg-blue-100 .text-blue-700,
+[data-theme="dark"] [role="dialog"] .bg-blue-100 .text-blue-900,
+[data-theme="dark"] .modal-body .bg-primary-50 .text-primary-600,
+[data-theme="dark"] .modal-body .bg-primary-50 .text-primary-700,
+[data-theme="dark"] .modal-body .bg-primary-50 .text-primary-800,
+[data-theme="dark"] .modal-body .bg-primary-100 .text-primary-600,
+[data-theme="dark"] .modal-body .bg-primary-100 .text-primary-700,
+[data-theme="dark"] .modal-body .bg-primary-100 .text-primary-800,
+[data-theme="dark"] .modal-body .bg-blue-50 .text-blue-600,
+[data-theme="dark"] .modal-body .bg-blue-50 .text-blue-700,
+[data-theme="dark"] .modal-body .bg-blue-50 .text-blue-900,
+[data-theme="dark"] .modal-body .bg-blue-100 .text-blue-600,
+[data-theme="dark"] .modal-body .bg-blue-100 .text-blue-700,
+[data-theme="dark"] .modal-body .bg-blue-100 .text-blue-900 {
+  color: #bfdbfe !important;
+}
+
+/* Modal gradient backgrounds - dark mode */
+[data-theme="dark"] [role="dialog"] [class*="from-primary-50"],
+[data-theme="dark"] [role="dialog"] [class*="from-primary-100"],
+[data-theme="dark"] [role="dialog"] [class*="from-blue-50"],
+[data-theme="dark"] [role="dialog"] [class*="from-blue-100"],
+[data-theme="dark"] .modal-body [class*="from-primary-50"],
+[data-theme="dark"] .modal-body [class*="from-primary-100"],
+[data-theme="dark"] .modal-body [class*="from-blue-50"],
+[data-theme="dark"] .modal-body [class*="from-blue-100"] {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #bfdbfe !important;
+}
+
+[data-theme="dark"] [role="dialog"] [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] [role="dialog"] [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] [role="dialog"] [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] [role="dialog"] [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] .modal-body [class*="from-primary-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] .modal-body [class*="from-primary-100"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] .modal-body [class*="from-blue-50"] *:not(button):not(a):not([class*="material-icons"]),
+[data-theme="dark"] .modal-body [class*="from-blue-100"] *:not(button):not(a):not([class*="material-icons"]) {
+  color: #bfdbfe !important;
+}
+

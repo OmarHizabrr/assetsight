@@ -243,7 +243,7 @@ export function ImportExcelModal({
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      size="xl"
+      size="full"
     >
       <div className="space-y-6">
         {description && (

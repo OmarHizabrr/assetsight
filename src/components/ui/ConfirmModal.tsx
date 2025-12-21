@@ -136,7 +136,7 @@ export function ConfirmModal({
         <div 
           className="modal-content animate-scale-in" 
           style={{ 
-            maxWidth: '500px',
+            maxWidth: '600px',
             backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'white',
             borderRadius: '1.5rem',
             border: isDark 

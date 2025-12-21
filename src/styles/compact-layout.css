@@ -1,0 +1,263 @@
+/* ========================================
+   COMPACT LAYOUT OPTIMIZATION
+   تحسين استغلال المساحة بشكل أدق
+   ======================================== */
+
+/* ========================================
+   PAGE HEADER COMPACT SPACING
+   ======================================== */
+
+/* Reduce spacing in page headers */
+main > div:first-child .space-y-3,
+main > div:first-child .space-y-4 {
+  row-gap: 0.5rem !important;
+}
+
+main > div:first-child .gap-4 {
+  gap: 0.75rem !important;
+}
+
+main > div:first-child .gap-3 {
+  gap: 0.5rem !important;
+}
+
+/* Reduce icon size in headers */
+main > div:first-child .w-16,
+main > div:first-child .h-16 {
+  width: 3.5rem !important;
+  height: 3.5rem !important;
+}
+
+main > div:first-child .w-14,
+main > div:first-child .h-14 {
+  width: 3rem !important;
+  height: 3rem !important;
+}
+
+/* Reduce title size */
+main > div:first-child h1 {
+  font-size: 2rem !important;
+  line-height: 2.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+@media (min-width: 640px) {
+  main > div:first-child h1 {
+    font-size: 2.5rem !important;
+    line-height: 2.75rem !important;
+  }
+}
+
+/* Reduce description spacing */
+main > div:first-child h1 + p,
+main > div:first-child p {
+  margin-top: 0.25rem !important;
+  font-size: 0.875rem !important;
+}
+
+@media (min-width: 640px) {
+  main > div:first-child h1 + p,
+  main > div:first-child p {
+    font-size: 1rem !important;
+  }
+}
+
+/* ========================================
+   FILTER SECTION COMPACT SPACING
+   ======================================== */
+
+/* Reduce padding in filter sections */
+main > div[class*="mb-"]:not(:first-child) {
+  padding: 0.75rem 1rem !important;
+}
+
+main > div[class*="mb-"]:not(:first-child) .gap-4 {
+  gap: 0.75rem !important;
+}
+
+main > div[class*="mb-"]:not(:first-child) .gap-2 {
+  gap: 0.5rem !important;
+}
+
+/* ========================================
+   MODAL COMPACT SPACING
+   ======================================== */
+
+/* Modal Header - Compact */
+.modal-header {
+  padding: 1rem 1.5rem !important;
+}
+
+.modal-header h5,
+.modal-header .modal-title {
+  font-size: 1.25rem !important;
+  gap: 0.5rem !important;
+}
+
+.modal-header .gap-3 {
+  gap: 0.5rem !important;
+}
+
+/* Modal Body - Compact */
+.modal-body {
+  padding: 1.25rem 1.5rem !important;
+}
+
+.modal-body > div {
+  gap: 1rem !important;
+}
+
+.modal-body .space-y-6 {
+  row-gap: 1rem !important;
+}
+
+.modal-body .space-y-4 {
+  row-gap: 0.75rem !important;
+}
+
+.modal-body .gap-5 {
+  gap: 1rem !important;
+}
+
+.modal-body .gap-4 {
+  gap: 0.75rem !important;
+}
+
+.modal-body .gap-2\.5 {
+  gap: 0.5rem !important;
+}
+
+/* Modal Footer - Compact */
+.modal-footer {
+  padding: 1rem 1.5rem !important;
+  gap: 0.75rem !important;
+}
+
+.modal-footer .gap-3 {
+  gap: 0.75rem !important;
+}
+
+/* ========================================
+   FORM MODAL COMPACT SPACING
+   ======================================== */
+
+/* Form spacing */
+form.space-y-6 {
+  row-gap: 1rem !important;
+}
+
+form.space-y-4 {
+  row-gap: 0.75rem !important;
+}
+
+/* Grid gaps */
+form .gap-5 {
+  gap: 1rem !important;
+}
+
+form .gap-4 {
+  gap: 0.75rem !important;
+}
+
+/* Field spacing */
+form .gap-2\.5 {
+  gap: 0.5rem !important;
+}
+
+form .gap-2 {
+  gap: 0.5rem !important;
+}
+
+/* ========================================
+   DATA TABLE COMPACT SPACING
+   ======================================== */
+
+/* Card spacing */
+.data-table-card {
+  margin-top: 0.5rem !important;
+}
+
+.data-table-card [class*="CardHeader"] {
+  padding: 1rem 1.25rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+.data-table-card [class*="CardBody"] {
+  padding: 0.75rem !important;
+}
+
+/* ========================================
+   GENERAL COMPACT SPACING
+   ======================================== */
+
+/* Reduce all mb-6 to mb-3 */
+main .mb-6 {
+  margin-bottom: 0.75rem !important;
+}
+
+/* Reduce all mb-4 to mb-3 */
+main .mb-4 {
+  margin-bottom: 0.75rem !important;
+}
+
+/* Reduce all mb-10 to mb-3 */
+main .mb-10 {
+  margin-bottom: 0.75rem !important;
+}
+
+/* Reduce gaps */
+main .gap-6 {
+  gap: 1rem !important;
+}
+
+main .gap-4 {
+  gap: 0.75rem !important;
+}
+
+main .gap-3 {
+  gap: 0.5rem !important;
+}
+
+/* Reduce padding */
+main .p-4 {
+  padding: 0.75rem !important;
+}
+
+main .p-6 {
+  padding: 1rem !important;
+}
+
+main .px-4 {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+}
+
+main .py-4 {
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+/* ========================================
+   RESPONSIVE COMPACT SPACING
+   ======================================== */
+
+@media (max-width: 640px) {
+  /* Even more compact on mobile */
+  main > div:first-child h1 {
+    font-size: 1.75rem !important;
+    line-height: 2rem !important;
+  }
+  
+  .modal-header {
+    padding: 0.875rem 1.25rem !important;
+  }
+  
+  .modal-body {
+    padding: 1rem 1.25rem !important;
+  }
+  
+  .modal-footer {
+    padding: 0.875rem 1.25rem !important;
+  }
+}
+

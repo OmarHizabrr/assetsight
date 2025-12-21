@@ -319,7 +319,7 @@ function AssetTypesPageContent() {
             setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
           }}
           title={editingAssetType ? "تعديل نوع الأصل" : "إضافة نوع جديد"}
-          size="md"
+          size="lg"
           footer={
             <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
               <Button

@@ -49,7 +49,7 @@ export function FormModal({
   isLoading = false,
   submitText = 'حفظ',
   cancelText = 'إلغاء',
-  size = 'md',
+  size = 'lg',
   layout = 'single',
   description,
 }: FormModalProps) {
@@ -199,8 +199,8 @@ export function FormModal({
         </div>
       }
     >
-      <form id="form-modal-form" onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
-        <div className={`grid ${getGridCols()} gap-5`}>
+      <form id="form-modal-form" onSubmit={handleSubmit} className="space-y-4 animate-fade-in">
+        <div className={`grid ${getGridCols()} gap-4`}>
           {fields.map((field, index) => {
             const fieldValue = formData[field.name] ?? '';
             const hasError = !!errors[field.name] && touched[field.name];
@@ -210,7 +210,7 @@ export function FormModal({
             return (
               <div
                 key={field.name}
-                className={`flex flex-col gap-2.5 animate-fade-in-up ${
+                className={`flex flex-col gap-2 animate-fade-in-up ${
                   colSpan > 1 ? `md:col-span-${colSpan}` : ''
                 }`}
                 style={{
