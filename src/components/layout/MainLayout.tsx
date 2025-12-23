@@ -713,10 +713,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       <ul className="space-y-1 px-3" role="menubar">
                         {visibleItems.map((item, itemIndex) => {
                           const isActive = pathname === item.href;
+                          // تحديد العناصر التي يجب أن تحتوي على أيقونة فتح في تبويب جديد
+                          const shouldShowNewTabIcon = item.href === '/admin/assets' || item.href === '/admin/reports';
+                          
                           return (
                             <li 
                               key={item.href} 
                               style={{ animationDelay: `${(groupIndex * visibleItems.length + itemIndex) * 20}ms` }}
+                              className="relative group/item"
                             >
                               <Link
                                 href={item.href}
@@ -795,6 +799,29 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                   <div className="absolute inset-0 rounded-xl bg-primary-500/10 blur-xl -z-0" />
                                 )}
                               </Link>
+                              
+                              {/* New Tab Icon - للأصول والتقارير فقط */}
+                              {shouldShowNewTabIcon && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    window.open(item.href, '_blank', 'noopener,noreferrer');
+                                  }}
+                                  className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover/item:opacity-100 group-hover:opacity-100 material-transition bg-white/90 hover:bg-primary-50 text-slate-600 hover:text-primary-600 shadow-md hover:shadow-lg hover:scale-110 active:scale-95 z-20 border border-slate-200 hover:border-primary-300"
+                                  aria-label={`فتح ${item.label} في تبويب جديد`}
+                                  title={`فتح ${item.label} في تبويب جديد`}
+                                  style={{
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  }}
+                                >
+                                  <MaterialIcon 
+                                    name="open_in_new" 
+                                    size="sm"
+                                    className="relative z-10"
+                                  />
+                                </button>
+                              )}
                             </li>
                           );
                         })}

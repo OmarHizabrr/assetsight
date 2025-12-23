@@ -17,6 +17,221 @@
 @import '../styles/compact-layout.css';
 
 /* ========================================
+   REPORTS PAGE ENHANCED ANIMATIONS
+   ======================================== */
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 1000px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Enhanced hover effects for stats cards */
+.stats-card-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.stats-card-hover:hover::before {
+  left: 100%;
+}
+
+/* Smooth table row animations */
+.table-row-enter {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Enhanced table styles */
+.reports-table {
+  position: relative;
+}
+
+.reports-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.reports-table tbody tr {
+  position: relative;
+}
+
+.reports-table tbody tr::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: linear-gradient(90deg, transparent, rgba(115, 103, 240, 0.1), transparent);
+  transition: width 0.3s ease;
+}
+
+.reports-table tbody tr:hover::before {
+  width: 100%;
+}
+
+.reports-table tbody td {
+  position: relative;
+  z-index: 1;
+}
+
+/* Table cell hover effects */
+.reports-table tbody td:hover {
+  background: rgba(115, 103, 240, 0.05);
+  transition: background 0.2s ease;
+}
+
+/* Enhanced table header with icons */
+.reports-table thead th {
+  position: relative;
+}
+
+.reports-table thead th::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(115, 103, 240, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.reports-table thead:hover th::after {
+  opacity: 1;
+}
+
+/* Table row number indicator */
+.reports-table tbody tr::after {
+  content: counter(row-number);
+  counter-increment: row-number;
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: rgba(115, 103, 240, 0.3);
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.reports-table tbody {
+  counter-reset: row-number;
+}
+
+.reports-table tbody tr:hover::after {
+  opacity: 1;
+}
+
+/* Smooth scroll for table */
+.reports-table {
+  scroll-behavior: smooth;
+}
+
+.reports-table::-webkit-scrollbar {
+  height: 8px;
+}
+
+.reports-table::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.reports-table::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #7367f0, #5e52d5);
+  border-radius: 10px;
+}
+
+.reports-table::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #5e52d5, #4a3fc7);
+}
+
+/* Enhanced filter animations */
+.filter-panel {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-panel-open {
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Glass morphism effect for dropdowns */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced badge animations */
+.badge-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* ========================================
    CRITICAL SPACING OVERRIDES - تجاوز حاسم للمسافات
    يجب أن يكون في آخر الملف لضمان الأولوية
    ======================================== */

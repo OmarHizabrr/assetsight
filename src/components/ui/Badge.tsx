@@ -3,7 +3,7 @@
 import { HTMLAttributes } from 'react';
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'accent';
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'accent' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   dot?: boolean;
 }
@@ -25,6 +25,7 @@ export function Badge({
     warning: 'bg-gradient-to-r from-warning-500 to-warning-600 text-white border-2 border-warning-400 shadow-warning-500/30',
     error: 'bg-gradient-to-r from-error-500 to-error-600 text-white border-2 border-error-400 shadow-error-500/30',
     accent: 'bg-gradient-to-r from-accent-500 to-accent-600 text-white border-2 border-accent-400 shadow-accent-500/30',
+    outline: 'bg-transparent text-slate-700 border-2 border-slate-300 hover:border-primary-400 hover:text-primary-700 shadow-sm',
   };
 
   const sizes = {
