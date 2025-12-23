@@ -200,13 +200,181 @@
   background: linear-gradient(90deg, #5e52d5, #4a3fc7);
 }
 
-/* Enhanced filter animations */
+/* Reports page layout improvements */
+.reports-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+}
+
+.reports-table-wrapper table {
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  display: table;
+}
+
+.reports-table-wrapper thead {
+  display: table-header-group;
+}
+
+.reports-table-wrapper tbody {
+  display: table-row-group;
+}
+
+.reports-table-wrapper thead th {
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f8fafc;
+  display: table-cell;
+}
+
+.reports-table-wrapper tbody td {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  display: table-cell;
+}
+
+.reports-table-wrapper tr {
+  display: table-row;
+}
+
+/* Ensure proper table display */
+.reports-table-wrapper table {
+  border-spacing: 0;
+}
+
+/* Fix table column widths - use auto layout for better responsiveness */
+.reports-table-wrapper table {
+  table-layout: auto;
+}
+
+.reports-table-wrapper th,
+.reports-table-wrapper td {
+  padding: 0.75rem;
+  text-align: right;
+}
+
+/* Ensure table takes full width */
+.reports-table-wrapper {
+  width: 100%;
+  display: block;
+}
+
+.reports-table-wrapper table {
+  width: 100%;
+  min-width: 800px;
+}
+
+/* Icon loading optimization */
+[class*="MaterialIcon"],
+svg {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+[role="button"],
+a {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Optimize card hover effects */
+[class*="Card"]:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Loading state optimizations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Smooth number transitions */
+[class*="font-bold"][class*="text-"] {
+  transition: all 0.3s ease;
+}
+
+/* Sticky header backdrop blur */
+.reports-table-wrapper thead th {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Filter panel improvements */
 .filter-panel {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .filter-panel-open {
   animation: slideDown 0.3s ease-out;
+}
+
+/* Reports filter card sticky positioning */
+.reports-filter-card {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Stats cards improvements */
+.reports-stats-card {
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Mobile card view improvements */
+@media (max-width: 1024px) {
+  .reports-table {
+    overflow-x: auto;
+  }
+  
+  .reports-table table {
+    min-width: 800px;
+  }
+}
+
+/* Table responsive improvements */
+.reports-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reports-table-wrapper::-webkit-scrollbar {
+  height: 10px;
+}
+
+.reports-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.reports-table-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #7367f0, #5e52d5);
+  border-radius: 10px;
+}
+
+.reports-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #5e52d5, #4a3fc7);
 }
 
 /* Glass morphism effect for dropdowns */

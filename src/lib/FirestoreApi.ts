@@ -1,7 +1,9 @@
 import {
   collection,
+  collectionGroup,
   deleteDoc,
   doc,
+  getCountFromServer,
   getDoc,
   getDocs,
   limit,
@@ -11,6 +13,7 @@ import {
   Timestamp,
   updateDoc,
   where,
+  type AggregateQuerySnapshot,
   type CollectionReference,
   type DocumentReference,
   type QueryConstraint,
@@ -605,6 +608,63 @@ export class FirestoreApi {
       }
     }
     return converted;
+  }
+
+  // ==============================
+  // دوال سريعة لجلب العدد فقط (بدون تحميل البيانات)
+  // ==============================
+
+  /**
+   * الحصول على عدد المستندات في حلقة فرعية بشكل سريع
+   * يستخدم count().get() للحصول على العدد فقط بدون تحميل البيانات
+   */
+  async getSubCollectionCount({
+    parentCollection,
+    parentId,
+    subCollection,
+  }: {
+    parentCollection: string;
+    parentId: string;
+    subCollection: string;
+  }): Promise<number> {
+    try {
+      const colRef = this.getSubCollection(parentCollection, parentId, subCollection);
+      const aggregateQuery = await getCountFromServer(colRef);
+      return aggregateQuery.data().count ?? 0;
+    } catch (error) {
+      console.error(`Error getting count for ${parentCollection}/${parentId}/${subCollection}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * الحصول على عدد جميع المستندات في collection group
+   * يستخدم collectionGroup للحصول على كل المجموعات الفرعية بنفس الاسم
+   * مثال: getAllCount('assets') يجلب عدد كل الأصول في كل المجلدات
+   */
+  async getAllCount(collectionName: string): Promise<number> {
+    try {
+      const colGroupRef = collectionGroup(db, collectionName);
+      const aggregateQuery = await getCountFromServer(colGroupRef);
+      return aggregateQuery.data().count ?? 0;
+    } catch (error) {
+      console.error(`Error getting count for collection group ${collectionName}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * الحصول على عدد المستندات في collection عادي
+   */
+  async getCollectionCount(collectionName: string): Promise<number> {
+    try {
+      const colRef = this.getCollection(collectionName);
+      const aggregateQuery = await getCountFromServer(colRef);
+      return aggregateQuery.data().count ?? 0;
+    } catch (error) {
+      console.error(`Error getting count for collection ${collectionName}:`, error);
+      return 0;
+    }
   }
 }
 

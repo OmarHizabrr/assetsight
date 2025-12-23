@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { PdfSettingsService } from "@/lib/services/PdfSettingsService";
 import { getBothDates } from "@/lib/utils/hijriDate";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from 'xlsx';
 
 interface AssetDetail {
@@ -71,40 +73,33 @@ function AdvancedFilter({
   const allSelected = filteredOptions.length > 0 && filteredOptions.every(opt => selectedIds.has(opt.id));
 
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+    <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow transition-shadow">
       <button
         onClick={onToggleOpen}
-        className="w-full p-4 bg-gradient-to-r from-slate-50 to-slate-100/50 hover:from-slate-100 hover:to-slate-200/50 transition-all flex items-center justify-between group"
+        className="w-full p-2.5 bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-between group"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
-            <MaterialIcon
-              name={isOpen ? "expand_less" : "expand_more"}
-              className="text-primary-600"
-              size="md"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            {icon && (
-              <MaterialIcon name={icon} className="text-slate-500" size="sm" />
-            )}
-            <span className="font-semibold text-slate-700">{title}</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <MaterialIcon
+            name={isOpen ? "expand_less" : "expand_more"}
+            className="text-slate-500 text-sm"
+            size="sm"
+          />
+          <span className="font-medium text-slate-700 text-sm">{title}</span>
           {selectedIds.size > 0 && (
-            <Badge variant="primary" size="sm" className="animate-scale-in">
+            <Badge variant="primary" size="sm" className="text-xs">
               {selectedIds.size}
             </Badge>
           )}
         </div>
-        <span className="text-xs text-slate-500 font-medium bg-white px-2 py-1 rounded-md">
+        <span className="text-xs text-slate-500 font-medium">
           {filteredOptions.length}
         </span>
       </button>
 
       {isOpen && (
-        <div className="p-4 border-t border-slate-200 bg-white filter-panel-open">
+        <div className="p-2 border-t border-slate-200 bg-white">
           {/* البحث */}
-          <div className="mb-4">
+          <div className="mb-2">
             <Input
               type="text"
               value={searchTerm}
@@ -116,7 +111,7 @@ function AdvancedFilter({
           </div>
 
           {/* اختيار الكل / إلغاء الكل */}
-          <div className="mb-3 pb-3 border-b border-slate-200">
+          <div className="mb-2 pb-2 border-b border-slate-200">
             <Checkbox
               checked={allSelected}
               onChange={() => {
@@ -134,29 +129,29 @@ function AdvancedFilter({
                   });
                 }
               }}
-              label={allSelected ? "إلغاء اختيار الكل" : "اختيار الكل"}
-              className="font-semibold text-slate-700"
+              label={allSelected ? "إلغاء الكل" : "اختيار الكل"}
+              className="text-sm"
             />
           </div>
 
           {/* قائمة الخيارات */}
-          <div className="max-h-64 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-primary-200 scrollbar-track-slate-100">
+          <div className="max-h-48 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-primary-200 scrollbar-track-slate-100">
             {filteredOptions.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-4">لا توجد نتائج</p>
+              <p className="text-xs text-slate-500 text-center py-3">لا توجد نتائج</p>
             ) : (
               filteredOptions.map((option) => (
                 <div 
                   key={option.id} 
-                  className="flex items-center justify-between p-2.5 hover:bg-primary-50 rounded-lg transition-all duration-200 cursor-pointer group hover:shadow-sm hover:scale-[1.02]"
+                  className="flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors cursor-pointer"
                   onClick={() => onToggle(option.id)}
                 >
                   <Checkbox
                     checked={selectedIds.has(option.id)}
                     onChange={() => onToggle(option.id)}
                     label={option.label}
-                    className="flex-1"
+                    className="flex-1 text-sm"
                   />
-                  <Badge variant="outline" size="sm" className="group-hover:bg-primary-100 group-hover:scale-110 transition-all duration-200">
+                  <Badge variant="outline" size="sm" className="text-xs">
                     {option.count}
                   </Badge>
                 </div>
@@ -193,27 +188,20 @@ function RangeFilter({
   placeholder = { min: "من", max: "إلى" },
 }: RangeFilterProps) {
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+    <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow transition-shadow">
       <button
         onClick={onToggleOpen}
-        className="w-full p-4 bg-gradient-to-r from-slate-50 to-slate-100/50 hover:from-slate-100 hover:to-slate-200/50 transition-all flex items-center justify-between group"
+        className="w-full p-2.5 bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-between group"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
-            <MaterialIcon
-              name={isOpen ? "expand_less" : "expand_more"}
-              className="text-primary-600"
-              size="md"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            {icon && (
-              <MaterialIcon name={icon} className="text-slate-500" size="sm" />
-            )}
-            <span className="font-semibold text-slate-700">{title}</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <MaterialIcon
+            name={isOpen ? "expand_less" : "expand_more"}
+            className="text-slate-500 text-sm"
+            size="sm"
+          />
+          <span className="font-medium text-slate-700 text-sm">{title}</span>
           {(minValue || maxValue) && (
-            <Badge variant="primary" size="sm" className="animate-scale-in">
+            <Badge variant="primary" size="sm" className="text-xs">
               مفعل
             </Badge>
           )}
@@ -221,28 +209,26 @@ function RangeFilter({
       </button>
 
       {isOpen && (
-        <div className="p-4 border-t border-slate-200 bg-white filter-panel-open">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="p-2 border-t border-slate-200 bg-white">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-2">{placeholder.min}</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">{placeholder.min}</label>
               <Input
                 type="number"
                 value={minValue}
                 onChange={(e) => onMinChange(e.target.value)}
                 placeholder={placeholder.min}
-                leftIcon={<MaterialIcon name="arrow_downward" size="sm" />}
-                className="w-full"
+                className="w-full text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-2">{placeholder.max}</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">{placeholder.max}</label>
               <Input
                 type="number"
                 value={maxValue}
                 onChange={(e) => onMaxChange(e.target.value)}
                 placeholder={placeholder.max}
-                leftIcon={<MaterialIcon name="arrow_upward" size="sm" />}
-                className="w-full"
+                className="w-full text-sm"
               />
             </div>
           </div>
@@ -254,6 +240,8 @@ function RangeFilter({
 
 function ReportsPageContent() {
   const [loading, setLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingStage, setLoadingStage] = useState('جاري التحميل...');
   const [stats, setStats] = useState({
     totalAssets: 0,
     totalValue: 0,
@@ -332,39 +320,78 @@ function ReportsPageContent() {
   const loadReports = async () => {
     try {
       setLoading(true);
+      setLoadingProgress(0);
+      setLoadingStage('جاري تحميل الإحصائيات...');
       
-      // جلب جميع البيانات بشكل متوازي
+      // جلب الإحصائيات السريعة أولاً (بدون تحميل البيانات)
+      setLoadingProgress(10);
+      const [
+        totalAssetsCount,
+        totalDepartmentsCount,
+        totalUsersCount,
+        deptDocs,
+      ] = await Promise.all([
+        firestoreApi.getCollectionCount("assets"),
+        firestoreApi.getCollectionCount("departments"),
+        firestoreApi.getCollectionCount("users"),
+        firestoreApi.getDocuments(firestoreApi.getCollection("departments")),
+      ]);
+
+      setLoadingProgress(30);
+      setLoadingStage('جاري جلب عدد المكاتب...');
+      const departments = BaseModel.fromFirestoreArray(deptDocs);
+      setAllDepartments(departments);
+
+      // جلب عدد المكاتب من جميع الإدارات بشكل سريع
+      const officeCountPromises = departments.map(async (dept) => {
+        const deptId = dept.get('id');
+        if (!deptId) return 0;
+        return firestoreApi.getSubCollectionCount({
+          parentCollection: "departments",
+          parentId: deptId,
+          subCollection: "departments",
+        });
+      });
+      const officeCounts = await Promise.all(officeCountPromises);
+      const totalOfficesCount = officeCounts.reduce((sum, count) => sum + count, 0);
+
+      setLoadingProgress(50);
+      setLoadingStage('جاري تحميل البيانات...');
+
+      // جلب البيانات الكاملة للفلاتر والجدول (بعد الإحصائيات)
       const [
         assetDocs,
-        deptDocs,
         statusDocs,
         assetNameDocs,
         assetTypeDocs,
         userDocs,
       ] = await Promise.all([
         firestoreApi.getDocuments(firestoreApi.getCollection("assets")),
-        firestoreApi.getDocuments(firestoreApi.getCollection("departments")),
         firestoreApi.getDocuments(firestoreApi.getCollection("assetStatuses")),
         firestoreApi.getDocuments(firestoreApi.getCollection("assetNames")),
         firestoreApi.getDocuments(firestoreApi.getCollection("assetTypes")),
         firestoreApi.getDocuments(firestoreApi.getCollection("users")),
       ]);
 
+      setLoadingProgress(70);
+      setLoadingStage('جاري معالجة البيانات...');
+
       const assets = BaseModel.fromFirestoreArray(assetDocs);
-      const departments = BaseModel.fromFirestoreArray(deptDocs);
       const statusesData = BaseModel.fromFirestoreArray(statusDocs);
       const assetNamesData = BaseModel.fromFirestoreArray(assetNameDocs);
       const assetTypesData = BaseModel.fromFirestoreArray(assetTypeDocs);
       const usersData = BaseModel.fromFirestoreArray(userDocs);
 
       setAllAssets(assets);
-      setAllDepartments(departments);
       setStatuses(statusesData);
       setAssetNames(assetNamesData);
       setAssetTypes(assetTypesData);
       setUsers(usersData);
 
-      // جلب جميع المكاتب
+      setLoadingProgress(80);
+      setLoadingStage('جاري تحميل المكاتب...');
+
+      // جلب جميع المكاتب (للفلاتر)
       const officePromises = departments.map(async (dept) => {
         const deptId = dept.get('id');
         if (!deptId) return { deptId: '', offices: [] };
@@ -389,8 +416,10 @@ function ReportsPageContent() {
 
       setAllOffices(officesList);
 
-      // حساب الإحصائيات
-      const totalAssets = assets.length;
+      setLoadingProgress(90);
+      setLoadingStage('جاري إعداد التقارير...');
+
+      // حساب القيمة الإجمالية والأصول النشطة (من البيانات المحملة)
       const totalValue = assets.reduce((sum, asset) => {
         const currentValue = asset.getValue<number>('current_value') || 0;
         const purchaseValue = asset.getValue<number>('purchase_value') || 0;
@@ -401,20 +430,30 @@ function ReportsPageContent() {
         return isActive;
       }).length;
 
+      // تحديث الإحصائيات باستخدام الأعداد السريعة
       setStats({
-        totalAssets,
+        totalAssets: totalAssetsCount,
         totalValue,
         activeAssets,
-        departments: departments.length,
-        offices: officesList.length,
+        departments: totalDepartmentsCount,
+        offices: totalOfficesCount,
       });
+
+      setLoadingProgress(95);
+      setLoadingStage('جاري بناء التفاصيل...');
 
       // بناء تفاصيل الأصول
       buildAssetDetails(assets, departments, officesList, statusesData, assetNamesData, assetTypesData, usersData);
+
+      setLoadingProgress(100);
+      // تأخير بسيط لإظهار 100% قبل إخفاء الشاشة
+      await new Promise(resolve => setTimeout(resolve, 300));
     } catch (error) {
       console.error("Error loading reports:", error);
+      setLoadingStage('حدث خطأ أثناء التحميل');
     } finally {
       setLoading(false);
+      setLoadingProgress(0);
     }
   };
 
@@ -751,7 +790,7 @@ function ReportsPageContent() {
     users,
   ]);
 
-  const toggleFilter = (filterType: string, id: string) => {
+  const toggleFilter = useCallback((filterType: string, id: string) => {
     switch (filterType) {
       case 'departments':
         setSelectedDepartmentIds(prev => {
@@ -820,9 +859,9 @@ function ReportsPageContent() {
         });
         break;
     }
-  };
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSelectedDepartmentIds(new Set());
     setSelectedOfficeIds(new Set());
     setSelectedAssetTypeIds(new Set());
@@ -839,7 +878,7 @@ function ReportsPageContent() {
     setIsActiveFilter('all');
     setPurchaseDateFrom('');
     setPurchaseDateTo('');
-  };
+  }, []);
 
   const exportToCSV = () => {
     if (filteredAssets.length === 0) return;
@@ -1120,148 +1159,134 @@ function ReportsPageContent() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center min-h-[60vh] animate-fade-in">
-          <div className="flex flex-col items-center gap-6">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary-100 border-t-primary-600"></div>
-              <div className="absolute inset-0 animate-spin rounded-full h-16 w-16 border-4 border-transparent border-r-primary-400" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-            </div>
-            <div className="text-center space-y-2">
-              <p className="text-slate-700 font-semibold text-lg">جاري تحميل التقارير...</p>
-              <p className="text-slate-500 text-sm">يرجى الانتظار</p>
-            </div>
-            <div className="flex gap-2">
-              <div className="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-              <div className="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-            </div>
-          </div>
-        </div>
+        <LoadingScreen 
+          message={loadingStage}
+          showProgress={true}
+          progress={loadingProgress}
+        />
       </MainLayout>
     );
   }
 
   return (
     <MainLayout>
-      {/* Page Header */}
-      <div className="mb-10 animate-fade-in">
-        <div className="space-y-3">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition hover:shadow-primary-500/60">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-              <MaterialIcon name="assessment" className="text-white relative z-10 group-hover:rotate-12 transition-transform duration-300" size="3xl" />
+      <div className="w-full">
+        {/* Page Header */}
+        <div className="mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30 flex-shrink-0">
+              <MaterialIcon name="assessment" className="text-white" size="lg" />
             </div>
-            <div className="flex-1">
-              <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2 animate-fade-in">التقارير والإحصائيات</h1>
-              <p className="text-slate-600 text-lg font-semibold animate-fade-in" style={{ animationDelay: '0.1s' }}>نظام فلترة متقدم مثل Excel</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-0.5">التقارير والإحصائيات</h1>
+              <p className="text-slate-600 text-sm font-medium">نظام فلترة متقدم</p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* إحصائيات عامة */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-primary-50/30 border-primary-200/40 group hover:scale-[1.02] transition-all duration-300 hover:shadow-2xl hover:shadow-primary-500/20">
-          <CardBody padding="lg">
-            <div className="flex items-center justify-between">
+        {/* إحصائيات عامة */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <CardBody padding="sm">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">إجمالي الأصول</p>
-                <p className="text-4xl font-black bg-gradient-to-r from-slate-900 via-primary-600 to-slate-700 bg-clip-text text-transparent mb-1 transition-all duration-300 group-hover:scale-110 inline-block">{stats.totalAssets}</p>
-                <p className="text-xs text-slate-500 font-medium">أصل مسجل</p>
+                <p className="text-xs font-medium text-slate-500 mb-1">إجمالي الأصول</p>
+                <p className="text-2xl font-bold text-slate-900 transition-all duration-300">{stats.totalAssets.toLocaleString('ar-SA')}</p>
+                <p className="text-xs text-slate-500">أصل</p>
               </div>
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30 group-hover:shadow-xl group-hover:shadow-primary-500/50 group-hover:scale-110 transition-all duration-300">
-                <MaterialIcon name="inventory" className="text-white group-hover:scale-110 transition-transform duration-300" size="3xl" />
+              <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-primary-200">
+                <MaterialIcon name="inventory" className="text-primary-600" size="md" />
               </div>
             </div>
           </CardBody>
         </Card>
 
-        <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-success-50/30 border-success-200/40 group hover:scale-[1.02] transition-all duration-300 hover:shadow-2xl hover:shadow-success-500/20">
-          <CardBody padding="lg">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <CardBody padding="sm">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">القيمة الإجمالية</p>
-                <p className="text-4xl font-black bg-gradient-to-r from-slate-900 via-success-600 to-slate-700 bg-clip-text text-transparent mb-1 transition-all duration-300 group-hover:scale-110 inline-block">
+                <p className="text-xs font-medium text-slate-500 mb-1">القيمة الإجمالية</p>
+                <p className="text-xl font-bold text-slate-900 truncate transition-all duration-300">
                   {stats.totalValue.toLocaleString('ar-SA')}
                 </p>
-                <p className="text-xs text-slate-500 font-medium">ريال سعودي</p>
+                <p className="text-xs text-slate-500">ريال</p>
               </div>
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-success-500 to-success-700 flex items-center justify-center shadow-lg shadow-success-500/30 group-hover:shadow-xl group-hover:shadow-success-500/50 group-hover:scale-110 transition-all duration-300">
-                <MaterialIcon name="attach_money" className="text-white group-hover:scale-110 transition-transform duration-300" size="3xl" />
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-accent-50/30 border-accent-200/40 group hover:scale-[1.02] transition-all duration-300 hover:shadow-2xl hover:shadow-accent-500/20">
-          <CardBody padding="lg">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">أصول نشطة</p>
-                <p className="text-4xl font-black bg-gradient-to-r from-slate-900 via-accent-600 to-slate-700 bg-clip-text text-transparent mb-1 transition-all duration-300 group-hover:scale-110 inline-block">{stats.activeAssets}</p>
-                <p className="text-xs text-slate-500 font-medium">أصل نشط</p>
-              </div>
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-accent-500 to-accent-700 flex items-center justify-center shadow-lg shadow-accent-500/30 group-hover:shadow-xl group-hover:shadow-accent-500/50 group-hover:scale-110 transition-all duration-300">
-                <MaterialIcon name="check_circle" className="text-white group-hover:scale-110 transition-transform duration-300" size="3xl" />
+              <div className="w-10 h-10 rounded-lg bg-success-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-success-200">
+                <MaterialIcon name="attach_money" className="text-success-600" size="md" />
               </div>
             </div>
           </CardBody>
         </Card>
 
-        <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-warning-50/30 border-warning-200/40 group hover:scale-[1.02] transition-all duration-300 hover:shadow-2xl hover:shadow-warning-500/20">
-          <CardBody padding="lg">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <CardBody padding="sm">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">النتائج المفلترة</p>
-                <p className="text-4xl font-black bg-gradient-to-r from-slate-900 via-warning-600 to-slate-700 bg-clip-text text-transparent mb-1 transition-all duration-300 group-hover:scale-110 inline-block">{filteredAssets.length}</p>
-                <p className="text-xs text-slate-500 font-medium">من {stats.totalAssets} أصل</p>
+                <p className="text-xs font-medium text-slate-500 mb-1">أصول نشطة</p>
+                <p className="text-2xl font-bold text-slate-900 transition-all duration-300">{stats.activeAssets.toLocaleString('ar-SA')}</p>
+                <p className="text-xs text-slate-500">نشط</p>
               </div>
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-warning-500 to-warning-700 flex items-center justify-center shadow-lg shadow-warning-500/30 group-hover:shadow-xl group-hover:shadow-warning-500/50 group-hover:scale-110 transition-all duration-300">
-                <MaterialIcon name="filter_list" className="text-white group-hover:scale-110 transition-transform duration-300" size="3xl" />
+              <div className="w-10 h-10 rounded-lg bg-accent-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-accent-200">
+                <MaterialIcon name="check_circle" className="text-accent-600" size="md" />
               </div>
             </div>
           </CardBody>
         </Card>
 
-        <Card hover variant="elevated" className="bg-gradient-to-br from-white via-white to-primary-50/30 border-primary-200/40 group hover:scale-[1.02] transition-all duration-300 hover:shadow-2xl hover:shadow-primary-500/20">
-          <CardBody padding="lg">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <CardBody padding="sm">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">قيمة المفلترة</p>
-                <p className="text-4xl font-black bg-gradient-to-r from-slate-900 via-primary-600 to-slate-700 bg-clip-text text-transparent mb-1 transition-all duration-300 group-hover:scale-110 inline-block">
+                <p className="text-xs font-medium text-slate-500 mb-1">النتائج المفلترة</p>
+                <p className="text-2xl font-bold text-slate-900 transition-all duration-300">{filteredAssets.length.toLocaleString('ar-SA')}</p>
+                <p className="text-xs text-slate-500">من {stats.totalAssets.toLocaleString('ar-SA')}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-warning-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-warning-200">
+                <MaterialIcon name="filter_list" className="text-warning-600" size="md" />
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <CardBody padding="sm">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-slate-500 mb-1">قيمة المفلترة</p>
+                <p className="text-xl font-bold text-slate-900 truncate transition-all duration-300">
                   {totalFilteredValue.toLocaleString('ar-SA')}
                 </p>
-                <p className="text-xs text-slate-500 font-medium">ريال سعودي</p>
+                <p className="text-xs text-slate-500">ريال</p>
               </div>
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30 group-hover:shadow-xl group-hover:shadow-primary-500/50 group-hover:scale-110 transition-all duration-300">
-                <MaterialIcon name="calculate" className="text-white group-hover:scale-110 transition-transform duration-300" size="3xl" />
+              <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-primary-200">
+                <MaterialIcon name="calculate" className="text-primary-600" size="md" />
               </div>
             </div>
           </CardBody>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 w-full">
         {/* لوحة الفلاتر */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-6 shadow-xl border-2 border-slate-200/50 bg-gradient-to-br from-white to-slate-50/30">
-            <CardHeader>
+        <div className="w-full lg:w-80 flex-shrink-0">
+          <Card className="sticky top-4 shadow-md border border-slate-200 bg-white h-fit max-h-[calc(100vh-120px)] flex flex-col">
+            <CardHeader className="pb-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <MaterialIcon name="tune" className="text-primary-600" size="md" />
-                <span className="text-xl font-bold text-slate-800">الفلاتر المتقدمة</span>
+                <MaterialIcon name="tune" className="text-primary-600" size="sm" />
+                <span className="text-base font-semibold text-slate-800">الفلاتر</span>
               </div>
             </CardHeader>
-            <CardBody>
-              <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-slate-100 pr-2 hover:scrollbar-thumb-primary-400 transition-colors">
+            <CardBody className="pt-3 flex-1 flex flex-col min-h-0">
+              <div className="space-y-2 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-slate-100 pr-1">
                 {/* البحث العام */}
-                <div className="bg-gradient-to-r from-primary-50 via-primary-100/70 to-primary-50 p-4 rounded-xl border-2 border-primary-200/60 shadow-md hover:shadow-lg transition-all duration-300">
+                <div className="mb-3">
                   <Input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="ابحث في جميع الحقول..."
+                    placeholder="ابحث..."
                     leftIcon={<MaterialIcon name="search" size="sm" />}
-                    className="w-full bg-white shadow-sm hover:shadow-md transition-shadow"
+                    className="w-full"
                   />
                 </div>
 
@@ -1568,13 +1593,13 @@ function ReportsPageContent() {
                 </div>
 
                 {/* أزرار التحكم */}
-                <div className="pt-4 border-t-2 border-slate-200 space-y-2 sticky bottom-0 bg-white pb-2">
+                <div className="pt-3 mt-3 border-t border-slate-200 space-y-2 sticky bottom-0 bg-white pb-2 z-10">
                   <Button
                     onClick={resetFilters}
                     variant="outline"
                     fullWidth
+                    size="sm"
                     leftIcon={<MaterialIcon name="refresh" size="sm" />}
-                    className="font-semibold"
                   >
                     إعادة تعيين
                   </Button>
@@ -1635,12 +1660,13 @@ function ReportsPageContent() {
         </div>
 
         {/* جدول النتائج */}
-        <div className="lg:col-span-3">
-          <Card className="shadow-xl border-2 border-slate-200/50 bg-gradient-to-br from-white to-slate-50/30">
+        <div className="flex-1 min-w-0 w-full">
+          <Card className="shadow-md border border-slate-200 bg-white w-full">
             <CardHeader 
+              className="pb-3 border-b border-slate-200 flex-shrink-0"
               action={
                 filteredAssets.length > 0 ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <div className="relative" ref={exportButtonRef}>
                       <Button
                         onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
@@ -1689,17 +1715,19 @@ function ReportsPageContent() {
                 ) : undefined
               }
             >
-              <div className="flex items-center gap-2">
-                <MaterialIcon name="table_chart" className="text-primary-600" size="md" />
-                <span className="text-xl font-bold text-slate-800">النتائج المفلترة ({filteredAssets.length} أصل)</span>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
+                  <span className="text-base font-semibold text-slate-800">النتائج ({filteredAssets.length})</span>
+                </div>
               </div>
             </CardHeader>
-            <CardBody>
+            <CardBody className="p-4">
               {filteredAssets.length === 0 ? (
                 <div className="text-center py-16 animate-fade-in">
                   <div className="relative inline-block mb-6">
                     <div className="absolute inset-0 bg-primary-100 rounded-full blur-2xl opacity-50 animate-pulse"></div>
-                    <MaterialIcon name="filter_alt_off" className="text-slate-400 mx-auto relative z-10 text-6xl" size="5xl" />
+                    <MaterialIcon name="filter_alt_off" className="text-slate-400 mx-auto relative z-10" size="5xl" />
                   </div>
                   <h3 className="text-2xl font-bold text-slate-700 mb-3">لا توجد نتائج</h3>
                   <p className="text-slate-500 mb-6">جرب تغيير الفلاتر أو البحث</p>
@@ -1707,6 +1735,7 @@ function ReportsPageContent() {
                     onClick={resetFilters}
                     variant="outline"
                     leftIcon={<MaterialIcon name="refresh" size="sm" />}
+                    className="transition-all hover:scale-105"
                   >
                     إعادة تعيين الفلاتر
                   </Button>
@@ -1714,168 +1743,133 @@ function ReportsPageContent() {
               ) : (
                 <div className="w-full">
                   {/* Desktop Table View */}
-                  <div className="hidden lg:block overflow-x-auto rounded-xl border-2 border-slate-200/60 shadow-lg bg-white reports-table">
-                    <div className="min-w-full">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b-2 border-primary-200 bg-gradient-to-r from-primary-50 via-primary-100/50 to-primary-50 sticky top-0 z-20 shadow-md">
-                            <th className="text-right p-4 font-extrabold text-primary-900 text-xs uppercase tracking-widest whitespace-nowrap border-l border-primary-200/50 first:border-l-0 min-w-[120px]">
-                              <div className="flex items-center gap-2">
-                                <MaterialIcon name="business" className="text-primary-600" size="sm" />
-                                <span>الإدارة</span>
-                              </div>
-                            </th>
-                            <th className="text-right p-4 font-extrabold text-primary-900 text-xs uppercase tracking-widest whitespace-nowrap border-l border-primary-200/50 min-w-[120px]">
-                              <div className="flex items-center gap-2">
-                                <MaterialIcon name="meeting_room" className="text-primary-600" size="sm" />
-                                <span>المكتب</span>
-                              </div>
-                            </th>
-                            <th className="text-right p-4 font-extrabold text-primary-900 text-xs uppercase tracking-widest whitespace-nowrap border-l border-primary-200/50 min-w-[150px]">
-                              <div className="flex items-center gap-2">
-                                <MaterialIcon name="inventory_2" className="text-primary-600" size="sm" />
-                                <span>اسم الأصل</span>
-                              </div>
-                            </th>
-                            <th className="text-right p-4 font-extrabold text-primary-900 text-xs uppercase tracking-widest whitespace-nowrap border-l border-primary-200/50 min-w-[120px]">
-                              <div className="flex items-center gap-2">
-                                <MaterialIcon name="category" className="text-primary-600" size="sm" />
-                                <span>نوع الأصل</span>
-                              </div>
-                            </th>
-                            <th className="text-right p-4 font-extrabold text-primary-900 text-xs uppercase tracking-widest whitespace-nowrap border-l border-primary-200/50 min-w-[120px]">
-                              <div className="flex items-center gap-2">
-                                <MaterialIcon name="info" className="text-primary-600" size="sm" />
-                                <span>حالة الأصل</span>
-                              </div>
-                            </th>
-                            <th className="text-right p-4 font-extrabold text-primary-900 text-xs uppercase tracking-widest whitespace-nowrap border-l border-primary-200/50 min-w-[120px]">
-                              <div className="flex items-center gap-2">
-                                <MaterialIcon name="person" className="text-primary-600" size="sm" />
-                                <span>حامل الأصل</span>
-                              </div>
-                            </th>
-                            <th className="text-right p-4 font-extrabold text-primary-900 text-xs uppercase tracking-widest whitespace-nowrap border-l border-primary-200/50 min-w-[100px]">
-                              <div className="flex items-center gap-2">
-                                <MaterialIcon name="tag" className="text-primary-600" size="sm" />
-                                <span>رقم الأصل</span>
-                              </div>
-                            </th>
-                            <th className="text-right p-4 font-extrabold text-primary-900 text-xs uppercase tracking-widest whitespace-nowrap border-l border-primary-200/50 min-w-[120px]">
-                              <div className="flex items-center gap-2">
-                                <MaterialIcon name="attach_money" className="text-primary-600" size="sm" />
-                                <span>القيمة</span>
-                              </div>
-                            </th>
+                  <div className="hidden lg:block w-full overflow-x-auto reports-table-wrapper">
+                    <table className="w-full text-sm border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 first:border-l-0 min-w-[120px]">
+                            <div className="flex items-center gap-2 justify-end">
+                              <MaterialIcon name="business" className="text-primary-600" size="sm" />
+                              <span>الإدارة</span>
+                            </div>
+                          </th>
+                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
+                            <div className="flex items-center gap-2 justify-end">
+                              <MaterialIcon name="meeting_room" className="text-primary-600" size="sm" />
+                              <span>المكتب</span>
+                            </div>
+                          </th>
+                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[150px]">
+                            <div className="flex items-center gap-2 justify-end">
+                              <MaterialIcon name="inventory_2" className="text-primary-600" size="sm" />
+                              <span>اسم الأصل</span>
+                            </div>
+                          </th>
+                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
+                            <div className="flex items-center gap-2 justify-end">
+                              <MaterialIcon name="category" className="text-primary-600" size="sm" />
+                              <span>نوع الأصل</span>
+                            </div>
+                          </th>
+                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
+                            <div className="flex items-center gap-2 justify-end">
+                              <MaterialIcon name="info" className="text-primary-600" size="sm" />
+                              <span>حالة الأصل</span>
+                            </div>
+                          </th>
+                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
+                            <div className="flex items-center gap-2 justify-end">
+                              <MaterialIcon name="person" className="text-primary-600" size="sm" />
+                              <span>حامل الأصل</span>
+                            </div>
+                          </th>
+                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[100px]">
+                            <div className="flex items-center gap-2 justify-end">
+                              <MaterialIcon name="tag" className="text-primary-600" size="sm" />
+                              <span>رقم الأصل</span>
+                            </div>
+                          </th>
+                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
+                            <div className="flex items-center gap-2 justify-end">
+                              <MaterialIcon name="attach_money" className="text-primary-600" size="sm" />
+                              <span>القيمة</span>
+                            </div>
+                          </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {filteredAssets.map((assetDetail, idx) => (
-                            <tr 
-                              key={idx} 
-                              className={`group relative transition-all duration-300 hover:duration-200 animate-fade-in ${
-                                idx % 2 === 0 
-                                  ? 'bg-white hover:bg-gradient-to-r hover:from-primary-50/80 hover:via-primary-50/50 hover:to-white' 
-                                  : 'bg-slate-50/70 hover:bg-gradient-to-r hover:from-primary-50/80 hover:via-primary-50/50 hover:to-slate-50/70'
-                              } hover:shadow-lg hover:shadow-primary-500/10 hover:scale-[1.01] hover:border-l-4 hover:border-l-primary-500`}
-                              style={{ animationDelay: `${idx * 0.02}s` }}
-                            >
-                              {/* Left border indicator on hover */}
-                              <div className="absolute right-0 top-0 bottom-0 w-1 bg-primary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                              
-                              <td className="p-4 text-slate-800 font-semibold transition-all duration-200 group-hover:text-primary-700 group-hover:font-bold border-l border-slate-100 group-hover:border-l-primary-200">
-                                <div className="flex items-center gap-2">
-                                  <MaterialIcon name="business" className="text-slate-400 group-hover:text-primary-500 text-sm opacity-0 group-hover:opacity-100 transition-all duration-200" size="sm" />
-                                  <span className="truncate max-w-[150px]" title={assetDetail.departmentName}>{assetDetail.departmentName}</span>
-                                </div>
-                              </td>
-                              <td className="p-4 text-slate-800 font-semibold transition-all duration-200 group-hover:text-primary-700 group-hover:font-bold border-l border-slate-100 group-hover:border-l-primary-200">
-                                <div className="flex items-center gap-2">
-                                  <MaterialIcon name="meeting_room" className="text-slate-400 group-hover:text-primary-500 text-sm opacity-0 group-hover:opacity-100 transition-all duration-200" size="sm" />
-                                  <span className="truncate max-w-[150px]" title={assetDetail.officeName}>{assetDetail.officeName}</span>
-                                </div>
-                              </td>
-                              <td className="p-4 text-slate-900 font-bold transition-all duration-200 group-hover:text-primary-800 group-hover:scale-105 border-l border-slate-100 group-hover:border-l-primary-200">
-                                <div className="flex items-center gap-2">
-                                  <MaterialIcon name="inventory_2" className="text-primary-400 text-sm flex-shrink-0" size="sm" />
-                                  <span className="truncate max-w-[200px]" title={assetDetail.assetName}>{assetDetail.assetName}</span>
-                                </div>
-                              </td>
-                              <td className="p-4 text-slate-700 font-medium transition-all duration-200 group-hover:text-slate-800 border-l border-slate-100 group-hover:border-l-primary-200">
-                                <span className="truncate max-w-[150px]" title={assetDetail.assetType}>{assetDetail.assetType}</span>
-                              </td>
-                              <td className="p-4 transition-all duration-200 border-l border-slate-100 group-hover:border-l-primary-200">
-                                <Badge 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="group-hover:scale-110 group-hover:shadow-md group-hover:border-primary-300 transition-all duration-200 font-semibold whitespace-nowrap"
-                                >
-                                  {assetDetail.assetStatus}
-                                </Badge>
-                              </td>
-                              <td className="p-4 text-slate-700 font-medium transition-all duration-200 group-hover:text-slate-800 border-l border-slate-100 group-hover:border-l-primary-200">
-                                <div className="flex items-center gap-2">
-                                  <MaterialIcon name="person" className="text-slate-400 group-hover:text-primary-500 text-sm opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0" size="sm" />
-                                  <span className="truncate max-w-[150px]" title={assetDetail.custodianName}>{assetDetail.custodianName}</span>
-                                </div>
-                              </td>
-                              <td className="p-4 text-slate-600 font-mono text-xs transition-all duration-200 group-hover:text-primary-600 group-hover:font-semibold border-l border-slate-100 group-hover:border-l-primary-200 bg-slate-50/50 group-hover:bg-primary-50/50 rounded-md">
-                                <div className="flex items-center gap-2">
-                                  <MaterialIcon name="tag" className="text-slate-400 group-hover:text-primary-500 text-xs opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0" size="sm" />
-                                  <span className="font-mono truncate max-w-[100px]" title={assetDetail.asset.get('asset_tag') || '-'}>{assetDetail.asset.get('asset_tag') || '-'}</span>
-                                </div>
-                              </td>
-                              <td className="p-4 text-slate-900 font-bold transition-all duration-200 group-hover:text-primary-700 group-hover:text-lg border-l border-slate-100 group-hover:border-l-primary-200">
-                                <div className="flex items-center gap-2 justify-end whitespace-nowrap">
-                                  <span className="bg-gradient-to-r from-success-500 to-success-600 bg-clip-text text-transparent group-hover:from-success-600 group-hover:to-success-700">
-                                    {assetDetail.value.toLocaleString('ar-SA')}
-                                  </span>
-                                  <span className="text-success-600 font-semibold">ريال</span>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                        <tfoot>
-                          <tr className="bg-gradient-to-r from-primary-100 via-primary-200/50 to-primary-100 font-extrabold border-t-4 border-primary-400 shadow-inner relative">
-                            <td colSpan={7} className="p-5 text-right text-slate-900 text-base border-l border-primary-300/50">
-                              <div className="flex items-center gap-2 justify-end">
-                                <MaterialIcon name="calculate" className="text-primary-700" size="md" />
-                                <span>الإجمالي:</span>
-                              </div>
+                      <tbody>
+                        {filteredAssets.map((assetDetail, idx) => (
+                          <tr 
+                            key={idx} 
+                            className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${
+                              idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
+                            }`}
+                          >
+                            <td className="p-3 text-slate-700 text-sm border-l border-slate-100">
+                              <span className="truncate block max-w-[150px]" title={assetDetail.departmentName}>{assetDetail.departmentName}</span>
                             </td>
-                            <td className="p-5 text-slate-900 text-2xl border-l border-primary-300/50">
-                              <div className="flex items-center gap-2 justify-end">
-                                <span className="bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent font-black">
-                                  {totalFilteredValue.toLocaleString('ar-SA')}
-                                </span>
-                                <span className="text-primary-700 font-bold">ريال</span>
+                            <td className="p-3 text-slate-700 text-sm border-l border-slate-100">
+                              <span className="truncate block max-w-[150px]" title={assetDetail.officeName}>{assetDetail.officeName}</span>
+                            </td>
+                            <td className="p-3 text-slate-900 font-semibold text-sm border-l border-slate-100">
+                              <span className="truncate block max-w-[200px]" title={assetDetail.assetName}>{assetDetail.assetName}</span>
+                            </td>
+                            <td className="p-3 text-slate-700 text-sm border-l border-slate-100">
+                              <span className="truncate block max-w-[150px]" title={assetDetail.assetType}>{assetDetail.assetType}</span>
+                            </td>
+                            <td className="p-3 border-l border-slate-100">
+                              <Badge variant="outline" size="sm" className="whitespace-nowrap">
+                                {assetDetail.assetStatus}
+                              </Badge>
+                            </td>
+                            <td className="p-3 text-slate-700 text-sm border-l border-slate-100">
+                              <span className="truncate block max-w-[150px]" title={assetDetail.custodianName}>{assetDetail.custodianName}</span>
+                            </td>
+                            <td className="p-3 text-slate-600 font-mono text-xs border-l border-slate-100">
+                              <span className="truncate block max-w-[100px]" title={assetDetail.asset.get('asset_tag') || '-'}>{assetDetail.asset.get('asset_tag') || '-'}</span>
+                            </td>
+                            <td className="p-3 text-slate-900 font-semibold text-sm border-l border-slate-100 text-right">
+                              <div className="flex items-center gap-1 justify-end whitespace-nowrap">
+                                <span>{assetDetail.value.toLocaleString('ar-SA')}</span>
+                                <span className="text-slate-500 text-xs">ريال</span>
                               </div>
                             </td>
                           </tr>
-                        </tfoot>
-                      </table>
-                    </div>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-slate-100 border-t-2 border-slate-300 font-semibold">
+                          <td colSpan={7} className="p-3 text-right text-slate-900 text-sm border-l border-slate-200">
+                            <span>الإجمالي:</span>
+                          </td>
+                          <td className="p-3 text-slate-900 text-base border-l border-slate-200 text-right">
+                            <div className="flex items-center gap-1 justify-end">
+                              <span>{totalFilteredValue.toLocaleString('ar-SA')}</span>
+                              <span className="text-slate-600 text-sm">ريال</span>
+                            </div>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
 
                   {/* Mobile/Tablet Card View */}
-                  <div className="lg:hidden space-y-4">
+                  <div className="lg:hidden space-y-3">
                     {filteredAssets.map((assetDetail, idx) => (
                       <Card 
                         key={idx} 
-                        className="hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-2 border-slate-200/60 bg-gradient-to-br from-white to-slate-50/30"
-                        style={{ animationDelay: `${idx * 0.03}s` }}
+                        className="hover:shadow-xl transition-all duration-300 hover:scale-[1.01] border-2 border-slate-200/60 bg-gradient-to-br from-white to-slate-50/30 animate-fade-in"
                       >
-                        <CardBody padding="lg">
-                          <div className="space-y-4">
+                        <CardBody padding="md">
+                          <div className="space-y-3">
                             {/* Header with Asset Name */}
-                            <div className="flex items-start justify-between border-b-2 border-primary-200/50 pb-3">
-                              <div className="flex-1">
+                            <div className="flex items-start justify-between border-b-2 border-primary-200/50 pb-3 mb-3">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <MaterialIcon name="inventory_2" className="text-primary-500" size="md" />
-                                  <h3 className="text-lg font-bold text-slate-900">{assetDetail.assetName}</h3>
+                                  <MaterialIcon name="inventory_2" className="text-primary-500 flex-shrink-0" size="md" />
+                                  <h3 className="text-base font-bold text-slate-900 truncate">{assetDetail.assetName}</h3>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <Badge variant="outline" size="sm" className="font-semibold">
                                     {assetDetail.assetStatus}
                                   </Badge>
@@ -1884,8 +1878,8 @@ function ReportsPageContent() {
                                   </span>
                                 </div>
                               </div>
-                              <div className="text-left">
-                                <div className="text-xl font-black bg-gradient-to-r from-success-500 to-success-600 bg-clip-text text-transparent">
+                              <div className="text-left flex-shrink-0 mr-2">
+                                <div className="text-lg font-black bg-gradient-to-r from-success-500 to-success-600 bg-clip-text text-transparent">
                                   {assetDetail.value.toLocaleString('ar-SA')}
                                 </div>
                                 <div className="text-xs text-success-600 font-semibold">ريال</div>
@@ -1893,8 +1887,8 @@ function ReportsPageContent() {
                             </div>
 
                             {/* Details Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div className="flex items-center gap-2 p-3 bg-slate-50/50 rounded-lg">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div className="flex items-center gap-2 p-2.5 bg-slate-50/50 rounded-lg">
                                 <MaterialIcon name="business" className="text-primary-500 flex-shrink-0" size="sm" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs text-slate-500 mb-1">الإدارة</p>
@@ -1904,7 +1898,7 @@ function ReportsPageContent() {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 p-3 bg-slate-50/50 rounded-lg">
+                              <div className="flex items-center gap-2 p-2.5 bg-slate-50/50 rounded-lg">
                                 <MaterialIcon name="meeting_room" className="text-primary-500 flex-shrink-0" size="sm" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs text-slate-500 mb-1">المكتب</p>
@@ -1914,7 +1908,7 @@ function ReportsPageContent() {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 p-3 bg-slate-50/50 rounded-lg">
+                              <div className="flex items-center gap-2 p-2.5 bg-slate-50/50 rounded-lg">
                                 <MaterialIcon name="category" className="text-primary-500 flex-shrink-0" size="sm" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs text-slate-500 mb-1">نوع الأصل</p>
@@ -1924,7 +1918,7 @@ function ReportsPageContent() {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 p-3 bg-slate-50/50 rounded-lg">
+                              <div className="flex items-center gap-2 p-2.5 bg-slate-50/50 rounded-lg">
                                 <MaterialIcon name="person" className="text-primary-500 flex-shrink-0" size="sm" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs text-slate-500 mb-1">حامل الأصل</p>
@@ -1979,6 +1973,7 @@ function ReportsPageContent() {
             </CardBody>
           </Card>
         </div>
+      </div>
       </div>
     </MainLayout>
   );

@@ -29,35 +29,38 @@ function HomePageContent() {
 
     const loadStats = async () => {
       try {
-        // جلب الإدارات والأصول
-        const [deptDocs, assetDocs] = await Promise.all([
-          firestoreApi.getDocuments(firestoreApi.getCollection("departments")),
-          firestoreApi.getDocuments(firestoreApi.getCollection("assets")),
+        // جلب الإحصائيات السريعة باستخدام count (بدون تحميل البيانات)
+        const [
+          totalAssets,
+          totalDepartments,
+          totalUsers,
+          deptDocs,
+        ] = await Promise.all([
+          firestoreApi.getCollectionCount("assets"),
+          firestoreApi.getCollectionCount("departments"),
+          firestoreApi.getCollectionCount("users"),
+          firestoreApi.getDocuments(firestoreApi.getCollection("departments")), // للجلب عدد المكاتب
         ]);
 
         const departments = BaseModel.fromFirestoreArray(deptDocs);
         
-        // جلب جميع المكاتب من جميع الإدارات
-        let totalOffices = 0;
-        
-        for (const dept of departments) {
+        // جلب عدد المكاتب من جميع الإدارات بشكل سريع
+        const officeCountPromises = departments.map(async (dept) => {
           const deptId = dept.get('id');
-          if (deptId) {
-            // جلب المكاتب
-            const subCollectionRef = firestoreApi.getSubCollection("departments", deptId, "departments");
-            const officeDocs = await firestoreApi.getDocuments(subCollectionRef);
-            totalOffices += officeDocs.length;
-          }
-        }
-        
-        // جلب جميع المستخدمين من الجدول المستقل users/userId/
-        const userDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("users"));
-        const totalUsers = userDocs.length;
+          if (!deptId) return 0;
+          return firestoreApi.getSubCollectionCount({
+            parentCollection: "departments",
+            parentId: deptId,
+            subCollection: "departments",
+          });
+        });
+        const officeCounts = await Promise.all(officeCountPromises);
+        const totalOffices = officeCounts.reduce((sum, count) => sum + count, 0);
 
         setStats({
-          departments: departments.length,
+          departments: totalDepartments,
           offices: totalOffices,
-          assets: assetDocs.length,
+          assets: totalAssets,
           users: totalUsers,
         });
       } catch (error) {
