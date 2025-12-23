@@ -112,7 +112,7 @@ export function DataTable({
   title,
   exportFileName = 'export',
   pageSize = 10,
-  pageSizeOptions = [7, 10, 25, 50, 75, 100],
+  pageSizeOptions = [7, 10, 25, 50, 100, 250, 500, 1000],
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");

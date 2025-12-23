@@ -708,37 +708,53 @@ function AssetsPageContent() {
     const assetTypesMap = new Map<string, BaseModel>();
     const assetStatusesMap = new Map<string, BaseModel>();
 
-    // تهيئة Maps من البيانات الحالية
+    // تهيئة Maps من البيانات الحالية (مع trim للتأكد من عدم وجود مسافات زائدة)
     departments.forEach(d => {
       const name = d.get('name');
-      if (name) departmentsMap.set(name, d);
+      if (name && name.trim()) {
+        departmentsMap.set(name.trim(), d);
+      }
     });
     allOffices.forEach(o => {
       const name = o.get('name');
       const deptId = o.get('department_id');
-      if (name && deptId) officesMap.set(`${deptId}|${name}`, o);
+      if (name && name.trim() && deptId) {
+        officesMap.set(`${deptId}|${name.trim()}`, o);
+      }
     });
     users.forEach(u => {
       const name = u.get('full_name');
-      if (name) usersMap.set(name, u);
+      if (name && name.trim()) {
+        usersMap.set(name.trim(), u);
+      }
     });
     currencies.forEach(c => {
       const name = c.get('name');
       const code = c.get('code');
-      if (name) currenciesMap.set(name, c);
-      if (code) currenciesMap.set(code, c);
+      if (name && name.trim()) {
+        currenciesMap.set(name.trim(), c);
+      }
+      if (code && code.trim()) {
+        currenciesMap.set(code.trim(), c);
+      }
     });
     assetNames.forEach(n => {
       const name = n.get('name');
-      if (name) assetNamesMap.set(name, n);
+      if (name && name.trim()) {
+        assetNamesMap.set(name.trim(), n);
+      }
     });
     assetTypes.forEach(t => {
       const name = t.get('name');
-      if (name) assetTypesMap.set(name, t);
+      if (name && name.trim()) {
+        assetTypesMap.set(name.trim(), t);
+      }
     });
     assetStatuses.forEach(s => {
       const name = s.get('name');
-      if (name) assetStatusesMap.set(name, s);
+      if (name && name.trim()) {
+        assetStatusesMap.set(name.trim(), s);
+      }
     });
 
     // دالة مساعدة لاستخراج القيمة من الصف
@@ -802,119 +818,133 @@ function AssetsPageContent() {
       const assetType = getValue(['نوع الأصل', 'type', 'Type', 'asset_type'], row);
       const assetStatus = getValue(['حالة الأصل', 'status', 'Status', 'asset_status'], row);
 
-      // جمع الإدارات الفريدة
-      if (departmentName && !departmentsMap.has(departmentName)) {
-        uniqueDepartments.add(departmentName);
+      // جمع الإدارات الفريدة (فقط إذا لم تكن موجودة في Map)
+      if (departmentName && departmentName.trim() && !departmentsMap.has(departmentName.trim())) {
+        uniqueDepartments.add(departmentName.trim());
       }
       
-      // جمع المكاتب الفريدة (إذا كانت الإدارة موجودة أو سيتم إضافتها)
-      if (officeName && departmentName) {
-        // إذا كانت الإدارة موجودة، تحقق من المكتب مباشرة
-        const existingDept = departmentsMap.get(departmentName);
+      // جمع المكاتب الفريدة (فقط إذا لم تكن موجودة)
+      if (officeName && officeName.trim() && departmentName && departmentName.trim()) {
+        const deptNameTrimmed = departmentName.trim();
+        const officeNameTrimmed = officeName.trim();
+        
+        // إذا كانت الإدارة موجودة في Map، تحقق من المكتب مباشرة
+        const existingDept = departmentsMap.get(deptNameTrimmed);
         if (existingDept) {
           const deptId = existingDept.get('id');
           if (deptId) {
-            const officeMapKey = `${deptId}|${officeName}`;
+            const officeMapKey = `${deptId}|${officeNameTrimmed}`;
             // إذا لم يكن المكتب موجوداً في officesMap، أضفه إلى القائمة الفريدة
             if (!officesMap.has(officeMapKey)) {
-              const officeKey = `${departmentName}|${officeName}`;
+              const officeKey = `${deptNameTrimmed}|${officeNameTrimmed}`;
               if (!uniqueOffices.has(officeKey)) {
-                uniqueOffices.set(officeKey, departmentName);
+                uniqueOffices.set(officeKey, deptNameTrimmed);
               }
             }
           }
         } else {
           // إذا كانت الإدارة غير موجودة، أضف المكتب للقائمة الفريدة (سيتم إضافته بعد إضافة الإدارة)
-          const officeKey = `${departmentName}|${officeName}`;
+          const officeKey = `${deptNameTrimmed}|${officeNameTrimmed}`;
           if (!uniqueOffices.has(officeKey)) {
-            uniqueOffices.set(officeKey, departmentName);
+            uniqueOffices.set(officeKey, deptNameTrimmed);
           }
         }
       }
       
-      // جمع المستخدمين الفريدين
-      if (custodianName && !usersMap.has(custodianName)) {
-        uniqueUsers.add(custodianName);
+      // جمع المستخدمين الفريدين (فقط إذا لم يكونوا موجودين في Map)
+      if (custodianName && custodianName.trim() && !usersMap.has(custodianName.trim())) {
+        uniqueUsers.add(custodianName.trim());
       }
       
-      // جمع العملات الفريدة
-      if (currencyName && !currenciesMap.has(currencyName)) {
-        uniqueCurrencies.add(currencyName);
+      // جمع العملات الفريدة (فقط إذا لم تكن موجودة في Map)
+      if (currencyName && currencyName.trim() && !currenciesMap.has(currencyName.trim())) {
+        uniqueCurrencies.add(currencyName.trim());
       }
       
-      // جمع أسماء الأصول الفريدة
-      if (assetName && !assetNamesMap.has(assetName)) {
-        uniqueAssetNames.add(assetName);
+      // جمع أسماء الأصول الفريدة (فقط إذا لم تكن موجودة في Map)
+      if (assetName && assetName.trim() && !assetNamesMap.has(assetName.trim())) {
+        uniqueAssetNames.add(assetName.trim());
       }
       
-      // جمع أنواع الأصول الفريدة
-      if (assetType && !assetTypesMap.has(assetType)) {
-        uniqueAssetTypes.add(assetType);
+      // جمع أنواع الأصول الفريدة (فقط إذا لم تكن موجودة في Map)
+      if (assetType && assetType.trim() && !assetTypesMap.has(assetType.trim())) {
+        uniqueAssetTypes.add(assetType.trim());
       }
       
-      // جمع حالات الأصول الفريدة
-      if (assetStatus && !assetStatusesMap.has(assetStatus)) {
-        uniqueAssetStatuses.add(assetStatus);
+      // جمع حالات الأصول الفريدة (فقط إذا لم تكن موجودة في Map)
+      if (assetStatus && assetStatus.trim() && !assetStatusesMap.has(assetStatus.trim())) {
+        uniqueAssetStatuses.add(assetStatus.trim());
       }
     }
 
     // المرحلة الثانية: إضافة جميع القيم الفريدة بشكل متسلسل (لتجنب التكرار)
     console.log(`إضافة ${uniqueDepartments.size} إدارة، ${uniqueOffices.size} مكتب، ${uniqueUsers.size} مستخدم، ${uniqueCurrencies.size} عملة، ${uniqueAssetNames.size} اسم أصل، ${uniqueAssetTypes.size} نوع أصل، ${uniqueAssetStatuses.size} حالة أصل`);
 
-    // إضافة الإدارات الفريدة
+    // إضافة الإدارات الفريدة (مع التحقق من عدم التكرار)
     for (const deptName of uniqueDepartments) {
-      if (!departmentsMap.has(deptName)) {
+      const deptNameTrimmed = deptName.trim();
+      // التحقق مرة أخرى قبل الإضافة (للتأكد من عدم التكرار)
+      if (deptNameTrimmed && !departmentsMap.has(deptNameTrimmed)) {
         const newDeptId = firestoreApi.getNewId("departments");
         const deptDocRef = firestoreApi.getDocument("departments", newDeptId);
         await firestoreApi.setData(deptDocRef, {
-          name: deptName,
+          name: deptNameTrimmed,
           description: '',
           notes: '',
         });
-        const newDept = new BaseModel({ id: newDeptId, name: deptName });
-        departmentsMap.set(deptName, newDept);
+        const newDept = new BaseModel({ id: newDeptId, name: deptNameTrimmed });
+        departmentsMap.set(deptNameTrimmed, newDept);
         setDepartments(prev => [...prev, newDept]);
+        console.log(`تم إضافة إدارة جديدة: ${deptNameTrimmed}`);
       }
     }
 
     // إضافة المكاتب الفريدة (بعد إضافة الإدارات)
     for (const [officeKey, deptName] of uniqueOffices) {
       const [deptNameFromKey, officeName] = officeKey.split('|');
+      const deptNameTrimmed = (deptNameFromKey || deptName).trim();
+      const officeNameTrimmed = officeName?.trim();
+      
+      if (!officeNameTrimmed) continue;
+      
       // البحث عن الإدارة باستخدام اسم الإدارة من المفتاح أو من القيمة
-      const dept = departmentsMap.get(deptNameFromKey || deptName);
-      if (dept && officeName) {
+      const dept = departmentsMap.get(deptNameTrimmed);
+      if (dept) {
         const deptId = dept.get('id');
         if (deptId) {
-          const officeMapKey = `${deptId}|${officeName}`;
-          // التحقق من عدم وجود المكتب بالفعل
+          const officeMapKey = `${deptId}|${officeNameTrimmed}`;
+          // التحقق من عدم وجود المكتب بالفعل (مرة أخرى قبل الإضافة)
           if (!officesMap.has(officeMapKey)) {
             const newOfficeId = firestoreApi.getNewId("offices");
             const officeDocRef = firestoreApi.getSubDocument("departments", deptId, "departments", newOfficeId);
             await firestoreApi.setData(officeDocRef, {
-              name: officeName,
+              name: officeNameTrimmed,
               floor: '',
               room: '',
               notes: '',
             });
             const newOffice = new BaseModel({ 
               id: newOfficeId, 
-              name: officeName,
+              name: officeNameTrimmed,
               department_id: deptId 
             });
             officesMap.set(officeMapKey, newOffice);
             setAllOffices(prev => [...prev, newOffice]);
+            console.log(`تم إضافة مكتب جديد: ${officeNameTrimmed} في إدارة ${deptNameTrimmed}`);
           }
         }
       }
     }
 
-    // إضافة المستخدمين الفريدين
+    // إضافة المستخدمين الفريدين (مع التحقق من عدم التكرار)
     for (const userName of uniqueUsers) {
-      if (!usersMap.has(userName)) {
+      const userNameTrimmed = userName.trim();
+      // التحقق مرة أخرى قبل الإضافة
+      if (userNameTrimmed && !usersMap.has(userNameTrimmed)) {
         const newUserId = firestoreApi.getNewId("users");
         const userDocRef = firestoreApi.getDocument("users", newUserId);
         await firestoreApi.setData(userDocRef, {
-          full_name: userName,
+          full_name: userNameTrimmed,
           email: '',
           phone: '',
           role: 'user',
@@ -922,85 +952,98 @@ function AssetsPageContent() {
         });
         const newUser = new BaseModel({ 
           id: newUserId, 
-          full_name: userName 
+          full_name: userNameTrimmed 
         });
-        usersMap.set(userName, newUser);
+        usersMap.set(userNameTrimmed, newUser);
         setUsers(prev => [...prev, newUser]);
+        console.log(`تم إضافة مستخدم جديد: ${userNameTrimmed}`);
       }
     }
 
-    // إضافة العملات الفريدة
+    // إضافة العملات الفريدة (مع التحقق من عدم التكرار)
     for (const currencyName of uniqueCurrencies) {
-      if (!currenciesMap.has(currencyName)) {
+      const currencyNameTrimmed = currencyName.trim();
+      // التحقق مرة أخرى قبل الإضافة
+      if (currencyNameTrimmed && !currenciesMap.has(currencyNameTrimmed)) {
         const newCurrencyId = firestoreApi.getNewId("currencies");
         const currencyDocRef = firestoreApi.getDocument("currencies", newCurrencyId);
-        const currencyCode = currencyName.length >= 3 
-          ? currencyName.substring(0, 3).toUpperCase() 
-          : currencyName.toUpperCase();
+        const currencyCode = currencyNameTrimmed.length >= 3 
+          ? currencyNameTrimmed.substring(0, 3).toUpperCase() 
+          : currencyNameTrimmed.toUpperCase();
         await firestoreApi.setData(currencyDocRef, {
-          name: currencyName,
+          name: currencyNameTrimmed,
           code: currencyCode,
-          symbol: currencyName.substring(0, 1) || currencyCode.substring(0, 1),
+          symbol: currencyNameTrimmed.substring(0, 1) || currencyCode.substring(0, 1),
           is_default: 0,
         });
         const newCurrency = new BaseModel({ 
           id: newCurrencyId, 
-          name: currencyName,
+          name: currencyNameTrimmed,
           code: currencyCode,
         });
-        currenciesMap.set(currencyName, newCurrency);
-        if (currencyCode !== currencyName) {
+        currenciesMap.set(currencyNameTrimmed, newCurrency);
+        if (currencyCode !== currencyNameTrimmed) {
           currenciesMap.set(currencyCode, newCurrency);
         }
         setCurrencies(prev => [...prev, newCurrency]);
+        console.log(`تم إضافة عملة جديدة: ${currencyNameTrimmed}`);
       }
     }
 
-    // إضافة أسماء الأصول الفريدة
+    // إضافة أسماء الأصول الفريدة (مع التحقق من عدم التكرار)
     for (const assetName of uniqueAssetNames) {
-      if (!assetNamesMap.has(assetName)) {
+      const assetNameTrimmed = assetName.trim();
+      // التحقق مرة أخرى قبل الإضافة
+      if (assetNameTrimmed && !assetNamesMap.has(assetNameTrimmed)) {
         const newAssetNameId = firestoreApi.getNewId("assetNames");
         const assetNameDocRef = firestoreApi.getDocument("assetNames", newAssetNameId);
         await firestoreApi.setData(assetNameDocRef, {
-          name: assetName,
+          name: assetNameTrimmed,
           description: '',
           notes: '',
         });
-        const newAssetName = new BaseModel({ id: newAssetNameId, name: assetName });
-        assetNamesMap.set(assetName, newAssetName);
+        const newAssetName = new BaseModel({ id: newAssetNameId, name: assetNameTrimmed });
+        assetNamesMap.set(assetNameTrimmed, newAssetName);
         setAssetNames(prev => [...prev, newAssetName]);
+        console.log(`تم إضافة اسم أصل جديد: ${assetNameTrimmed}`);
       }
     }
 
-    // إضافة أنواع الأصول الفريدة
+    // إضافة أنواع الأصول الفريدة (مع التحقق من عدم التكرار)
     for (const assetType of uniqueAssetTypes) {
-      if (!assetTypesMap.has(assetType)) {
+      const assetTypeTrimmed = assetType.trim();
+      // التحقق مرة أخرى قبل الإضافة
+      if (assetTypeTrimmed && !assetTypesMap.has(assetTypeTrimmed)) {
         const newTypeId = firestoreApi.getNewId("assetTypes");
         const typeDocRef = firestoreApi.getDocument("assetTypes", newTypeId);
         await firestoreApi.setData(typeDocRef, {
-          name: assetType,
+          name: assetTypeTrimmed,
           description: '',
           notes: '',
         });
-        const newType = new BaseModel({ id: newTypeId, name: assetType });
-        assetTypesMap.set(assetType, newType);
+        const newType = new BaseModel({ id: newTypeId, name: assetTypeTrimmed });
+        assetTypesMap.set(assetTypeTrimmed, newType);
         setAssetTypes(prev => [...prev, newType]);
+        console.log(`تم إضافة نوع أصل جديد: ${assetTypeTrimmed}`);
       }
     }
 
-    // إضافة حالات الأصول الفريدة
+    // إضافة حالات الأصول الفريدة (مع التحقق من عدم التكرار)
     for (const assetStatus of uniqueAssetStatuses) {
-      if (!assetStatusesMap.has(assetStatus)) {
+      const assetStatusTrimmed = assetStatus.trim();
+      // التحقق مرة أخرى قبل الإضافة
+      if (assetStatusTrimmed && !assetStatusesMap.has(assetStatusTrimmed)) {
         const newStatusId = firestoreApi.getNewId("assetStatuses");
         const statusDocRef = firestoreApi.getDocument("assetStatuses", newStatusId);
         await firestoreApi.setData(statusDocRef, {
-          name: assetStatus,
+          name: assetStatusTrimmed,
           description: '',
           notes: '',
         });
-        const newStatus = new BaseModel({ id: newStatusId, name: assetStatus });
-        assetStatusesMap.set(assetStatus, newStatus);
+        const newStatus = new BaseModel({ id: newStatusId, name: assetStatusTrimmed });
+        assetStatusesMap.set(assetStatusTrimmed, newStatus);
         setAssetStatuses(prev => [...prev, newStatus]);
+        console.log(`تم إضافة حالة أصل جديدة: ${assetStatusTrimmed}`);
       }
     }
 
@@ -1051,53 +1094,53 @@ function AssetsPageContent() {
           const finalIsActiveValue = isActive || '1';
           const notes = getValue(['الملاحظات', 'notes', 'Notes'], row);
 
-          // البحث عن asset_name_id (تم إضافته في المرحلة الأولى)
+          // البحث عن asset_name_id (تم إضافته في المرحلة الأولى) - مع trim
           let assetNameId = '';
-          if (assetName) {
-            const found = assetNamesMap.get(assetName);
+          if (assetName && assetName.trim()) {
+            const found = assetNamesMap.get(assetName.trim());
             assetNameId = found?.get('id') || '';
           }
 
-          // البحث عن type_id (تم إضافته في المرحلة الأولى)
+          // البحث عن type_id (تم إضافته في المرحلة الأولى) - مع trim
           let typeId = '';
-          if (assetType) {
-            const found = assetTypesMap.get(assetType);
+          if (assetType && assetType.trim()) {
+            const found = assetTypesMap.get(assetType.trim());
             typeId = found?.get('id') || '';
           }
 
-          // البحث عن status_id (تم إضافته في المرحلة الأولى)
+          // البحث عن status_id (تم إضافته في المرحلة الأولى) - مع trim
           let statusId = '';
-          if (assetStatus) {
-            const found = assetStatusesMap.get(assetStatus);
+          if (assetStatus && assetStatus.trim()) {
+            const found = assetStatusesMap.get(assetStatus.trim());
             statusId = found?.get('id') || '';
           }
 
-          // البحث عن department_id و location_office_id (تم إضافتهما في المرحلة الأولى)
+          // البحث عن department_id و location_office_id (تم إضافتهما في المرحلة الأولى) - مع trim
           let departmentId = '';
           let locationOfficeId = '';
-          if (departmentName) {
-            const foundDept = departmentsMap.get(departmentName);
+          if (departmentName && departmentName.trim()) {
+            const foundDept = departmentsMap.get(departmentName.trim());
             departmentId = foundDept?.get('id') || '';
             
-            // البحث عن المكتب
-            if (officeName && departmentId) {
-              const officeKey = `${departmentId}|${officeName}`;
+            // البحث عن المكتب - مع trim
+            if (officeName && officeName.trim() && departmentId) {
+              const officeKey = `${departmentId}|${officeName.trim()}`;
               const foundOffice = officesMap.get(officeKey);
               locationOfficeId = foundOffice?.get('id') || '';
             }
           }
 
-          // البحث عن custodian_user_id (تم إضافته في المرحلة الأولى)
+          // البحث عن custodian_user_id (تم إضافته في المرحلة الأولى) - مع trim
           let custodianUserId = '';
-          if (custodianName) {
-            const found = usersMap.get(custodianName);
+          if (custodianName && custodianName.trim()) {
+            const found = usersMap.get(custodianName.trim());
             custodianUserId = found?.get('id') || '';
           }
 
-          // البحث عن currency_id (تم إضافته في المرحلة الأولى)
+          // البحث عن currency_id (تم إضافته في المرحلة الأولى) - مع trim
           let finalCurrencyId = currencyId || '';
-          if (!finalCurrencyId && currencyName) {
-            const found = currenciesMap.get(currencyName);
+          if (!finalCurrencyId && currencyName && currencyName.trim()) {
+            const found = currenciesMap.get(currencyName.trim());
             finalCurrencyId = found?.get('id') || '';
           }
           if (!finalCurrencyId) {
