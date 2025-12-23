@@ -10,6 +10,7 @@ import { createPortal } from "react-dom";
 import * as XLSX from 'xlsx';
 import { Button } from "./Button";
 import { Card, CardBody, CardHeader } from "./Card";
+import { ConfirmModal } from "./ConfirmModal";
 import { DebouncedInput } from "./DebouncedInput";
 import { Select } from "./Select";
 
@@ -86,6 +87,8 @@ export interface DataTableProps {
   onAddNew?: () => void;
   onBulkEdit?: (items: BaseModel[]) => void; // دالة التحرير الجماعي
   onBulkDelete?: (items: BaseModel[]) => void; // دالة الحذف الجماعي
+  onDeleteAll?: () => void; // دالة حذف جميع البيانات
+  isAdmin?: boolean; // هل المستخدم مدير
   loading?: boolean;
   title?: string;
   exportFileName?: string;
@@ -103,6 +106,8 @@ export function DataTable({
   onAddNew,
   onBulkEdit,
   onBulkDelete,
+  onDeleteAll,
+  isAdmin = false,
   loading = false,
   title,
   exportFileName = 'export',
@@ -122,6 +127,8 @@ export function DataTable({
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
+  const [deleteAllLoading, setDeleteAllLoading] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
   const actionDropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -1055,6 +1062,19 @@ export function DataTable({
                 <MaterialIcon name="arrow_drop_down" size="sm" />
               </Button>
             </div>
+            
+            {/* Delete All Button - للمدير فقط */}
+            {isAdmin && onDeleteAll && data.length > 0 && (
+              <Button
+                variant="error"
+                size="sm"
+                onClick={() => setIsDeleteAllModalOpen(true)}
+                className="normal-case shadow-lg hover:shadow-xl hover:scale-105 material-transition"
+              >
+                <MaterialIcon name="delete_sweep" size="sm" />
+                <span className="hidden sm:inline mr-1">حذف الكل</span>
+              </Button>
+            )}
             
             {onAddNew && (
               <Button
@@ -2064,6 +2084,33 @@ export function DataTable({
         document.body
       );
     })}
+
+    {/* Delete All Confirm Modal */}
+    {typeof window !== 'undefined' && isDeleteAllModalOpen && createPortal(
+      <ConfirmModal
+        isOpen={isDeleteAllModalOpen}
+        onClose={() => setIsDeleteAllModalOpen(false)}
+        onConfirm={async () => {
+          if (!onDeleteAll) return;
+          try {
+            setDeleteAllLoading(true);
+            await onDeleteAll();
+            setIsDeleteAllModalOpen(false);
+          } catch (error) {
+            console.error("Error deleting all:", error);
+          } finally {
+            setDeleteAllLoading(false);
+          }
+        }}
+        title="تأكيد حذف جميع البيانات"
+        message={`هل أنت متأكد من حذف جميع البيانات (${data.length} عنصر)؟ هذا الإجراء لا يمكن التراجع عنه.`}
+        confirmText="حذف الكل"
+        cancelText="إلغاء"
+        variant="danger"
+        loading={deleteAllLoading}
+      />,
+      document.body
+    )}
     </>
   );
 }

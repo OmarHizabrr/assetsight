@@ -12,16 +12,30 @@ import { ImportExcelModal } from "@/components/ui/ImportExcelModal";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Textarea";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+// دالة للتحقق من أن المستخدم مدير
+function isAdmin(role: string | null | undefined): boolean {
+  if (!role) return false;
+  const normalizedRole = role.trim().toLowerCase();
+  return normalizedRole === 'مدير' || 
+         normalizedRole === 'admin' || 
+         normalizedRole === 'administrator' ||
+         normalizedRole === 'مدير النظام' ||
+         normalizedRole === 'system admin';
+}
+
 function AssetTypesPageContent() {
   const pathname = usePathname();
   const { canAdd, canEdit, canDelete } = usePermissions(pathname || '/admin/asset-types');
   const { showSuccess, showError, showWarning } = useToast();
+  const { user } = useAuth();
+  const isUserAdmin = isAdmin(user?.get('role'));
   const [assetTypes, setAssetTypes] = useState<BaseModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -183,6 +197,54 @@ function AssetTypesPageContent() {
       showError("حدث خطأ أثناء الحذف الجماعي");
     } finally {
       setBulkDeleteLoading(false);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (assetTypes.length === 0) {
+      showWarning("لا توجد بيانات للحذف");
+      return;
+    }
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      const deletePromises = assetTypes.map(async (assetType, index) => {
+        const id = assetType.get('id');
+        if (!id) {
+          errorCount++;
+          errors.push(`نوع #${index + 1} بدون معرف`);
+          return;
+        }
+
+        try {
+          const docRef = firestoreApi.getDocument("assetTypes", id);
+          await firestoreApi.deleteData(docRef);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          const name = assetType.get('name') || 'غير معروف';
+          const errorMsg = error instanceof Error ? error.message : 'خطأ غير معروف';
+          errors.push(`فشل حذف ${name}: ${errorMsg}`);
+        }
+      });
+
+      await Promise.all(deletePromises);
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم حذف ${successCount} من ${assetTypes.length} نوع بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+      } else {
+        showSuccess(`تم حذف جميع ${successCount} نوع بنجاح`);
+      }
+
+      await loadAssetTypes();
+    } catch (error) {
+      console.error("Error deleting all:", error);
+      showError("حدث خطأ أثناء حذف جميع البيانات");
     }
   };
 
@@ -367,6 +429,8 @@ function AssetTypesPageContent() {
         onDelete={canDelete ? handleDelete : undefined}
         onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
         onBulkDelete={canDelete ? handleBulkDelete : undefined}
+        onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
+        isAdmin={isUserAdmin}
         onAddNew={canAdd ? () => {
           setEditingAssetType(null);
           setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
