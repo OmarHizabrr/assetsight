@@ -77,6 +77,9 @@ function UsersPageContent() {
   const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
   const [bulkEditSelectedDepartmentIds, setBulkEditSelectedDepartmentIds] = useState<Record<number, string>>({});
   const [bulkEditOfficesMap, setBulkEditOfficesMap] = useState<Record<number, BaseModel[]>>({});
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [deletingUsers, setDeletingUsers] = useState<BaseModel[]>([]);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const [userTypeFilter, setUserTypeFilter] = useState<string>('all'); // 'all', 'موظف', 'مستخدم نظام'
 
   useEffect(() => {
@@ -379,6 +382,68 @@ function UsersPageContent() {
     setBulkEditOfficesMap(officesMap);
     
     setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkDelete = (selectedItems: BaseModel[]) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      showWarning("لم يتم تحديد أي مستخدمين للحذف");
+      return;
+    }
+    setDeletingUsers(selectedItems);
+    setIsBulkDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (deletingUsers.length === 0) {
+      showWarning("لم يتم تحديد أي مستخدمين للحذف");
+      return;
+    }
+    
+    try {
+      setBulkDeleteLoading(true);
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      const deletePromises = deletingUsers.map(async (user, index) => {
+        const id = user.get('id');
+        if (!id) {
+          errorCount++;
+          errors.push(`مستخدم #${index + 1} بدون معرف`);
+          return;
+        }
+
+        try {
+          const docRef = firestoreApi.getDocument("users", id);
+          await firestoreApi.deleteData(docRef);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          const name = user.get('full_name') || user.get('username') || 'غير معروف';
+          const errorMsg = error instanceof Error ? error.message : 'خطأ غير معروف';
+          errors.push(`فشل حذف ${name}: ${errorMsg}`);
+        }
+      });
+
+      await Promise.all(deletePromises);
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم حذف ${successCount} من ${deletingUsers.length} مستخدم بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+      } else {
+        showSuccess(`تم حذف جميع ${successCount} مستخدم بنجاح`);
+      }
+
+      await loadData();
+      setIsBulkDeleteModalOpen(false);
+      setDeletingUsers([]);
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+      showError("حدث خطأ أثناء الحذف الجماعي");
+    } finally {
+      setBulkDeleteLoading(false);
+    }
   };
 
   const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
@@ -909,6 +974,7 @@ function UsersPageContent() {
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
         onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+        onBulkDelete={canDelete ? handleBulkDelete : undefined}
         onAddNew={canAdd ? () => {
           setEditingUser(null);
           setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
@@ -1423,6 +1489,22 @@ function UsersPageContent() {
           onSubmit={handleBulkEditSubmit}
           isLoading={bulkEditLoading}
           infoMessage="يمكنك تعديل كل مستخدم بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
+
+        {/* Bulk Delete Confirm Modal */}
+        <ConfirmModal
+          isOpen={isBulkDeleteModalOpen}
+          onClose={() => {
+            setIsBulkDeleteModalOpen(false);
+            setDeletingUsers([]);
+          }}
+          onConfirm={confirmBulkDelete}
+          title="تأكيد الحذف الجماعي"
+          message={`هل أنت متأكد من حذف ${deletingUsers.length} مستخدم؟ لا يمكن التراجع عن هذا الإجراء.`}
+          confirmText="حذف الكل"
+          cancelText="إلغاء"
+          variant="danger"
+          loading={bulkDeleteLoading}
         />
     </MainLayout>
   );

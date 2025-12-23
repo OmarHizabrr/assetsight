@@ -40,6 +40,9 @@ function CategoriesPageContent() {
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedCategoriesForBulkEdit, setSelectedCategoriesForBulkEdit] = useState<BaseModel[]>([]);
   const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [deletingCategories, setDeletingCategories] = useState<BaseModel[]>([]);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadCategories();
@@ -118,6 +121,68 @@ function CategoriesPageContent() {
     const formDataArray = selectedItems.map(item => new BaseModel(item.getData()));
     setBulkEditFormDataArray(formDataArray);
     setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkDelete = (selectedItems: BaseModel[]) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      showWarning("لم يتم تحديد أي فئات للحذف");
+      return;
+    }
+    setDeletingCategories(selectedItems);
+    setIsBulkDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (deletingCategories.length === 0) {
+      showWarning("لم يتم تحديد أي فئات للحذف");
+      return;
+    }
+    
+    try {
+      setBulkDeleteLoading(true);
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      const deletePromises = deletingCategories.map(async (category, index) => {
+        const id = category.get('id');
+        if (!id) {
+          errorCount++;
+          errors.push(`فئة #${index + 1} بدون معرف`);
+          return;
+        }
+
+        try {
+          const docRef = firestoreApi.getDocument("categories", id);
+          await firestoreApi.deleteData(docRef);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          const name = category.get('name') || 'غير معروف';
+          const errorMsg = error instanceof Error ? error.message : 'خطأ غير معروف';
+          errors.push(`فشل حذف ${name}: ${errorMsg}`);
+        }
+      });
+
+      await Promise.all(deletePromises);
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم حذف ${successCount} من ${deletingCategories.length} فئة بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+      } else {
+        showSuccess(`تم حذف جميع ${successCount} فئة بنجاح`);
+      }
+
+      await loadCategories();
+      setIsBulkDeleteModalOpen(false);
+      setDeletingCategories([]);
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+      showError("حدث خطأ أثناء الحذف الجماعي");
+    } finally {
+      setBulkDeleteLoading(false);
+    }
   };
 
   const handleBulkEditSubmit = async (e: React.FormEvent) => {
@@ -313,6 +378,7 @@ function CategoriesPageContent() {
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
         onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+        onBulkDelete={canDelete ? handleBulkDelete : undefined}
         onAddNew={canAdd ? () => {
           setEditingCategory(null);
           setFormData(new BaseModel({ name: '', description: '', notes: '' }));
@@ -476,6 +542,22 @@ function CategoriesPageContent() {
           }}
           isLoading={bulkEditLoading}
           infoMessage="يمكنك تعديل كل فئة بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
+
+        {/* Bulk Delete Confirm Modal */}
+        <ConfirmModal
+          isOpen={isBulkDeleteModalOpen}
+          onClose={() => {
+            setIsBulkDeleteModalOpen(false);
+            setDeletingCategories([]);
+          }}
+          onConfirm={confirmBulkDelete}
+          title="تأكيد الحذف الجماعي"
+          message={`هل أنت متأكد من حذف ${deletingCategories.length} فئة؟ لا يمكن التراجع عن هذا الإجراء.`}
+          confirmText="حذف الكل"
+          cancelText="إلغاء"
+          variant="danger"
+          loading={bulkDeleteLoading}
         />
     </MainLayout>
   );

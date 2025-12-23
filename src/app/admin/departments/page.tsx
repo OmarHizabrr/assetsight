@@ -39,6 +39,9 @@ function DepartmentsPageContent() {
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedDepartmentsForBulkEdit, setSelectedDepartmentsForBulkEdit] = useState<BaseModel[]>([]);
   const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [deletingDepartments, setDeletingDepartments] = useState<BaseModel[]>([]);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadDepartments();
@@ -117,6 +120,68 @@ function DepartmentsPageContent() {
     const formDataArray = selectedItems.map(item => new BaseModel(item.getData()));
     setBulkEditFormDataArray(formDataArray);
     setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkDelete = (selectedItems: BaseModel[]) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      showWarning("لم يتم تحديد أي إدارات للحذف");
+      return;
+    }
+    setDeletingDepartments(selectedItems);
+    setIsBulkDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (deletingDepartments.length === 0) {
+      showWarning("لم يتم تحديد أي إدارات للحذف");
+      return;
+    }
+    
+    try {
+      setBulkDeleteLoading(true);
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      const deletePromises = deletingDepartments.map(async (department, index) => {
+        const id = department.get('id');
+        if (!id) {
+          errorCount++;
+          errors.push(`إدارة #${index + 1} بدون معرف`);
+          return;
+        }
+
+        try {
+          const docRef = firestoreApi.getDocument("departments", id);
+          await firestoreApi.deleteData(docRef);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          const name = department.get('name') || 'غير معروف';
+          const errorMsg = error instanceof Error ? error.message : 'خطأ غير معروف';
+          errors.push(`فشل حذف ${name}: ${errorMsg}`);
+        }
+      });
+
+      await Promise.all(deletePromises);
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم حذف ${successCount} من ${deletingDepartments.length} إدارة بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+      } else {
+        showSuccess(`تم حذف جميع ${successCount} إدارة بنجاح`);
+      }
+
+      await loadDepartments();
+      setIsBulkDeleteModalOpen(false);
+      setDeletingDepartments([]);
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+      showError("حدث خطأ أثناء الحذف الجماعي");
+    } finally {
+      setBulkDeleteLoading(false);
+    }
   };
 
   const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
@@ -319,6 +384,7 @@ function DepartmentsPageContent() {
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
         onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+        onBulkDelete={canDelete ? handleBulkDelete : undefined}
         onAddNew={canAdd ? () => {
           setEditingDepartment(null);
           setFormData(new BaseModel({ name: '', description: '', notes: '' }));
@@ -472,6 +538,22 @@ function DepartmentsPageContent() {
           onSubmit={handleBulkEditSubmit}
           isLoading={bulkEditLoading}
           infoMessage="يمكنك تعديل كل إدارة بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
+
+        {/* Bulk Delete Confirm Modal */}
+        <ConfirmModal
+          isOpen={isBulkDeleteModalOpen}
+          onClose={() => {
+            setIsBulkDeleteModalOpen(false);
+            setDeletingDepartments([]);
+          }}
+          onConfirm={confirmBulkDelete}
+          title="تأكيد الحذف الجماعي"
+          message={`هل أنت متأكد من حذف ${deletingDepartments.length} إدارة؟ لا يمكن التراجع عن هذا الإجراء.`}
+          confirmText="حذف الكل"
+          cancelText="إلغاء"
+          variant="danger"
+          loading={bulkDeleteLoading}
         />
     </MainLayout>
   );

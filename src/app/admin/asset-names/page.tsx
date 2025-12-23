@@ -42,6 +42,9 @@ function AssetNamesPageContent() {
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedAssetNamesForBulkEdit, setSelectedAssetNamesForBulkEdit] = useState<BaseModel[]>([]);
   const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [deletingAssetNames, setDeletingAssetNames] = useState<BaseModel[]>([]);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -122,6 +125,79 @@ function AssetNamesPageContent() {
     const formDataArray = selectedItems.map(item => new BaseModel(item.getData()));
     setBulkEditFormDataArray(formDataArray);
     setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkDelete = (selectedItems: BaseModel[]) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      showWarning("لم يتم تحديد أي أسماء للحذف");
+      return;
+    }
+    console.log(`Bulk delete requested for ${selectedItems.length} asset names`);
+    setDeletingAssetNames(selectedItems);
+    setIsBulkDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (deletingAssetNames.length === 0) {
+      showWarning("لم يتم تحديد أي أسماء للحذف");
+      return;
+    }
+    
+    console.log(`Starting bulk delete for ${deletingAssetNames.length} asset names`);
+    
+    try {
+      setBulkDeleteLoading(true);
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      // حذف جميع الأسماء المحددة بشكل متوازي
+      const deletePromises = deletingAssetNames.map(async (assetName, index) => {
+        const id = assetName.get('id');
+        if (!id) {
+          errorCount++;
+          errors.push(`اسم #${index + 1} بدون معرف`);
+          console.warn(`Asset name at index ${index} has no ID:`, assetName.getData());
+          return;
+        }
+
+        try {
+          console.log(`Deleting asset name ${index + 1}/${deletingAssetNames.length}: ${id}`);
+          const docRef = firestoreApi.getDocument("assetNames", id);
+          await firestoreApi.deleteData(docRef);
+          successCount++;
+          console.log(`Successfully deleted asset name ${id}`);
+        } catch (error) {
+          errorCount++;
+          const name = assetName.get('name') || 'غير معروف';
+          const errorMsg = error instanceof Error ? error.message : 'خطأ غير معروف';
+          errors.push(`فشل حذف ${name}: ${errorMsg}`);
+          console.error(`Failed to delete asset name ${id}:`, error);
+        }
+      });
+
+      await Promise.all(deletePromises);
+
+      console.log(`Bulk delete completed: ${successCount} succeeded, ${errorCount} failed`);
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم حذف ${successCount} من ${deletingAssetNames.length} اسم بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+      } else {
+        showSuccess(`تم حذف جميع ${successCount} اسم بنجاح`);
+      }
+
+      // إعادة تحميل البيانات
+      await loadAssetNames();
+      setIsBulkDeleteModalOpen(false);
+      setDeletingAssetNames([]);
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+      showError("حدث خطأ أثناء الحذف الجماعي");
+    } finally {
+      setBulkDeleteLoading(false);
+    }
   };
 
   const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
@@ -472,6 +548,7 @@ function AssetNamesPageContent() {
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
         onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+        onBulkDelete={canDelete ? handleBulkDelete : undefined}
         onAddNew={canAdd ? () => {
           setEditingAssetName(null);
           setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
@@ -644,6 +721,22 @@ function AssetNamesPageContent() {
           onSubmit={handleBulkEditSubmit}
           isLoading={bulkEditLoading}
           infoMessage="يمكنك تعديل كل صف بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
+
+        {/* Bulk Delete Confirm Modal */}
+        <ConfirmModal
+          isOpen={isBulkDeleteModalOpen}
+          onClose={() => {
+            setIsBulkDeleteModalOpen(false);
+            setDeletingAssetNames([]);
+          }}
+          onConfirm={confirmBulkDelete}
+          title="تأكيد الحذف الجماعي"
+          message={`هل أنت متأكد من حذف ${deletingAssetNames.length} اسم؟ لا يمكن التراجع عن هذا الإجراء.`}
+          confirmText="حذف الكل"
+          cancelText="إلغاء"
+          variant="danger"
+          loading={bulkDeleteLoading}
         />
     </MainLayout>
   );

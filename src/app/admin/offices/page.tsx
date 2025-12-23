@@ -44,6 +44,9 @@ function OfficesPageContent() {
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedOfficesForBulkEdit, setSelectedOfficesForBulkEdit] = useState<BaseModel[]>([]);
   const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [deletingOffices, setDeletingOffices] = useState<BaseModel[]>([]);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -170,6 +173,74 @@ function OfficesPageContent() {
     const formDataArray = selectedItems.map(item => new BaseModel(item.getData()));
     setBulkEditFormDataArray(formDataArray);
     setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkDelete = (selectedItems: BaseModel[]) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      showWarning("لم يتم تحديد أي مكاتب للحذف");
+      return;
+    }
+    setDeletingOffices(selectedItems);
+    setIsBulkDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (deletingOffices.length === 0) {
+      showWarning("لم يتم تحديد أي مكاتب للحذف");
+      return;
+    }
+    
+    try {
+      setBulkDeleteLoading(true);
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      const deletePromises = deletingOffices.map(async (office, index) => {
+        const id = office.get('id');
+        const deptId = office.get('department_id');
+        if (!id || !deptId) {
+          errorCount++;
+          errors.push(`مكتب #${index + 1} بدون معرف أو إدارة`);
+          return;
+        }
+
+        try {
+          const docRef = firestoreApi.getSubDocument(
+            "departments",
+            deptId,
+            "departments",
+            id
+          );
+          await firestoreApi.deleteData(docRef);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          const name = office.get('name') || 'غير معروف';
+          const errorMsg = error instanceof Error ? error.message : 'خطأ غير معروف';
+          errors.push(`فشل حذف ${name}: ${errorMsg}`);
+        }
+      });
+
+      await Promise.all(deletePromises);
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم حذف ${successCount} من ${deletingOffices.length} مكتب بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+      } else {
+        showSuccess(`تم حذف جميع ${successCount} مكتب بنجاح`);
+      }
+
+      await loadData();
+      setIsBulkDeleteModalOpen(false);
+      setDeletingOffices([]);
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+      showError("حدث خطأ أثناء الحذف الجماعي");
+    } finally {
+      setBulkDeleteLoading(false);
+    }
   };
 
   const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
@@ -424,6 +495,7 @@ function OfficesPageContent() {
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
         onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+        onBulkDelete={canDelete ? handleBulkDelete : undefined}
         onAddNew={canAdd ? () => {
           setEditingOffice(null);
           setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
@@ -613,6 +685,22 @@ function OfficesPageContent() {
           onSubmit={handleBulkEditSubmit}
           isLoading={bulkEditLoading}
           infoMessage="يمكنك تعديل كل مكتب بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
+        />
+
+        {/* Bulk Delete Confirm Modal */}
+        <ConfirmModal
+          isOpen={isBulkDeleteModalOpen}
+          onClose={() => {
+            setIsBulkDeleteModalOpen(false);
+            setDeletingOffices([]);
+          }}
+          onConfirm={confirmBulkDelete}
+          title="تأكيد الحذف الجماعي"
+          message={`هل أنت متأكد من حذف ${deletingOffices.length} مكتب؟ لا يمكن التراجع عن هذا الإجراء.`}
+          confirmText="حذف الكل"
+          cancelText="إلغاء"
+          variant="danger"
+          loading={bulkDeleteLoading}
         />
     </MainLayout>
   );

@@ -43,6 +43,9 @@ function CurrenciesPageContent() {
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
   const [selectedCurrenciesForBulkEdit, setSelectedCurrenciesForBulkEdit] = useState<BaseModel[]>([]);
   const [bulkEditFormDataArray, setBulkEditFormDataArray] = useState<BaseModel[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [deletingCurrencies, setDeletingCurrencies] = useState<BaseModel[]>([]);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadCurrencies();
@@ -139,6 +142,68 @@ function CurrenciesPageContent() {
     });
     setBulkEditFormDataArray(formDataArray);
     setIsBulkEditModalOpen(true);
+  };
+
+  const handleBulkDelete = (selectedItems: BaseModel[]) => {
+    if (!selectedItems || selectedItems.length === 0) {
+      showWarning("لم يتم تحديد أي عملات للحذف");
+      return;
+    }
+    setDeletingCurrencies(selectedItems);
+    setIsBulkDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (deletingCurrencies.length === 0) {
+      showWarning("لم يتم تحديد أي عملات للحذف");
+      return;
+    }
+    
+    try {
+      setBulkDeleteLoading(true);
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      const deletePromises = deletingCurrencies.map(async (currency, index) => {
+        const id = currency.get('id');
+        if (!id) {
+          errorCount++;
+          errors.push(`عملة #${index + 1} بدون معرف`);
+          return;
+        }
+
+        try {
+          const docRef = firestoreApi.getDocument("currencies", id);
+          await firestoreApi.deleteData(docRef);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          const name = currency.get('name') || 'غير معروف';
+          const errorMsg = error instanceof Error ? error.message : 'خطأ غير معروف';
+          errors.push(`فشل حذف ${name}: ${errorMsg}`);
+        }
+      });
+
+      await Promise.all(deletePromises);
+
+      if (errorCount > 0) {
+        const errorMessage = errors.slice(0, 3).join('، ');
+        const moreErrors = errors.length > 3 ? ` و ${errors.length - 3} خطأ آخر` : '';
+        showWarning(`تم حذف ${successCount} من ${deletingCurrencies.length} عملة بنجاح، فشل: ${errorCount}. ${errorMessage}${moreErrors}`, 8000);
+      } else {
+        showSuccess(`تم حذف جميع ${successCount} عملة بنجاح`);
+      }
+
+      await loadCurrencies();
+      setIsBulkDeleteModalOpen(false);
+      setDeletingCurrencies([]);
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+      showError("حدث خطأ أثناء الحذف الجماعي");
+    } finally {
+      setBulkDeleteLoading(false);
+    }
   };
 
   const handleBulkEditSubmit = async (dataArray: Record<string, any>[]) => {
@@ -391,6 +456,7 @@ function CurrenciesPageContent() {
         onEdit={canEdit ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
         onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+        onBulkDelete={canDelete ? handleBulkDelete : undefined}
         onAddNew={canAdd ? () => {
           setEditingCurrency(null);
           setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
@@ -597,6 +663,22 @@ function CurrenciesPageContent() {
           onSubmit={handleBulkEditSubmit}
           isLoading={bulkEditLoading}
           infoMessage="يمكنك تعديل كل عملة بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'. ملاحظة: لا يمكن تحديد أكثر من عملة افتراضية واحدة."
+        />
+
+        {/* Bulk Delete Confirm Modal */}
+        <ConfirmModal
+          isOpen={isBulkDeleteModalOpen}
+          onClose={() => {
+            setIsBulkDeleteModalOpen(false);
+            setDeletingCurrencies([]);
+          }}
+          onConfirm={confirmBulkDelete}
+          title="تأكيد الحذف الجماعي"
+          message={`هل أنت متأكد من حذف ${deletingCurrencies.length} عملة؟ لا يمكن التراجع عن هذا الإجراء.`}
+          confirmText="حذف الكل"
+          cancelText="إلغاء"
+          variant="danger"
+          loading={bulkDeleteLoading}
         />
     </MainLayout>
   );
