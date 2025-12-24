@@ -9,7 +9,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/contexts/ToastContext";
 import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { PdfSettingsService } from "@/lib/services/PdfSettingsService";
@@ -70,92 +70,143 @@ function AdvancedFilter({
     );
   }, [options, searchTerm]);
 
-  const allSelected = filteredOptions.length > 0 && filteredOptions.every(opt => selectedIds.has(opt.id));
+  // حساب الحالة بناءً على الخيارات المفلترة
+  const allFilteredSelected = filteredOptions.length > 0 && filteredOptions.every(opt => selectedIds.has(opt.id));
+  const someFilteredSelected = filteredOptions.some(opt => selectedIds.has(opt.id));
+
+  const handleToggle = useCallback((id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    onToggle(id);
+  }, [onToggle]);
+
+  const handleSelectAll = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (allFilteredSelected) {
+      // إلغاء تحديد جميع الخيارات المفلترة
+      filteredOptions.forEach(opt => {
+        if (selectedIds.has(opt.id)) {
+          onToggle(opt.id);
+        }
+      });
+    } else {
+      // تحديد جميع الخيارات المفلترة
+      filteredOptions.forEach(opt => {
+        if (!selectedIds.has(opt.id)) {
+          onToggle(opt.id);
+        }
+      });
+    }
+  }, [allFilteredSelected, filteredOptions, selectedIds, onToggle]);
 
   return (
-    <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow transition-shadow">
+    <div className="border-2 border-slate-200 rounded-xl overflow-hidden bg-white shadow-md hover:shadow-lg transition-all duration-200 hover:border-primary-300">
       <button
         onClick={onToggleOpen}
-        className="w-full p-2.5 bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-between group"
+        className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-200 flex items-center justify-between group"
       >
-        <div className="flex items-center gap-2">
-          <MaterialIcon
-            name={isOpen ? "expand_less" : "expand_more"}
-            className="text-slate-500 text-sm"
-            size="sm"
-          />
-          <span className="font-medium text-slate-700 text-sm">{title}</span>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
+            <MaterialIcon
+              name={isOpen ? "expand_less" : "expand_more"}
+              className="text-primary-600"
+              size="sm"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            {icon && <MaterialIcon name={icon} className="text-slate-500" size="sm" />}
+            <span className="font-semibold text-slate-700 text-sm">{title}</span>
+          </div>
           {selectedIds.size > 0 && (
-            <Badge variant="primary" size="sm" className="text-xs">
+            <Badge variant="primary" size="sm" className="text-xs animate-scale-in">
               {selectedIds.size}
             </Badge>
           )}
         </div>
-        <span className="text-xs text-slate-500 font-medium">
+        <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-1 rounded">
           {filteredOptions.length}
         </span>
       </button>
 
       {isOpen && (
-        <div className="p-2 border-t border-slate-200 bg-white">
+        <div className="p-3 border-t border-slate-200 bg-white animate-fade-in">
           {/* البحث */}
-          <div className="mb-2">
+          <div className="mb-3">
             <Input
               type="text"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="ابحث..."
+              placeholder="ابحث في القائمة..."
               leftIcon={<MaterialIcon name="search" size="sm" />}
               className="w-full"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
 
           {/* اختيار الكل / إلغاء الكل */}
-          <div className="mb-2 pb-2 border-b border-slate-200">
-            <Checkbox
-              checked={allSelected}
-              onChange={() => {
-                if (allSelected) {
-                  filteredOptions.forEach(opt => {
-                    if (selectedIds.has(opt.id)) {
-                      onToggle(opt.id);
-                    }
-                  });
-                } else {
-                  filteredOptions.forEach(opt => {
-                    if (!selectedIds.has(opt.id)) {
-                      onToggle(opt.id);
-                    }
-                  });
-                }
-              }}
-              label={allSelected ? "إلغاء الكل" : "اختيار الكل"}
-              className="text-sm"
-            />
-          </div>
+          {filteredOptions.length > 0 && (
+            <div className="mb-3 pb-3 border-b border-slate-200">
+              <div 
+                className="flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg transition-colors cursor-pointer"
+                onClick={handleSelectAll}
+              >
+                <Checkbox
+                  checked={allFilteredSelected}
+                  onChange={() => {}}
+                  label={allFilteredSelected ? "إلغاء تحديد الكل" : "تحديد الكل"}
+                  className="text-sm font-medium"
+                />
+                {someFilteredSelected && !allFilteredSelected && (
+                  <Badge variant="outline" size="sm" className="text-xs">
+                    جزئي
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* قائمة الخيارات */}
-          <div className="max-h-48 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-primary-200 scrollbar-track-slate-100">
+          <div className="max-h-64 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-slate-100 pr-1">
             {filteredOptions.length === 0 ? (
-              <p className="text-xs text-slate-500 text-center py-3">لا توجد نتائج</p>
+              <div className="text-center py-6">
+                <MaterialIcon name="search_off" className="text-slate-400 mx-auto mb-2" size="md" />
+                <p className="text-xs text-slate-500">لا توجد نتائج</p>
+              </div>
             ) : (
-              filteredOptions.map((option) => (
-                <div 
-                  key={option.id} 
-                  className="flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors cursor-pointer"
-                  onClick={() => onToggle(option.id)}
-                >
-                  <Checkbox
-                    checked={selectedIds.has(option.id)}
-                    onChange={() => onToggle(option.id)}
-                    label={option.label}
-                    className="flex-1 text-sm"
-                  />
-                  <Badge variant="outline" size="sm" className="text-xs">
-                    {option.count}
-                  </Badge>
-                </div>
-              ))
+              filteredOptions.map((option) => {
+                const isSelected = selectedIds.has(option.id);
+                return (
+                  <div 
+                    key={option.id} 
+                    className={`flex items-center justify-between p-2.5 rounded-lg transition-all duration-150 cursor-pointer ${
+                      isSelected 
+                        ? 'bg-primary-50 border-2 border-primary-200 shadow-sm' 
+                        : 'hover:bg-slate-50 border-2 border-transparent'
+                    }`}
+                    onClick={(e) => handleToggle(option.id, e)}
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleToggle(option.id);
+                        }}
+                        label={option.label}
+                        className="flex-1 text-sm"
+                      />
+                    </div>
+                    <Badge 
+                      variant={isSelected ? "primary" : "outline"} 
+                      size="sm" 
+                      className="text-xs flex-shrink-0"
+                    >
+                      {option.count}
+                    </Badge>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -187,21 +238,28 @@ function RangeFilter({
   icon = "tune",
   placeholder = { min: "من", max: "إلى" },
 }: RangeFilterProps) {
+  const hasValue = minValue || maxValue;
+
   return (
-    <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow transition-shadow">
+    <div className="border-2 border-slate-200 rounded-xl overflow-hidden bg-white shadow-md hover:shadow-lg transition-all duration-200 hover:border-primary-300">
       <button
         onClick={onToggleOpen}
-        className="w-full p-2.5 bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-between group"
+        className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-200 flex items-center justify-between group"
       >
-        <div className="flex items-center gap-2">
-          <MaterialIcon
-            name={isOpen ? "expand_less" : "expand_more"}
-            className="text-slate-500 text-sm"
-            size="sm"
-          />
-          <span className="font-medium text-slate-700 text-sm">{title}</span>
-          {(minValue || maxValue) && (
-            <Badge variant="primary" size="sm" className="text-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
+            <MaterialIcon
+              name={isOpen ? "expand_less" : "expand_more"}
+              className="text-primary-600"
+              size="sm"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            {icon && <MaterialIcon name={icon} className="text-slate-500" size="sm" />}
+            <span className="font-semibold text-slate-700 text-sm">{title}</span>
+          </div>
+          {hasValue && (
+            <Badge variant="primary" size="sm" className="text-xs animate-scale-in">
               مفعل
             </Badge>
           )}
@@ -209,29 +267,54 @@ function RangeFilter({
       </button>
 
       {isOpen && (
-        <div className="p-2 border-t border-slate-200 bg-white">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="p-3 border-t border-slate-200 bg-white animate-fade-in">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">{placeholder.min}</label>
+              <label className="block text-xs font-semibold text-slate-600 mb-2">
+                <MaterialIcon name="arrow_downward" className="inline-block ml-1" size="sm" />
+                {placeholder.min}
+              </label>
               <Input
                 type="number"
                 value={minValue}
                 onChange={(e) => onMinChange(e.target.value)}
                 placeholder={placeholder.min}
                 className="w-full text-sm"
+                leftIcon={<MaterialIcon name="numbers" size="sm" />}
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">{placeholder.max}</label>
+              <label className="block text-xs font-semibold text-slate-600 mb-2">
+                <MaterialIcon name="arrow_upward" className="inline-block ml-1" size="sm" />
+                {placeholder.max}
+              </label>
               <Input
                 type="number"
                 value={maxValue}
                 onChange={(e) => onMaxChange(e.target.value)}
                 placeholder={placeholder.max}
                 className="w-full text-sm"
+                leftIcon={<MaterialIcon name="numbers" size="sm" />}
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
           </div>
+          {hasValue && (
+            <Button
+              onClick={() => {
+                onMinChange('');
+                onMaxChange('');
+              }}
+              variant="outline"
+              size="sm"
+              fullWidth
+              leftIcon={<MaterialIcon name="close" size="sm" />}
+              className="text-xs mt-3"
+            >
+              مسح القيم
+            </Button>
+          )}
         </div>
       )}
     </div>
@@ -239,9 +322,11 @@ function RangeFilter({
 }
 
 function ReportsPageContent() {
+  const { showSuccess, showError, showInfo } = useToast();
   const [loading, setLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingStage, setLoadingStage] = useState('جاري التحميل...');
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalAssets: 0,
     totalValue: 0,
@@ -306,12 +391,191 @@ function ReportsPageContent() {
     custodians: '',
   });
 
+  // Advanced Search state
+  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
+  const [searchFields, setSearchFields] = useState({
+    assetName: '',
+    assetType: '',
+    assetStatus: '',
+    department: '',
+    office: '',
+    custodian: '',
+    assetTag: '',
+    serialNumber: '',
+    description: '',
+  });
+
   // البيانات المعروضة
   const [allAssetDetails, setAllAssetDetails] = useState<AssetDetail[]>([]);
   
   // حالة قائمة التصدير
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [columnVisibilityOpen, setColumnVisibilityOpen] = useState(false);
   const exportButtonRef = useRef<HTMLDivElement>(null);
+  const columnVisibilityRef = useRef<HTMLDivElement>(null);
+
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+
+  // حفظ الفلاتر في localStorage
+  useEffect(() => {
+    const savedFilters = localStorage.getItem('reportsFilters');
+    if (savedFilters) {
+      try {
+        const filters = JSON.parse(savedFilters);
+        if (filters.selectedDepartmentIds) setSelectedDepartmentIds(new Set(filters.selectedDepartmentIds));
+        if (filters.selectedOfficeIds) setSelectedOfficeIds(new Set(filters.selectedOfficeIds));
+        if (filters.selectedAssetTypeIds) setSelectedAssetTypeIds(new Set(filters.selectedAssetTypeIds));
+        if (filters.selectedAssetStatusIds) setSelectedAssetStatusIds(new Set(filters.selectedAssetStatusIds));
+        if (filters.selectedAssetNameIds) setSelectedAssetNameIds(new Set(filters.selectedAssetNameIds));
+        if (filters.selectedCustodianIds) setSelectedCustodianIds(new Set(filters.selectedCustodianIds));
+        if (filters.searchTerm) setSearchTerm(filters.searchTerm);
+        if (filters.minValue) setMinValue(filters.minValue);
+        if (filters.maxValue) setMaxValue(filters.maxValue);
+        if (filters.isActiveFilter) setIsActiveFilter(filters.isActiveFilter);
+        if (filters.itemsPerPage) setItemsPerPage(filters.itemsPerPage);
+      } catch (e) {
+        console.error('Error loading saved filters:', e);
+      }
+    }
+  }, []);
+
+  // حفظ الفلاتر عند التغيير
+  useEffect(() => {
+    const filtersToSave = {
+      selectedDepartmentIds: Array.from(selectedDepartmentIds),
+      selectedOfficeIds: Array.from(selectedOfficeIds),
+      selectedAssetTypeIds: Array.from(selectedAssetTypeIds),
+      selectedAssetStatusIds: Array.from(selectedAssetStatusIds),
+      selectedAssetNameIds: Array.from(selectedAssetNameIds),
+      selectedCustodianIds: Array.from(selectedCustodianIds),
+      searchTerm,
+      minValue,
+      maxValue,
+      isActiveFilter,
+      itemsPerPage,
+    };
+    localStorage.setItem('reportsFilters', JSON.stringify(filtersToSave));
+  }, [
+    selectedDepartmentIds,
+    selectedOfficeIds,
+    selectedAssetTypeIds,
+    selectedAssetStatusIds,
+    selectedAssetNameIds,
+    selectedCustodianIds,
+    searchTerm,
+    minValue,
+    maxValue,
+    isActiveFilter,
+    itemsPerPage,
+  ]);
+
+  // تحميل Filter Presets
+  useEffect(() => {
+    const savedPresets = localStorage.getItem('reportsFilterPresets');
+    if (savedPresets) {
+      try {
+        setFilterPresets(JSON.parse(savedPresets));
+      } catch (e) {
+        console.error('Error loading presets:', e);
+      }
+    }
+  }, []);
+
+  // تحميل Export History
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('reportsExportHistory');
+    if (savedHistory) {
+      try {
+        const parsed = JSON.parse(savedHistory);
+        setExportHistory(parsed.map((item: any) => ({
+          ...item,
+          date: new Date(item.date),
+        })));
+      } catch (e) {
+        console.error('Error loading export history:', e);
+      }
+    }
+  }, []);
+
+  // حفظ Export History (سيتم تعريفه بعد exportColumns)
+
+  // تطبيق Filter Preset
+  const applyFilterPreset = useCallback((preset: { name: string; filters: any }) => {
+    if (preset.filters.selectedDepartmentIds) setSelectedDepartmentIds(new Set(preset.filters.selectedDepartmentIds));
+    if (preset.filters.selectedOfficeIds) setSelectedOfficeIds(new Set(preset.filters.selectedOfficeIds));
+    if (preset.filters.selectedAssetTypeIds) setSelectedAssetTypeIds(new Set(preset.filters.selectedAssetTypeIds));
+    if (preset.filters.selectedAssetStatusIds) setSelectedAssetStatusIds(new Set(preset.filters.selectedAssetStatusIds));
+    if (preset.filters.selectedAssetNameIds) setSelectedAssetNameIds(new Set(preset.filters.selectedAssetNameIds));
+    if (preset.filters.selectedCustodianIds) setSelectedCustodianIds(new Set(preset.filters.selectedCustodianIds));
+    if (preset.filters.searchTerm !== undefined) setSearchTerm(preset.filters.searchTerm);
+    if (preset.filters.minValue !== undefined) setMinValue(preset.filters.minValue);
+    if (preset.filters.maxValue !== undefined) setMaxValue(preset.filters.maxValue);
+    if (preset.filters.minPurchaseValue !== undefined) setMinPurchaseValue(preset.filters.minPurchaseValue);
+    if (preset.filters.maxPurchaseValue !== undefined) setMaxPurchaseValue(preset.filters.maxPurchaseValue);
+    if (preset.filters.minCurrentValue !== undefined) setMinCurrentValue(preset.filters.minCurrentValue);
+    if (preset.filters.maxCurrentValue !== undefined) setMaxCurrentValue(preset.filters.maxCurrentValue);
+    if (preset.filters.isActiveFilter) setIsActiveFilter(preset.filters.isActiveFilter);
+    if (preset.filters.purchaseDateFrom !== undefined) setPurchaseDateFrom(preset.filters.purchaseDateFrom);
+    if (preset.filters.purchaseDateTo !== undefined) setPurchaseDateTo(preset.filters.purchaseDateTo);
+    setCurrentPage(1);
+  }, []);
+
+  // حذف Filter Preset
+  const deleteFilterPreset = useCallback((index: number) => {
+    setFilterPresets(prev => {
+      const presetName = prev[index]?.name || 'المجموعة';
+      const newPresets = prev.filter((_, i) => i !== index);
+      localStorage.setItem('reportsFilterPresets', JSON.stringify(newPresets));
+      showInfo(`تم حذف مجموعة الفلاتر "${presetName}"`);
+      return newPresets;
+    });
+  }, [showInfo]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + K للبحث
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[placeholder*="ابحث في جميع الحقول"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+      // Ctrl/Cmd + R لإعادة تعيين الفلاتر
+      if ((e.ctrlKey || e.metaKey) && e.key === 'r' && !e.shiftKey) {
+        e.preventDefault();
+        resetFilters();
+      }
+      // Escape لإغلاق الفلاتر المفتوحة
+      if (e.key === 'Escape') {
+        setFilterOpenStates({
+          departments: false,
+          offices: false,
+          assetTypes: false,
+          assetStatuses: false,
+          assetNames: false,
+          custodians: false,
+          value: false,
+          purchaseValue: false,
+          currentValue: false,
+          dates: false,
+          status: false,
+        });
+        setExportDropdownOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     loadReports();
@@ -450,7 +714,10 @@ function ReportsPageContent() {
       await new Promise(resolve => setTimeout(resolve, 300));
     } catch (error) {
       console.error("Error loading reports:", error);
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع';
+      setError(errorMessage);
       setLoadingStage('حدث خطأ أثناء التحميل');
+      showError(`فشل تحميل البيانات: ${errorMessage}`);
     } finally {
       setLoading(false);
       setLoadingProgress(0);
@@ -790,73 +1057,121 @@ function ReportsPageContent() {
     users,
   ]);
 
+  // Sorting logic
+  const sortedAndPaginatedAssets = useMemo(() => {
+    let sorted = [...filteredAssets];
+
+    if (sortColumn) {
+      sorted.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (sortColumn) {
+          case 'department':
+            aValue = a.departmentName;
+            bValue = b.departmentName;
+            break;
+          case 'office':
+            aValue = a.officeName;
+            bValue = b.officeName;
+            break;
+          case 'assetName':
+            aValue = a.assetName;
+            bValue = b.assetName;
+            break;
+          case 'assetType':
+            aValue = a.assetType;
+            bValue = b.assetType;
+            break;
+          case 'assetStatus':
+            aValue = a.assetStatus;
+            bValue = b.assetStatus;
+            break;
+          case 'custodian':
+            aValue = a.custodianName;
+            bValue = b.custodianName;
+            break;
+          case 'value':
+            aValue = a.value;
+            bValue = b.value;
+            break;
+          default:
+            return 0;
+        }
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortDirection === 'asc'
+            ? aValue.localeCompare(bValue, 'ar')
+            : bValue.localeCompare(aValue, 'ar');
+        }
+
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+
+        return 0;
+      });
+    }
+
+    // Pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sorted.slice(startIndex, endIndex);
+  }, [filteredAssets, sortColumn, sortDirection, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
+
+  const handleSort = useCallback((column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting
+  }, [sortColumn, sortDirection]);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleItemsPerPageChange = useCallback((items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1);
+  }, []);
+
   const toggleFilter = useCallback((filterType: string, id: string) => {
+    const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>) => {
+      setter(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(id)) {
+          newSet.delete(id);
+        } else {
+          newSet.add(id);
+        }
+        return newSet;
+      });
+    };
+
     switch (filterType) {
       case 'departments':
-        setSelectedDepartmentIds(prev => {
-          const newSet = new Set(prev);
-          if (newSet.has(id)) {
-            newSet.delete(id);
-          } else {
-            newSet.add(id);
-          }
-          return newSet;
-        });
+        toggleSet(setSelectedDepartmentIds);
         break;
       case 'offices':
-        setSelectedOfficeIds(prev => {
-          const newSet = new Set(prev);
-          if (newSet.has(id)) {
-            newSet.delete(id);
-          } else {
-            newSet.add(id);
-          }
-          return newSet;
-        });
+        toggleSet(setSelectedOfficeIds);
         break;
       case 'assetTypes':
-        setSelectedAssetTypeIds(prev => {
-          const newSet = new Set(prev);
-          if (newSet.has(id)) {
-            newSet.delete(id);
-          } else {
-            newSet.add(id);
-          }
-          return newSet;
-        });
+        toggleSet(setSelectedAssetTypeIds);
         break;
       case 'assetStatuses':
-        setSelectedAssetStatusIds(prev => {
-          const newSet = new Set(prev);
-          if (newSet.has(id)) {
-            newSet.delete(id);
-          } else {
-            newSet.add(id);
-          }
-          return newSet;
-        });
+        toggleSet(setSelectedAssetStatusIds);
         break;
       case 'assetNames':
-        setSelectedAssetNameIds(prev => {
-          const newSet = new Set(prev);
-          if (newSet.has(id)) {
-            newSet.delete(id);
-          } else {
-            newSet.add(id);
-          }
-          return newSet;
-        });
+        toggleSet(setSelectedAssetNameIds);
         break;
       case 'custodians':
-        setSelectedCustodianIds(prev => {
-          const newSet = new Set(prev);
-          if (newSet.has(id)) {
-            newSet.delete(id);
-          } else {
-            newSet.add(id);
-          }
-          return newSet;
-        });
+        toggleSet(setSelectedCustodianIds);
         break;
     }
   }, []);
@@ -881,47 +1196,41 @@ function ReportsPageContent() {
   }, []);
 
   const exportToCSV = () => {
-    if (filteredAssets.length === 0) return;
+    if (filteredAssets.length === 0 || isExporting) return;
+    setIsExporting(true);
+    setExportType('CSV');
+    
+    // Simulate async operation
+    setTimeout(() => {
 
-    const headers = [
-      'الإدارة',
-      'المكتب',
-      'اسم الأصل',
-      'نوع الأصل',
-      'حالة الأصل',
-      'حامل الأصل',
-      'رقم الأصل',
-      'الرقم التسلسلي',
-      'القيمة',
-      'القيمة الشرائية',
-      'القيمة الحالية',
-      'تاريخ الشراء',
-      'تاريخ آخر صيانة',
-      'الوصف',
-      'ملاحظات'
-    ];
+    // بناء headers و data بناءً على الأعمدة المحددة
+    const columnMap: { [key: string]: { header: string; getValue: (ad: AssetDetail) => string | number } } = {
+      department: { header: 'الإدارة', getValue: (ad) => `"${ad.departmentName}"` },
+      office: { header: 'المكتب', getValue: (ad) => `"${ad.officeName}"` },
+      assetName: { header: 'اسم الأصل', getValue: (ad) => `"${ad.assetName}"` },
+      assetType: { header: 'نوع الأصل', getValue: (ad) => `"${ad.assetType}"` },
+      assetStatus: { header: 'حالة الأصل', getValue: (ad) => `"${ad.assetStatus}"` },
+      custodian: { header: 'حامل الأصل', getValue: (ad) => `"${ad.custodianName}"` },
+      assetTag: { header: 'رقم الأصل', getValue: (ad) => `"${ad.asset.get('asset_tag') || ''}"` },
+      serialNumber: { header: 'الرقم التسلسلي', getValue: (ad) => `"${ad.asset.get('serial_number') || ''}"` },
+      value: { header: 'القيمة', getValue: (ad) => ad.value },
+      purchaseValue: { header: 'القيمة الشرائية', getValue: (ad) => ad.purchaseValue },
+      currentValue: { header: 'القيمة الحالية', getValue: (ad) => ad.currentValue },
+      purchaseDate: { header: 'تاريخ الشراء', getValue: (ad) => `"${ad.asset.get('purchase_date') || ''}"` },
+      lastMaintenanceDate: { header: 'تاريخ آخر صيانة', getValue: (ad) => `"${ad.asset.get('last_maintenance_date') || ''}"` },
+      description: { header: 'الوصف', getValue: (ad) => `"${(ad.asset.get('description') || '').replace(/"/g, '""')}"` },
+      notes: { header: 'ملاحظات', getValue: (ad) => `"${(ad.asset.get('notes') || '').replace(/"/g, '""')}"` },
+    };
 
+    const selectedColumns = Object.entries(exportColumns)
+      .filter(([_, selected]) => selected)
+      .map(([key, _]) => key);
+
+    const headers = selectedColumns.map(key => columnMap[key].header);
     const csvContent = [
       headers.join(','),
       ...filteredAssets.map(assetDetail => {
-        const asset = assetDetail.asset;
-        return [
-          `"${assetDetail.departmentName}"`,
-          `"${assetDetail.officeName}"`,
-          `"${assetDetail.assetName}"`,
-          `"${assetDetail.assetType}"`,
-          `"${assetDetail.assetStatus}"`,
-          `"${assetDetail.custodianName}"`,
-          `"${asset.get('asset_tag') || ''}"`,
-          `"${asset.get('serial_number') || ''}"`,
-          assetDetail.value,
-          assetDetail.purchaseValue,
-          assetDetail.currentValue,
-          `"${asset.get('purchase_date') || ''}"`,
-          `"${asset.get('last_maintenance_date') || ''}"`,
-          `"${(asset.get('description') || '').replace(/"/g, '""')}"`,
-          `"${(asset.get('notes') || '').replace(/"/g, '""')}"`
-        ].join(',');
+        return selectedColumns.map(key => columnMap[key].getValue(assetDetail)).join(',');
       })
     ].join('\n');
 
@@ -935,30 +1244,49 @@ function ReportsPageContent() {
     link.click();
     document.body.removeChild(link);
     setExportDropdownOpen(false);
+    saveExportHistory('CSV', filteredAssets.length);
+    showSuccess(`تم تصدير ${filteredAssets.length} أصل إلى CSV`);
+    setIsExporting(false);
+    setExportType(null);
+    }, 500);
   };
 
   const exportToExcel = () => {
-    if (filteredAssets.length === 0) return;
+    if (filteredAssets.length === 0 || isExporting) return;
+    setIsExporting(true);
+    setExportType('Excel');
+    
+    // Simulate async operation
+    setTimeout(() => {
+
+    const columnMap: { [key: string]: { header: string; getValue: (ad: AssetDetail) => any } } = {
+      department: { header: 'الإدارة', getValue: (ad) => ad.departmentName },
+      office: { header: 'المكتب', getValue: (ad) => ad.officeName },
+      assetName: { header: 'اسم الأصل', getValue: (ad) => ad.assetName },
+      assetType: { header: 'نوع الأصل', getValue: (ad) => ad.assetType },
+      assetStatus: { header: 'حالة الأصل', getValue: (ad) => ad.assetStatus },
+      custodian: { header: 'حامل الأصل', getValue: (ad) => ad.custodianName },
+      assetTag: { header: 'رقم الأصل', getValue: (ad) => ad.asset.get('asset_tag') || '' },
+      serialNumber: { header: 'الرقم التسلسلي', getValue: (ad) => ad.asset.get('serial_number') || '' },
+      value: { header: 'القيمة', getValue: (ad) => ad.value },
+      purchaseValue: { header: 'القيمة الشرائية', getValue: (ad) => ad.purchaseValue },
+      currentValue: { header: 'القيمة الحالية', getValue: (ad) => ad.currentValue },
+      purchaseDate: { header: 'تاريخ الشراء', getValue: (ad) => ad.asset.get('purchase_date') || '' },
+      lastMaintenanceDate: { header: 'تاريخ آخر صيانة', getValue: (ad) => ad.asset.get('last_maintenance_date') || '' },
+      description: { header: 'الوصف', getValue: (ad) => ad.asset.get('description') || '' },
+      notes: { header: 'ملاحظات', getValue: (ad) => ad.asset.get('notes') || '' },
+    };
+
+    const selectedColumns = Object.entries(exportColumns)
+      .filter(([_, selected]) => selected)
+      .map(([key, _]) => key);
 
     const data = filteredAssets.map(assetDetail => {
-      const asset = assetDetail.asset;
-      return {
-        'الإدارة': assetDetail.departmentName,
-        'المكتب': assetDetail.officeName,
-        'اسم الأصل': assetDetail.assetName,
-        'نوع الأصل': assetDetail.assetType,
-        'حالة الأصل': assetDetail.assetStatus,
-        'حامل الأصل': assetDetail.custodianName,
-        'رقم الأصل': asset.get('asset_tag') || '',
-        'الرقم التسلسلي': asset.get('serial_number') || '',
-        'القيمة': assetDetail.value,
-        'القيمة الشرائية': assetDetail.purchaseValue,
-        'القيمة الحالية': assetDetail.currentValue,
-        'تاريخ الشراء': asset.get('purchase_date') || '',
-        'تاريخ آخر صيانة': asset.get('last_maintenance_date') || '',
-        'الوصف': asset.get('description') || '',
-        'ملاحظات': asset.get('notes') || '',
-      };
+      const row: any = {};
+      selectedColumns.forEach(key => {
+        row[columnMap[key].header] = columnMap[key].getValue(assetDetail);
+      });
+      return row;
     });
 
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -966,10 +1294,20 @@ function ReportsPageContent() {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'الأصول');
     XLSX.writeFile(workbook, `تقرير_الأصول_${new Date().toISOString().split('T')[0]}.xlsx`);
     setExportDropdownOpen(false);
+    saveExportHistory('Excel', filteredAssets.length);
+    showSuccess(`تم تصدير ${filteredAssets.length} أصل إلى Excel`);
+    setIsExporting(false);
+    setExportType(null);
+    }, 500);
   };
 
   const exportToPDF = () => {
-    if (filteredAssets.length === 0) return;
+    if (filteredAssets.length === 0 || isExporting) return;
+    setIsExporting(true);
+    setExportType('PDF');
+    
+    // Simulate async operation
+    setTimeout(() => {
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -1014,59 +1352,116 @@ function ReportsPageContent() {
           <style>
             @media print {
               @page {
-                margin: 20mm 15mm 20mm 15mm;
+                margin: 15mm 10mm 15mm 10mm;
+                size: A4 landscape;
+              }
+              body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
               }
             }
+            * {
+              box-sizing: border-box;
+            }
             body {
-              font-family: 'Arial', 'Tahoma', sans-serif;
+              font-family: 'Arial', 'Tahoma', 'Segoe UI', sans-serif;
               direction: rtl;
               margin: 0;
-              padding: 20px;
+              padding: 15px;
+              background: white;
+              color: #000;
             }
             .header {
               display: flex;
               justify-content: space-between;
               align-items: flex-start;
-              margin-bottom: 20px;
-              border-bottom: 2px solid #333;
+              margin-bottom: 15px;
+              border-bottom: 3px solid #2563eb;
               padding-bottom: 10px;
+              page-break-inside: avoid;
             }
             .header-left {
               text-align: right;
+              flex: 1;
             }
             .header-right {
               text-align: left;
+              flex: 1;
             }
             .logo {
-              max-width: 150px;
-              max-height: 80px;
+              max-width: 120px;
+              max-height: 70px;
+              object-fit: contain;
+            }
+            h2 {
+              text-align: center;
+              margin: 15px 0;
+              color: #1e40af;
+              font-size: 18px;
+            }
+            .summary {
+              background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+              padding: 12px;
+              margin: 15px 0;
+              border-radius: 8px;
+              border: 2px solid #3b82f6;
+              page-break-inside: avoid;
+            }
+            .summary strong {
+              color: #1e40af;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              margin: 20px 0;
-              font-size: 12px;
+              margin: 15px 0;
+              font-size: 11px;
+              page-break-inside: auto;
+            }
+            thead {
+              display: table-header-group;
+            }
+            tfoot {
+              display: table-footer-group;
+            }
+            tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
             }
             th, td {
-              border: 1px solid #ddd;
-              padding: 8px;
+              border: 1px solid #94a3b8;
+              padding: 6px 8px;
               text-align: right;
+              word-wrap: break-word;
             }
             th {
-              background-color: #f2f2f2;
+              background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+              color: white;
+              font-weight: bold;
+              font-size: 11px;
+            }
+            tbody tr:nth-child(even) {
+              background-color: #f8fafc;
+            }
+            tbody tr:hover {
+              background-color: #e0e7ff;
+            }
+            tfoot tr {
+              background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
               font-weight: bold;
             }
             .footer {
-              margin-top: 30px;
-              border-top: 2px solid #333;
+              margin-top: 20px;
+              border-top: 3px solid #2563eb;
               padding-top: 10px;
               text-align: center;
+              page-break-inside: avoid;
+              font-size: 10px;
+              color: #475569;
             }
-            .summary {
-              background-color: #f9f9f9;
-              padding: 10px;
-              margin: 20px 0;
-              border-radius: 5px;
+            @media print {
+              .no-print {
+                display: none !important;
+              }
             }
           </style>
         </head>
@@ -1130,31 +1525,312 @@ function ReportsPageContent() {
       printWindow.print();
     }, 250);
     setExportDropdownOpen(false);
+    const selectedColumnsCount = Object.values(exportColumns).filter(v => v).length;
+    const newEntry = {
+      id: `export-${Date.now()}-${Math.random()}`,
+      type: 'PDF' as const,
+      count: filteredAssets.length,
+      date: new Date(),
+      columns: selectedColumnsCount,
+    };
+    setExportHistory(prev => {
+      const updated = [newEntry, ...prev].slice(0, 10);
+      localStorage.setItem('reportsExportHistory', JSON.stringify(updated));
+      return updated;
+    });
+    showInfo(`تم فتح نافذة الطباعة لـ ${filteredAssets.length} أصل`);
+    setIsExporting(false);
+    setExportType(null);
+    }, 500);
   };
 
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
     exportToPDF();
-  };
+  }, [exportToPDF]);
 
-  // إغلاق قائمة التصدير عند النقر خارجها
+  // إغلاق القوائم المنسدلة عند النقر خارجها
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (exportButtonRef.current && !exportButtonRef.current.contains(event.target as Node)) {
         setExportDropdownOpen(false);
       }
+      if (columnVisibilityRef.current && !columnVisibilityRef.current.contains(event.target as Node)) {
+        setColumnVisibilityOpen(false);
+      }
     };
 
-    if (exportDropdownOpen) {
+    if (exportDropdownOpen || columnVisibilityOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [exportDropdownOpen]);
+  }, [exportDropdownOpen, columnVisibilityOpen]);
 
   const totalFilteredValue = useMemo(() => {
     return filteredAssets.reduce((sum, ad) => sum + ad.value, 0);
   }, [filteredAssets]);
+
+  // Copy to Clipboard
+  const copyToClipboard = useCallback(() => {
+    if (filteredAssets.length === 0 || isCopying) return;
+    setIsCopying(true);
+
+    const text = filteredAssets.map((assetDetail, idx) => {
+      const asset = assetDetail.asset;
+      return `${idx + 1}. ${assetDetail.assetName} - ${assetDetail.departmentName}/${assetDetail.officeName} - ${assetDetail.value.toLocaleString('ar-SA')} ريال`;
+    }).join('\n');
+
+    const summary = `إجمالي: ${filteredAssets.length} أصل\nالقيمة الإجمالية: ${totalFilteredValue.toLocaleString('ar-SA')} ريال\n\n${text}`;
+
+    navigator.clipboard.writeText(summary).then(() => {
+      showSuccess(`تم نسخ ${filteredAssets.length} أصل إلى الحافظة`);
+      setIsCopying(false);
+    }).catch(() => {
+      showError('فشل نسخ البيانات إلى الحافظة');
+      setIsCopying(false);
+    });
+  }, [filteredAssets, totalFilteredValue, showSuccess, showError]);
+
+  // إحصائيات متقدمة للنتائج المفلترة
+  const filteredStats = useMemo(() => {
+    const activeCount = filteredAssets.filter(detail => {
+      const isActive = detail.asset.getValue<number>('is_active') === 1 || 
+                      detail.asset.getValue<boolean>('is_active') === true;
+      return isActive;
+    }).length;
+
+    const inactiveCount = filteredAssets.length - activeCount;
+    const avgValue = filteredAssets.length > 0 ? totalFilteredValue / filteredAssets.length : 0;
+    const maxValue = filteredAssets.length > 0 ? Math.max(...filteredAssets.map(a => a.value)) : 0;
+    const minValue = filteredAssets.length > 0 ? Math.min(...filteredAssets.map(a => a.value)) : 0;
+
+    // إحصائيات حسب النوع
+    const typeStats = new Map<string, { count: number; value: number }>();
+    filteredAssets.forEach(detail => {
+      const type = detail.assetType;
+      const current = typeStats.get(type) || { count: 0, value: 0 };
+      typeStats.set(type, {
+        count: current.count + 1,
+        value: current.value + detail.value,
+      });
+    });
+
+    // إحصائيات حسب الحالة
+    const statusStats = new Map<string, { count: number; value: number }>();
+    filteredAssets.forEach(detail => {
+      const status = detail.assetStatus;
+      const current = statusStats.get(status) || { count: 0, value: 0 };
+      statusStats.set(status, {
+        count: current.count + 1,
+        value: current.value + detail.value,
+      });
+    });
+
+    return {
+      activeCount,
+      inactiveCount,
+      avgValue,
+      maxValue,
+      minValue,
+      typeStats: Array.from(typeStats.entries()).sort((a, b) => b[1].value - a[1].value),
+      statusStats: Array.from(statusStats.entries()).sort((a, b) => b[1].value - a[1].value),
+    };
+  }, [filteredAssets, totalFilteredValue]);
+
+  // View Mode state
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+
+  // Column Visibility state
+  const [visibleColumns, setVisibleColumns] = useState({
+    department: true,
+    office: true,
+    assetName: true,
+    assetType: true,
+    assetStatus: true,
+    custodian: true,
+    assetTag: true,
+    value: true,
+  });
+
+  // Export Columns state
+  const [exportColumns, setExportColumns] = useState({
+    department: true,
+    office: true,
+    assetName: true,
+    assetType: true,
+    assetStatus: true,
+    custodian: true,
+    assetTag: true,
+    serialNumber: true,
+    value: true,
+    purchaseValue: true,
+    currentValue: true,
+    purchaseDate: true,
+    lastMaintenanceDate: true,
+    description: true,
+    notes: true,
+  });
+  const [showExportColumnsModal, setShowExportColumnsModal] = useState(false);
+
+  // Export History state
+  const [exportHistory, setExportHistory] = useState<Array<{
+    id: string;
+    type: 'CSV' | 'Excel' | 'PDF';
+    count: number;
+    date: Date;
+    columns: number;
+  }>>([]);
+  const [showExportHistory, setShowExportHistory] = useState(false);
+
+  // Saved Searches state
+  const [savedSearches, setSavedSearches] = useState<Array<{
+    id: string;
+    name: string;
+    searchTerm: string;
+    searchFields: {
+      assetName: boolean;
+      assetTag: boolean;
+      serialNumber: boolean;
+      description: boolean;
+    };
+    date: Date;
+  }>>([]);
+  const [showSavedSearchesModal, setShowSavedSearchesModal] = useState(false);
+
+  // Loading states
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportType, setExportType] = useState<'CSV' | 'Excel' | 'PDF' | null>(null);
+  const [isCopying, setIsCopying] = useState(false);
+
+  // Search Suggestions state
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Row Selection state
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [selectAllMode, setSelectAllMode] = useState(false);
+
+  // Generate Search Suggestions
+  useEffect(() => {
+    if (searchTerm.trim().length < 2) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const searchLower = searchTerm.toLowerCase();
+    const suggestions: string[] = [];
+
+    // اقتراحات من أسماء الأصول
+    allAssetDetails.forEach(detail => {
+      if (detail.assetName.toLowerCase().includes(searchLower) && 
+          !suggestions.includes(detail.assetName) && 
+          suggestions.length < 5) {
+        suggestions.push(detail.assetName);
+      }
+    });
+
+    // اقتراحات من أنواع الأصول
+    assetTypes.forEach(type => {
+      const typeName = type.get('name') || '';
+      if (typeName.toLowerCase().includes(searchLower) && 
+          !suggestions.includes(typeName) && 
+          suggestions.length < 5) {
+        suggestions.push(typeName);
+      }
+    });
+
+    // اقتراحات من أسماء الإدارات
+    allDepartments.forEach(dept => {
+      const deptName = dept.get('name') || '';
+      if (deptName.toLowerCase().includes(searchLower) && 
+          !suggestions.includes(deptName) && 
+          suggestions.length < 5) {
+        suggestions.push(deptName);
+      }
+    });
+
+    setSearchSuggestions(suggestions.slice(0, 5));
+    setShowSuggestions(suggestions.length > 0);
+  }, [searchTerm, allAssetDetails, assetTypes, allDepartments]);
+
+  // حفظ Export History
+  const saveExportHistory = useCallback((type: 'CSV' | 'Excel' | 'PDF', count: number) => {
+    const selectedColumnsCount = Object.values(exportColumns).filter(v => v).length;
+    const newEntry = {
+      id: `export-${Date.now()}-${Math.random()}`,
+      type,
+      count,
+      date: new Date(),
+      columns: selectedColumnsCount,
+    };
+    setExportHistory(prev => {
+      const updated = [newEntry, ...prev].slice(0, 10); // حفظ آخر 10 تصديرات
+      localStorage.setItem('reportsExportHistory', JSON.stringify(updated));
+      return updated;
+    });
+  }, [exportColumns]);
+
+  // Filter Presets state
+  const [filterPresets, setFilterPresets] = useState<Array<{ name: string; filters: any }>>([]);
+  const [presetName, setPresetName] = useState('');
+  const [showPresetModal, setShowPresetModal] = useState(false);
+
+  // حفظ Filter Preset
+  const saveFilterPreset = useCallback(() => {
+    if (!presetName.trim()) return;
+
+    const preset = {
+      name: presetName.trim(),
+      filters: {
+        selectedDepartmentIds: Array.from(selectedDepartmentIds),
+        selectedOfficeIds: Array.from(selectedOfficeIds),
+        selectedAssetTypeIds: Array.from(selectedAssetTypeIds),
+        selectedAssetStatusIds: Array.from(selectedAssetStatusIds),
+        selectedAssetNameIds: Array.from(selectedAssetNameIds),
+        selectedCustodianIds: Array.from(selectedCustodianIds),
+        searchTerm,
+        minValue,
+        maxValue,
+        minPurchaseValue,
+        maxPurchaseValue,
+        minCurrentValue,
+        maxCurrentValue,
+        isActiveFilter,
+        purchaseDateFrom,
+        purchaseDateTo,
+      },
+    };
+
+    setFilterPresets(prev => {
+      const newPresets = [...prev, preset];
+      localStorage.setItem('reportsFilterPresets', JSON.stringify(newPresets));
+      return newPresets;
+    });
+    setPresetName('');
+    setShowPresetModal(false);
+    showSuccess(`تم حفظ مجموعة الفلاتر "${presetName.trim()}"`);
+  }, [
+    presetName,
+    selectedDepartmentIds,
+    selectedOfficeIds,
+    selectedAssetTypeIds,
+    selectedAssetStatusIds,
+    selectedAssetNameIds,
+    selectedCustodianIds,
+    searchTerm,
+    searchFields,
+    minValue,
+    maxValue,
+    minPurchaseValue,
+    maxPurchaseValue,
+    minCurrentValue,
+    maxCurrentValue,
+    isActiveFilter,
+    purchaseDateFrom,
+    purchaseDateTo,
+  ]);
 
   if (loading) {
     return (
@@ -1164,6 +1840,34 @@ function ReportsPageContent() {
           showProgress={true}
           progress={loadingProgress}
         />
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Card className="max-w-md w-full">
+            <CardBody className="p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-error-100 flex items-center justify-center mx-auto mb-4">
+                <MaterialIcon name="error" className="text-error-600" size="2xl" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">حدث خطأ</h2>
+              <p className="text-slate-600 mb-4">{error}</p>
+              <Button
+                onClick={() => {
+                  setError(null);
+                  window.location.reload();
+                }}
+                variant="primary"
+                leftIcon={<MaterialIcon name="refresh" size="sm" />}
+              >
+                إعادة المحاولة
+              </Button>
+            </CardBody>
+          </Card>
+        </div>
       </MainLayout>
     );
   }
@@ -1178,8 +1882,11 @@ function ReportsPageContent() {
               <MaterialIcon name="assessment" className="text-white" size="lg" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-0.5">التقارير والإحصائيات</h1>
-              <p className="text-slate-600 text-sm font-medium">نظام فلترة متقدم</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-0.5" id="reports-page-title">التقارير والإحصائيات</h1>
+              <p className="text-slate-600 text-sm font-medium" aria-describedby="reports-page-title">
+                نظام فلترة متقدم مع Sorting و Pagination
+                <span className="text-xs text-slate-400 mr-2" aria-label="اختصارات لوحة المفاتيح">(Ctrl+K للبحث، Ctrl+R لإعادة التعيين)</span>
+              </p>
             </div>
           </div>
         </div>
@@ -1266,28 +1973,461 @@ function ReportsPageContent() {
         </Card>
       </div>
 
+      {/* إحصائيات متقدمة للنتائج المفلترة */}
+      {filteredAssets.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
+          <Card className="bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200">
+            <CardBody padding="sm">
+              <div className="text-center">
+                <p className="text-xs font-medium text-primary-700 mb-1">متوسط القيمة</p>
+                <p className="text-lg font-bold text-primary-900">
+                  {filteredStats.avgValue.toLocaleString('ar-SA', { maximumFractionDigits: 0 })}
+                </p>
+                <p className="text-xs text-primary-600">ريال</p>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-success-50 to-success-100 border-2 border-success-200">
+            <CardBody padding="sm">
+              <div className="text-center">
+                <p className="text-xs font-medium text-success-700 mb-1">أعلى قيمة</p>
+                <p className="text-lg font-bold text-success-900">
+                  {filteredStats.maxValue.toLocaleString('ar-SA')}
+                </p>
+                <p className="text-xs text-success-600">ريال</p>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-warning-50 to-warning-100 border-2 border-warning-200">
+            <CardBody padding="sm">
+              <div className="text-center">
+                <p className="text-xs font-medium text-warning-700 mb-1">أقل قيمة</p>
+                <p className="text-lg font-bold text-warning-900">
+                  {filteredStats.minValue.toLocaleString('ar-SA')}
+                </p>
+                <p className="text-xs text-warning-600">ريال</p>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-accent-50 to-accent-100 border-2 border-accent-200">
+            <CardBody padding="sm">
+              <div className="text-center">
+                <p className="text-xs font-medium text-accent-700 mb-1">نشط</p>
+                <p className="text-lg font-bold text-accent-900">
+                  {filteredStats.activeCount.toLocaleString('ar-SA')}
+                </p>
+                <p className="text-xs text-accent-600">
+                  ({filteredAssets.length > 0 ? Math.round((filteredStats.activeCount / filteredAssets.length) * 100) : 0}%)
+                </p>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200">
+            <CardBody padding="sm">
+              <div className="text-center">
+                <p className="text-xs font-medium text-slate-700 mb-1">غير نشط</p>
+                <p className="text-lg font-bold text-slate-900">
+                  {filteredStats.inactiveCount.toLocaleString('ar-SA')}
+                </p>
+                <p className="text-xs text-slate-600">
+                  ({filteredAssets.length > 0 ? Math.round((filteredStats.inactiveCount / filteredAssets.length) * 100) : 0}%)
+                </p>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-secondary-50 to-secondary-100 border-2 border-secondary-200">
+            <CardBody padding="sm">
+              <div className="text-center">
+                <p className="text-xs font-medium text-secondary-700 mb-1">أنواع مختلفة</p>
+                <p className="text-lg font-bold text-secondary-900">
+                  {filteredStats.typeStats.length}
+                </p>
+                <p className="text-xs text-secondary-600">نوع</p>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      )}
+
+      {/* Summary Banner */}
+      {filteredAssets.length > 0 && filteredAssets.length < allAssetDetails.length && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-primary-50 via-blue-50 to-primary-50 border-2 border-primary-200 rounded-xl">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+              <MaterialIcon name="info" className="text-primary-600" size="md" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-800">
+                عرض {filteredAssets.length.toLocaleString('ar-SA')} من {allAssetDetails.length.toLocaleString('ar-SA')} أصل
+              </p>
+              <p className="text-xs text-slate-600 mt-1">
+                النسبة: {((filteredAssets.length / allAssetDetails.length) * 100).toFixed(1)}% من إجمالي الأصول
+              </p>
+            </div>
+            <Button
+              onClick={resetFilters}
+              variant="outline"
+              size="sm"
+              leftIcon={<MaterialIcon name="refresh" size="sm" />}
+            >
+              عرض الكل
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-4 w-full">
         {/* لوحة الفلاتر */}
         <div className="w-full lg:w-80 flex-shrink-0">
-          <Card className="sticky top-4 shadow-md border border-slate-200 bg-white h-fit max-h-[calc(100vh-120px)] flex flex-col">
-            <CardHeader className="pb-3 border-b border-slate-200">
-              <div className="flex items-center gap-2">
-                <MaterialIcon name="tune" className="text-primary-600" size="sm" />
-                <span className="text-base font-semibold text-slate-800">الفلاتر</span>
+          <Card className="lg:sticky lg:top-4 shadow-lg border-2 border-slate-200 bg-white h-fit lg:max-h-[calc(100vh-120px)] flex flex-col">
+            <CardHeader className="pb-3 border-b-2 border-slate-200 bg-gradient-to-r from-primary-50 to-slate-50">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center">
+                    <MaterialIcon name="tune" className="text-primary-600" size="sm" />
+                  </div>
+                  <span className="text-base font-bold text-slate-800" id="filters-panel-title">الفلاتر المتقدمة</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Filter Presets */}
+                  <div className="relative">
+                    <Button
+                      onClick={() => setShowPresetModal(!showPresetModal)}
+                      variant="outline"
+                      size="sm"
+                      leftIcon={<MaterialIcon name="folder" size="sm" />}
+                      className="text-xs"
+                    >
+                      <span className="hidden sm:inline">حفظ</span>
+                      {filterPresets.length > 0 && (
+                        <Badge variant="primary" size="sm" className="mr-1 text-xs">
+                          {filterPresets.length}
+                        </Badge>
+                      )}
+                    </Button>
+                    {showPresetModal && (
+                      <div className="absolute top-full left-0 mt-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in min-w-[250px] bg-white border border-slate-200">
+                        <div className="p-2 max-h-64 overflow-y-auto">
+                          <div className="text-xs font-semibold text-slate-700 mb-2 px-2">مجموعات الفلاتر المحفوظة:</div>
+                          {filterPresets.map((preset, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-2 hover:bg-primary-50 rounded-lg transition-colors group"
+                            >
+                              <button
+                                onClick={() => {
+                                  applyFilterPreset(preset);
+                                  setShowPresetModal(false);
+                                }}
+                                className="flex-1 text-right text-sm text-slate-700 hover:text-primary-600"
+                              >
+                                {preset.name}
+                              </button>
+                              <button
+                                onClick={() => deleteFilterPreset(idx)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-error-50 rounded"
+                              >
+                                <MaterialIcon name="delete" className="text-error-600" size="sm" />
+                              </button>
+                            </div>
+                          ))}
+                          <div className="border-t border-slate-200 mt-2 pt-2">
+                            <div className="p-2 space-y-2">
+                              <div className="text-xs font-semibold text-slate-700 mb-1">حفظ الفلاتر الحالية:</div>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="text"
+                                  value={presetName}
+                                  onChange={(e) => setPresetName(e.target.value)}
+                                  placeholder="اسم المجموعة..."
+                                  className="flex-1 text-sm"
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      saveFilterPreset();
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  onClick={saveFilterPreset}
+                                  variant="primary"
+                                  size="sm"
+                                  disabled={!presetName.trim()}
+                                  leftIcon={<MaterialIcon name="save" size="sm" />}
+                                >
+                                  حفظ
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {(selectedDepartmentIds.size > 0 || selectedOfficeIds.size > 0 || selectedAssetTypeIds.size > 0 || 
+                    selectedAssetStatusIds.size > 0 || selectedAssetNameIds.size > 0 || selectedCustodianIds.size > 0 ||
+                    minValue || maxValue || minPurchaseValue || maxPurchaseValue || minCurrentValue || maxCurrentValue ||
+                    isActiveFilter !== 'all' || purchaseDateFrom || purchaseDateTo) && (
+                    <Button
+                      onClick={resetFilters}
+                      variant="outline"
+                      size="sm"
+                      leftIcon={<MaterialIcon name="refresh" size="sm" />}
+                      className="text-xs"
+                    >
+                      إعادة تعيين
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
-            <CardBody className="pt-3 flex-1 flex flex-col min-h-0">
-              <div className="space-y-2 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-slate-100 pr-1">
+            <CardBody className="pt-4 flex-1 flex flex-col min-h-0" aria-labelledby="filters-panel-title">
+              <div className="space-y-3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-slate-100 pr-1" role="group" aria-label="خيارات الفلترة">
+                {/* Quick Filters */}
+                <div className="mb-4 pb-3 border-b-2 border-slate-200">
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                    <MaterialIcon name="star" className="inline-block ml-1" size="sm" />
+                    فلاتر سريعة
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      onClick={() => {
+                        setIsActiveFilter('active');
+                        setCurrentPage(1);
+                      }}
+                      variant={isActiveFilter === 'active' ? 'primary' : 'outline'}
+                      size="sm"
+                      className="text-xs"
+                      leftIcon={<MaterialIcon name="check_circle" size="sm" />}
+                    >
+                      نشط فقط
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsActiveFilter('inactive');
+                        setCurrentPage(1);
+                      }}
+                      variant={isActiveFilter === 'inactive' ? 'primary' : 'outline'}
+                      size="sm"
+                      className="text-xs"
+                      leftIcon={<MaterialIcon name="cancel" size="sm" />}
+                    >
+                      غير نشط
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setMinValue('');
+                        setMaxValue('');
+                        setMinPurchaseValue('');
+                        setMaxPurchaseValue('');
+                        setMinCurrentValue('');
+                        setMaxCurrentValue('');
+                        setCurrentPage(1);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      leftIcon={<MaterialIcon name="attach_money" size="sm" />}
+                    >
+                      مسح القيم
+                    </Button>
+                  </div>
+                </div>
+
                 {/* البحث العام */}
-                <div className="mb-3">
+                <div className="mb-4 pb-3 border-b-2 border-slate-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-semibold text-slate-600">
+                      <MaterialIcon name="search" className="inline-block ml-1" size="sm" />
+                      البحث السريع
+                      <span className="text-xs text-slate-400 mr-2">(Ctrl+K)</span>
+                    </label>
+                    <Button
+                      onClick={() => setAdvancedSearchOpen(!advancedSearchOpen)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      leftIcon={<MaterialIcon name={advancedSearchOpen ? "expand_less" : "expand_more"} size="sm" />}
+                    >
+                      <span className="hidden sm:inline">بحث متقدم</span>
+                    </Button>
+                  </div>
+                  <div className="relative">
                   <Input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="ابحث..."
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => {
+                      if (searchSuggestions.length > 0) setShowSuggestions(true);
+                    }}
+                    onBlur={() => {
+                      // Delay to allow clicking on suggestions
+                      setTimeout(() => setShowSuggestions(false), 200);
+                    }}
+                    placeholder="ابحث في جميع الحقول..."
                     leftIcon={<MaterialIcon name="search" size="sm" />}
                     className="w-full"
+                    aria-label="البحث السريع في جميع الحقول"
+                    aria-autocomplete="list"
+                    aria-expanded={showSuggestions}
+                    aria-controls="search-suggestions"
+                    role="combobox"
                   />
+                    {showSuggestions && searchSuggestions.length > 0 && (
+                      <div 
+                        id="search-suggestions"
+                        className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-slate-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto animate-scale-in"
+                        role="listbox"
+                        aria-label="اقتراحات البحث"
+                      >
+                        {searchSuggestions.map((suggestion, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setSearchTerm(suggestion);
+                              setShowSuggestions(false);
+                            }}
+                            className="w-full px-4 py-2 text-right text-sm text-slate-700 hover:bg-primary-50 transition-colors flex items-center gap-2 border-b border-slate-100 last:border-b-0 focus:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            role="option"
+                            aria-label={`اختر ${suggestion}`}
+                          >
+                            <MaterialIcon name="search" className="text-primary-500" size="sm" aria-hidden="true" />
+                            <span className="flex-1">{suggestion}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {searchTerm && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSearchSuggestions([]);
+                        setShowSuggestions(false);
+                      }}
+                      className="mt-2 text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                    >
+                      <MaterialIcon name="close" size="sm" />
+                      مسح البحث
+                    </button>
+                  )}
+
+                  {/* Saved Searches */}
+                  {searchTerm && searchTerm.length > 2 && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <Button
+                        onClick={() => {
+                          const newSearch = {
+                            id: `search-${Date.now()}-${Math.random()}`,
+                            name: `بحث: ${searchTerm.substring(0, 20)}...`,
+                            searchTerm,
+                            searchFields: {
+                              assetName: Boolean(searchFields.assetName && searchFields.assetName.length > 0),
+                              assetTag: Boolean(searchFields.assetTag && searchFields.assetTag.length > 0),
+                              serialNumber: Boolean(searchFields.serialNumber && searchFields.serialNumber.length > 0),
+                              description: Boolean(searchFields.description && searchFields.description.length > 0),
+                            },
+                            date: new Date(),
+                          };
+                          setSavedSearches(prev => {
+                            const updated = [newSearch, ...prev].slice(0, 10);
+                            localStorage.setItem('reportsSavedSearches', JSON.stringify(updated));
+                            return updated;
+                          });
+                          showSuccess('تم حفظ البحث');
+                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                        leftIcon={<MaterialIcon name="bookmark" size="sm" />}
+                      >
+                        حفظ البحث
+                      </Button>
+                      {savedSearches.length > 0 && (
+                        <Button
+                          onClick={() => setShowSavedSearchesModal(true)}
+                          variant="outline"
+                          size="sm"
+                          className="text-xs"
+                          leftIcon={<MaterialIcon name="history" size="sm" />}
+                        >
+                          البحوث المحفوظة ({savedSearches.length})
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Advanced Search */}
+                  {advancedSearchOpen && (
+                    <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2 animate-fade-in">
+                      <div className="text-xs font-semibold text-slate-700 mb-2">البحث في حقول محددة:</div>
+                      <div className="grid grid-cols-1 gap-2">
+                        <Input
+                          type="text"
+                          value={searchFields.assetName}
+                          onChange={(e) => setSearchFields(prev => ({ ...prev, assetName: e.target.value }))}
+                          placeholder="اسم الأصل..."
+                          leftIcon={<MaterialIcon name="inventory_2" size="sm" />}
+                          className="text-sm"
+                        />
+                        <Input
+                          type="text"
+                          value={searchFields.assetTag}
+                          onChange={(e) => setSearchFields(prev => ({ ...prev, assetTag: e.target.value }))}
+                          placeholder="رقم الأصل..."
+                          leftIcon={<MaterialIcon name="tag" size="sm" />}
+                          className="text-sm"
+                        />
+                        <Input
+                          type="text"
+                          value={searchFields.serialNumber}
+                          onChange={(e) => setSearchFields(prev => ({ ...prev, serialNumber: e.target.value }))}
+                          placeholder="الرقم التسلسلي..."
+                          leftIcon={<MaterialIcon name="qr_code" size="sm" />}
+                          className="text-sm"
+                        />
+                        <Input
+                          type="text"
+                          value={searchFields.description}
+                          onChange={(e) => setSearchFields(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="الوصف..."
+                          leftIcon={<MaterialIcon name="description" size="sm" />}
+                          className="text-sm"
+                        />
+                      </div>
+                      {(searchFields.assetName || searchFields.assetTag || searchFields.serialNumber || searchFields.description) && (
+                        <Button
+                          onClick={() => {
+                            setSearchFields({
+                              assetName: '',
+                              assetType: '',
+                              assetStatus: '',
+                              department: '',
+                              office: '',
+                              custodian: '',
+                              assetTag: '',
+                              serialNumber: '',
+                              description: '',
+                            });
+                          }}
+                          variant="outline"
+                          size="sm"
+                          fullWidth
+                          leftIcon={<MaterialIcon name="close" size="sm" />}
+                          className="text-xs mt-2"
+                        >
+                          مسح جميع الحقول
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* فلتر الإدارات */}
@@ -1495,22 +2635,22 @@ function ReportsPageContent() {
                 <div className="border-2 border-slate-200/60 rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 hover:border-primary-300/50">
                   <button
                     onClick={() => setFilterOpenStates(prev => ({ ...prev, status: !prev.status }))}
-                    className="w-full p-4 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-300 flex items-center justify-between group"
+                    className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-200 flex items-center justify-between group"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
                         <MaterialIcon
                           name={filterOpenStates.status ? "expand_less" : "expand_more"}
                           className="text-primary-600"
-                          size="md"
+                          size="sm"
                         />
                       </div>
                       <div className="flex items-center gap-2">
                         <MaterialIcon name="toggle_on" className="text-slate-500" size="sm" />
-                        <span className="font-semibold text-slate-700">الحالة</span>
+                        <span className="font-semibold text-slate-700 text-sm">الحالة</span>
                       </div>
                       {isActiveFilter !== 'all' && (
-                        <Badge variant="primary" size="sm" className="animate-scale-in">
+                        <Badge variant="primary" size="sm" className="animate-scale-in text-xs">
                           {isActiveFilter === 'active' ? 'نشط' : 'غير نشط'}
                         </Badge>
                       )}
@@ -1518,22 +2658,52 @@ function ReportsPageContent() {
                   </button>
 
                   {filterOpenStates.status && (
-                    <div className="p-4 border-t border-slate-200 bg-white filter-panel-open space-y-2">
-                      <Checkbox
-                        checked={isActiveFilter === 'all'}
-                        onChange={() => setIsActiveFilter('all')}
-                        label="الكل"
-                      />
-                      <Checkbox
-                        checked={isActiveFilter === 'active'}
-                        onChange={() => setIsActiveFilter('active')}
-                        label="نشط فقط"
-                      />
-                      <Checkbox
-                        checked={isActiveFilter === 'inactive'}
-                        onChange={() => setIsActiveFilter('inactive')}
-                        label="غير نشط فقط"
-                      />
+                    <div className="p-3 border-t border-slate-200 bg-white filter-panel-open space-y-2 animate-fade-in">
+                      <div 
+                        className={`p-2.5 rounded-lg transition-all cursor-pointer ${
+                          isActiveFilter === 'all' 
+                            ? 'bg-primary-50 border-2 border-primary-200' 
+                            : 'hover:bg-slate-50 border-2 border-transparent'
+                        }`}
+                        onClick={() => setIsActiveFilter('all')}
+                      >
+                        <Checkbox
+                          checked={isActiveFilter === 'all'}
+                          onChange={() => setIsActiveFilter('all')}
+                          label="الكل"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div 
+                        className={`p-2.5 rounded-lg transition-all cursor-pointer ${
+                          isActiveFilter === 'active' 
+                            ? 'bg-primary-50 border-2 border-primary-200' 
+                            : 'hover:bg-slate-50 border-2 border-transparent'
+                        }`}
+                        onClick={() => setIsActiveFilter('active')}
+                      >
+                        <Checkbox
+                          checked={isActiveFilter === 'active'}
+                          onChange={() => setIsActiveFilter('active')}
+                          label="نشط فقط"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div 
+                        className={`p-2.5 rounded-lg transition-all cursor-pointer ${
+                          isActiveFilter === 'inactive' 
+                            ? 'bg-primary-50 border-2 border-primary-200' 
+                            : 'hover:bg-slate-50 border-2 border-transparent'
+                        }`}
+                        onClick={() => setIsActiveFilter('inactive')}
+                      >
+                        <Checkbox
+                          checked={isActiveFilter === 'inactive'}
+                          onChange={() => setIsActiveFilter('inactive')}
+                          label="غير نشط فقط"
+                          className="text-sm"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1542,22 +2712,22 @@ function ReportsPageContent() {
                 <div className="border-2 border-slate-200/60 rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 hover:border-primary-300/50">
                   <button
                     onClick={() => setFilterOpenStates(prev => ({ ...prev, dates: !prev.dates }))}
-                    className="w-full p-4 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-300 flex items-center justify-between group"
+                    className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-200 flex items-center justify-between group"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
                         <MaterialIcon
                           name={filterOpenStates.dates ? "expand_less" : "expand_more"}
                           className="text-primary-600"
-                          size="md"
+                          size="sm"
                         />
                       </div>
                       <div className="flex items-center gap-2">
                         <MaterialIcon name="calendar_today" className="text-slate-500" size="sm" />
-                        <span className="font-semibold text-slate-700">تاريخ الشراء</span>
+                        <span className="font-semibold text-slate-700 text-sm">تاريخ الشراء</span>
                       </div>
                       {(purchaseDateFrom || purchaseDateTo) && (
-                        <Badge variant="primary" size="sm" className="animate-scale-in">
+                        <Badge variant="primary" size="sm" className="animate-scale-in text-xs">
                           مفعل
                         </Badge>
                       )}
@@ -1565,44 +2735,58 @@ function ReportsPageContent() {
                   </button>
 
                   {filterOpenStates.dates && (
-                    <div className="p-4 border-t border-slate-200 bg-white filter-panel-open">
+                    <div className="p-3 border-t border-slate-200 bg-white filter-panel-open animate-fade-in">
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-xs font-semibold text-slate-600 mb-2">من تاريخ</label>
+                          <label className="block text-xs font-semibold text-slate-600 mb-2">
+                            <MaterialIcon name="event" className="inline-block ml-1" size="sm" />
+                            من تاريخ
+                          </label>
                           <Input
                             type="date"
                             value={purchaseDateFrom}
                             onChange={(e) => setPurchaseDateFrom(e.target.value)}
                             leftIcon={<MaterialIcon name="event" size="sm" />}
                             className="w-full"
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-slate-600 mb-2">إلى تاريخ</label>
+                          <label className="block text-xs font-semibold text-slate-600 mb-2">
+                            <MaterialIcon name="event" className="inline-block ml-1" size="sm" />
+                            إلى تاريخ
+                          </label>
                           <Input
                             type="date"
                             value={purchaseDateTo}
                             onChange={(e) => setPurchaseDateTo(e.target.value)}
                             leftIcon={<MaterialIcon name="event" size="sm" />}
                             className="w-full"
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
+                        {(purchaseDateFrom || purchaseDateTo) && (
+                          <Button
+                            onClick={() => {
+                              setPurchaseDateFrom('');
+                              setPurchaseDateTo('');
+                            }}
+                            variant="outline"
+                            size="sm"
+                            fullWidth
+                            leftIcon={<MaterialIcon name="close" size="sm" />}
+                            className="text-xs"
+                          >
+                            مسح التواريخ
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* أزرار التحكم */}
-                <div className="pt-3 mt-3 border-t border-slate-200 space-y-2 sticky bottom-0 bg-white pb-2 z-10">
-                  <Button
-                    onClick={resetFilters}
-                    variant="outline"
-                    fullWidth
-                    size="sm"
-                    leftIcon={<MaterialIcon name="refresh" size="sm" />}
-                  >
-                    إعادة تعيين
-                  </Button>
+                <div className="pt-4 mt-4 border-t-2 border-slate-200 space-y-2 sticky bottom-0 bg-white pb-2 z-10">
                   {filteredAssets.length > 0 && (
                     <>
                       <div className="relative" ref={exportButtonRef}>
@@ -1619,25 +2803,65 @@ function ReportsPageContent() {
                         {exportDropdownOpen && (
                           <div className="absolute bottom-full left-0 right-0 mb-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in">
                             <button
-                              onClick={exportToCSV}
-                              className="w-full px-4 py-3 text-right hover:bg-success-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px]"
+                              onClick={() => {
+                                setShowExportColumnsModal(true);
+                                setExportDropdownOpen(false);
+                              }}
+                              className="w-full px-4 py-3 text-right hover:bg-slate-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-b border-slate-200"
                             >
-                              <MaterialIcon name="description" className="text-success-600" size="sm" />
-                              <span>تصدير إلى CSV</span>
+                              <MaterialIcon name="settings" className="text-slate-600" size="sm" />
+                              <span>تخصيص الأعمدة</span>
+                            </button>
+                            <button
+                              onClick={exportToCSV}
+                              disabled={isExporting}
+                              className="w-full px-4 py-3 text-right hover:bg-success-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-t border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isExporting && exportType === 'CSV' ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-success-600 border-t-transparent rounded-full animate-spin" />
+                                  <span>جاري التصدير...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <MaterialIcon name="description" className="text-success-600" size="sm" />
+                                  <span>تصدير إلى CSV</span>
+                                </>
+                              )}
                             </button>
                             <button
                               onClick={exportToExcel}
-                              className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px]"
+                              disabled={isExporting}
+                              className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
-                              <span>تصدير إلى Excel</span>
+                              {isExporting && exportType === 'Excel' ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                                  <span>جاري التصدير...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
+                                  <span>تصدير إلى Excel</span>
+                                </>
+                              )}
                             </button>
                             <button
                               onClick={exportToPDF}
-                              className="w-full px-4 py-3 text-right hover:bg-error-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px]"
+                              disabled={isExporting}
+                              className="w-full px-4 py-3 text-right hover:bg-error-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <MaterialIcon name="picture_as_pdf" className="text-error-600" size="sm" />
-                              <span>تصدير إلى PDF</span>
+                              {isExporting && exportType === 'PDF' ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-error-600 border-t-transparent rounded-full animate-spin" />
+                                  <span>جاري التصدير...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <MaterialIcon name="picture_as_pdf" className="text-error-600" size="sm" />
+                                  <span>تصدير إلى PDF</span>
+                                </>
+                              )}
                             </button>
                           </div>
                         )}
@@ -1651,6 +2875,17 @@ function ReportsPageContent() {
                       >
                         طباعة
                       </Button>
+                      <Button
+                        onClick={copyToClipboard}
+                        variant="outline"
+                        fullWidth
+                        leftIcon={<MaterialIcon name="content_copy" size="sm" />}
+                        className="font-semibold"
+                        disabled={filteredAssets.length === 0 || isCopying}
+                        isLoading={isCopying}
+                      >
+                        {isCopying ? 'جاري النسخ...' : 'نسخ إلى الحافظة'}
+                      </Button>
                     </>
                   )}
                 </div>
@@ -1661,12 +2896,82 @@ function ReportsPageContent() {
 
         {/* جدول النتائج */}
         <div className="flex-1 min-w-0 w-full">
-          <Card className="shadow-md border border-slate-200 bg-white w-full">
+          <Card className="shadow-lg border-2 border-slate-200 bg-white w-full">
             <CardHeader 
-              className="pb-3 border-b border-slate-200 flex-shrink-0"
+              className="pb-3 border-b-2 border-slate-200 flex-shrink-0 bg-gradient-to-r from-slate-50 to-white"
               action={
                 filteredAssets.length > 0 ? (
                   <div className="flex items-center gap-2 flex-wrap">
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                      <Button
+                        onClick={() => setViewMode('table')}
+                        variant={viewMode === 'table' ? 'primary' : 'ghost'}
+                        size="sm"
+                        className="px-2"
+                        leftIcon={<MaterialIcon name="table_chart" size="sm" />}
+                      >
+                        <span className="hidden sm:inline">جدول</span>
+                      </Button>
+                      <Button
+                        onClick={() => setViewMode('grid')}
+                        variant={viewMode === 'grid' ? 'primary' : 'ghost'}
+                        size="sm"
+                        className="px-2"
+                        leftIcon={<MaterialIcon name="dashboard" size="sm" />}
+                      >
+                        <span className="hidden sm:inline">شبكة</span>
+                      </Button>
+                    </div>
+
+                    {/* Column Visibility Toggle */}
+                    {viewMode === 'table' && (
+                      <div className="relative" ref={columnVisibilityRef}>
+                        <Button
+                          onClick={() => setColumnVisibilityOpen(!columnVisibilityOpen)}
+                          variant="outline"
+                          size="sm"
+                          leftIcon={<MaterialIcon name="visibility" size="sm" />}
+                          rightIcon={<MaterialIcon name={columnVisibilityOpen ? "expand_less" : "expand_more"} size="sm" />}
+                        >
+                          <span className="hidden sm:inline">الأعمدة</span>
+                        </Button>
+                        {columnVisibilityOpen && (
+                          <div className="absolute top-full left-0 mt-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in min-w-[200px] bg-white border border-slate-200">
+                            <div className="p-2 space-y-1 max-h-64 overflow-y-auto">
+                              {[
+                                { key: 'department', label: 'الإدارة' },
+                                { key: 'office', label: 'المكتب' },
+                                { key: 'assetName', label: 'اسم الأصل' },
+                                { key: 'assetType', label: 'نوع الأصل' },
+                                { key: 'assetStatus', label: 'حالة الأصل' },
+                                { key: 'custodian', label: 'حامل الأصل' },
+                                { key: 'assetTag', label: 'رقم الأصل' },
+                                { key: 'value', label: 'القيمة' },
+                              ].map(({ key, label }) => (
+                                <label
+                                  key={key}
+                                  className="flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg cursor-pointer transition-colors"
+                                >
+                                  <Checkbox
+                                    checked={visibleColumns[key as keyof typeof visibleColumns]}
+                                    onChange={() => {
+                                      setVisibleColumns(prev => ({
+                                        ...prev,
+                                        [key]: !prev[key as keyof typeof visibleColumns],
+                                      }));
+                                    }}
+                                    label={label}
+                                    className="text-sm"
+                                  />
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="relative" ref={exportButtonRef}>
                       <Button
                         onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
@@ -1675,33 +2980,90 @@ function ReportsPageContent() {
                         leftIcon={<MaterialIcon name="download" size="sm" />}
                         rightIcon={<MaterialIcon name={exportDropdownOpen ? "expand_less" : "expand_more"} size="sm" />}
                       >
-                        تصدير
+                        <span className="hidden sm:inline">تصدير</span>
                       </Button>
-                      {exportDropdownOpen && (
-                        <div className="absolute top-full left-0 mt-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in min-w-[180px]">
-                          <button
-                            onClick={exportToCSV}
-                            className="w-full px-4 py-3 text-right hover:bg-success-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px]"
-                          >
-                            <MaterialIcon name="description" className="text-success-600" size="sm" />
-                            <span>CSV</span>
-                          </button>
-                          <button
-                            onClick={exportToExcel}
-                            className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px]"
-                          >
-                            <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
-                            <span>Excel</span>
-                          </button>
-                          <button
-                            onClick={exportToPDF}
-                            className="w-full px-4 py-3 text-right hover:bg-error-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px]"
-                          >
-                            <MaterialIcon name="picture_as_pdf" className="text-error-600" size="sm" />
-                            <span>PDF</span>
-                          </button>
-                        </div>
-                      )}
+                        {exportDropdownOpen && (
+                          <div className="absolute top-full left-0 mt-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in min-w-[180px]">
+                            <button
+                              onClick={() => {
+                                setShowExportColumnsModal(true);
+                                setExportDropdownOpen(false);
+                              }}
+                              className="w-full px-4 py-3 text-right hover:bg-slate-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-b border-slate-200"
+                            >
+                              <MaterialIcon name="settings" className="text-slate-600" size="sm" />
+                              <span>تخصيص الأعمدة</span>
+                            </button>
+                            {exportHistory.length > 0 && (
+                              <button
+                                onClick={() => {
+                                  setShowExportHistory(true);
+                                  setExportDropdownOpen(false);
+                                }}
+                                className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-b border-slate-200"
+                              >
+                                <MaterialIcon name="history" className="text-primary-600" size="sm" />
+                                <span>سجل التصدير</span>
+                                {exportHistory.length > 0 && (
+                                  <Badge variant="primary" size="sm" className="mr-auto">
+                                    {exportHistory.length}
+                                  </Badge>
+                                )}
+                              </button>
+                            )}
+                            <button
+                              onClick={exportToCSV}
+                              disabled={isExporting}
+                              className="w-full px-4 py-3 text-right hover:bg-success-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-t border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isExporting && exportType === 'CSV' ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-success-600 border-t-transparent rounded-full animate-spin" />
+                                  <span>جاري التصدير...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <MaterialIcon name="description" className="text-success-600" size="sm" />
+                                  <span>CSV</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={exportToExcel}
+                              disabled={isExporting}
+                              className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isExporting && exportType === 'Excel' ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                                  <span>جاري التصدير...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
+                                  <span>Excel</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={exportToPDF}
+                              disabled={isExporting}
+                              className="w-full px-4 py-3 text-right hover:bg-error-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isExporting && exportType === 'PDF' ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-error-600 border-t-transparent rounded-full animate-spin" />
+                                  <span>جاري التصدير...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <MaterialIcon name="picture_as_pdf" className="text-error-600" size="sm" />
+                                  <span>PDF</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
                     </div>
                     <Button
                       onClick={handlePrint}
@@ -1709,17 +3071,97 @@ function ReportsPageContent() {
                       size="sm"
                       leftIcon={<MaterialIcon name="print" size="sm" />}
                     >
-                      طباعة
+                      <span className="hidden sm:inline">طباعة</span>
                     </Button>
+                    <Button
+                      onClick={copyToClipboard}
+                      variant="outline"
+                      size="sm"
+                      leftIcon={<MaterialIcon name="content_copy" size="sm" />}
+                      disabled={filteredAssets.length === 0 || isCopying}
+                      isLoading={isCopying}
+                      className="disabled:opacity-50"
+                      title="نسخ البيانات إلى الحافظة"
+                    >
+                      <span className="hidden sm:inline">{isCopying ? 'جاري النسخ...' : 'نسخ'}</span>
+                    </Button>
+                    {selectedRows.size > 0 && (
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-100 rounded-lg border-2 border-primary-300 shadow-sm animate-fade-in">
+                        <Badge variant="primary" size="sm" className="font-bold">
+                          {selectedRows.size}
+                        </Badge>
+                        <span className="text-xs font-semibold text-primary-700 hidden sm:inline">عنصر محدد</span>
+                        <div className="flex items-center gap-1 mr-2 border-r border-primary-300 pr-2">
+                          <Button
+                            onClick={() => {
+                              const selectedAssets = sortedAndPaginatedAssets.filter((_, idx) => 
+                                selectedRows.has((currentPage - 1) * itemsPerPage + idx)
+                              );
+                              const text = selectedAssets.map((assetDetail, idx) => {
+                                return `${idx + 1}. ${assetDetail.assetName} - ${assetDetail.departmentName}/${assetDetail.officeName} - ${assetDetail.value.toLocaleString('ar-SA')} ريال`;
+                              }).join('\n');
+                              const summary = `إجمالي: ${selectedAssets.length} أصل\nالقيمة الإجمالية: ${selectedAssets.reduce((sum, ad) => sum + ad.value, 0).toLocaleString('ar-SA')} ريال\n\n${text}`;
+                              navigator.clipboard.writeText(summary).then(() => {
+                                showSuccess(`تم نسخ ${selectedAssets.length} أصل محدد إلى الحافظة`);
+                              }).catch(() => {
+                                showError('فشل نسخ البيانات');
+                              });
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            leftIcon={<MaterialIcon name="content_copy" size="sm" />}
+                            title="نسخ المحدد"
+                          >
+                            <span className="hidden sm:inline">نسخ</span>
+                          </Button>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            setSelectedRows(new Set());
+                            setSelectAllMode(false);
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs p-1"
+                          leftIcon={<MaterialIcon name="close" size="sm" />}
+                          aria-label="إلغاء التحديد"
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : undefined
               }
             >
-              <div className="flex items-center justify-between w-full">
+              <div className="flex items-center justify-between w-full flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
-                  <span className="text-base font-semibold text-slate-800">النتائج ({filteredAssets.length})</span>
+                  <span className="text-base font-semibold text-slate-800" id="results-count" aria-live="polite" aria-atomic="true">
+                    النتائج ({filteredAssets.length.toLocaleString('ar-SA')})
+                  </span>
+                  {filteredAssets.length > itemsPerPage && (
+                    <span className="text-xs text-slate-500">
+                      (صفحة {currentPage} من {totalPages})
+                    </span>
+                  )}
                 </div>
+                {filteredAssets.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-slate-600 font-medium">عدد العناصر:</label>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                      className="text-xs border border-slate-300 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={250}>250</option>
+                      <option value={500}>500</option>
+                      <option value={1000}>1000</option>
+                    </select>
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardBody className="p-4">
@@ -1731,131 +3173,642 @@ function ReportsPageContent() {
                   </div>
                   <h3 className="text-2xl font-bold text-slate-700 mb-3">لا توجد نتائج</h3>
                   <p className="text-slate-500 mb-6">جرب تغيير الفلاتر أو البحث</p>
-                  <Button
-                    onClick={resetFilters}
-                    variant="outline"
-                    leftIcon={<MaterialIcon name="refresh" size="sm" />}
-                    className="transition-all hover:scale-105"
-                  >
-                    إعادة تعيين الفلاتر
-                  </Button>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Button
+                      onClick={resetFilters}
+                      variant="outline"
+                      leftIcon={<MaterialIcon name="refresh" size="sm" />}
+                      className="transition-all hover:scale-105"
+                    >
+                      إعادة تعيين الفلاتر
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setSearchTerm('');
+                        setCurrentPage(1);
+                      }}
+                      variant="outline"
+                      leftIcon={<MaterialIcon name="search" size="sm" />}
+                      className="transition-all hover:scale-105"
+                    >
+                      مسح البحث
+                    </Button>
+                  </div>
+                  <div className="mt-6 p-4 bg-slate-50 rounded-lg max-w-md mx-auto">
+                    <p className="text-sm text-slate-600 mb-2 font-semibold">اقتراحات:</p>
+                    <ul className="text-xs text-slate-500 text-right space-y-1">
+                      <li>• تأكد من أن الفلاتر المحددة صحيحة</li>
+                      <li>• جرب البحث بكلمات مختلفة</li>
+                      <li>• أزل بعض الفلاتر لتوسيع النتائج</li>
+                      <li>• تحقق من نطاق القيم المحدد</li>
+                    </ul>
+                  </div>
+                </div>
+              ) : viewMode === 'grid' ? (
+                <div className="w-full">
+                  {/* Grid View */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {sortedAndPaginatedAssets.map((assetDetail, idx) => {
+                      const globalIndex = (currentPage - 1) * itemsPerPage + idx;
+                      const isSelected = selectedRows.has(globalIndex);
+                      return (
+                      <Card 
+                        key={idx} 
+                        className={`hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-2 ${
+                          isSelected ? 'border-primary-400 bg-primary-50/50' : 'border-slate-200/60'
+                        } bg-gradient-to-br from-white to-slate-50/30 cursor-pointer`}
+                        onClick={() => {
+                          setSelectedRows(prev => {
+                            const newSet = new Set(prev);
+                            if (newSet.has(globalIndex)) {
+                              newSet.delete(globalIndex);
+                            } else {
+                              newSet.add(globalIndex);
+                            }
+                            return newSet;
+                          });
+                        }}
+                      >
+                        <CardBody padding="md">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between border-b-2 border-primary-200/50 pb-2">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-sm font-bold text-slate-900 truncate mb-1">{assetDetail.assetName}</h3>
+                                <Badge variant="outline" size="sm" className="text-xs">
+                                  {assetDetail.assetStatus}
+                                </Badge>
+                              </div>
+                              <div className="text-left flex-shrink-0 mr-2">
+                                <div className="text-base font-black text-success-600">
+                                  {assetDetail.value.toLocaleString('ar-SA')}
+                                </div>
+                                <div className="text-xs text-success-600">ريال</div>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5 text-xs">
+                              <div className="flex items-center gap-1.5 text-slate-600">
+                                <MaterialIcon name="business" className="text-primary-500" size="sm" />
+                                <span className="truncate">{assetDetail.departmentName}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-slate-600">
+                                <MaterialIcon name="meeting_room" className="text-primary-500" size="sm" />
+                                <span className="truncate">{assetDetail.officeName}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-slate-600">
+                                <MaterialIcon name="category" className="text-primary-500" size="sm" />
+                                <span className="truncate">{assetDetail.assetType}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-slate-600">
+                                <MaterialIcon name="person" className="text-primary-500" size="sm" />
+                                <span className="truncate">{assetDetail.custodianName}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                      );
+                    })}
+                  </div>
+
+                  {/* Grid View Pagination */}
+                  {filteredAssets.length > itemsPerPage && (
+                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <span>
+                          عرض {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAssets.length)} من {filteredAssets.length.toLocaleString('ar-SA')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() => handlePageChange(1)}
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage === 1}
+                          className="disabled:opacity-50"
+                        >
+                          <MaterialIcon name="arrow_back" size="sm" />
+                        </Button>
+                        <Button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage === 1}
+                          className="disabled:opacity-50"
+                        >
+                          <MaterialIcon name="chevron_right" size="sm" />
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum: number;
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = currentPage - 2 + i;
+                            }
+                            return (
+                              <Button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                variant={currentPage === pageNum ? "primary" : "outline"}
+                                size="sm"
+                                className="min-w-[40px]"
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                        <Button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage === totalPages}
+                          className="disabled:opacity-50"
+                        >
+                          <MaterialIcon name="chevron_left" size="sm" />
+                        </Button>
+                        <Button
+                          onClick={() => handlePageChange(totalPages)}
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage === totalPages}
+                          className="disabled:opacity-50"
+                        >
+                          <MaterialIcon name="arrow_forward" size="sm" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="w-full">
+                  {/* Mobile/Tablet Card View */}
+                  <div className="lg:hidden space-y-3 mb-4">
+                    {sortedAndPaginatedAssets.map((assetDetail, idx) => {
+                      const globalIndex = (currentPage - 1) * itemsPerPage + idx;
+                      const isSelected = selectedRows.has(globalIndex);
+                      return (
+                      <Card 
+                        key={idx} 
+                        className={`hover:shadow-lg transition-all duration-300 border-2 ${
+                          isSelected ? 'border-primary-400 bg-primary-50/50' : 'border-slate-200/60'
+                        } bg-gradient-to-br from-white to-slate-50/30 cursor-pointer`}
+                        onClick={() => {
+                          setSelectedRows(prev => {
+                            const newSet = new Set(prev);
+                            if (newSet.has(globalIndex)) {
+                              newSet.delete(globalIndex);
+                            } else {
+                              newSet.add(globalIndex);
+                            }
+                            return newSet;
+                          });
+                        }}
+                      >
+                        <CardBody padding="md">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between border-b-2 border-primary-200/50 pb-2">
+                              <div className="flex items-start gap-2 flex-1 min-w-0">
+                                <Checkbox
+                                  checked={isSelected}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedRows(prev => {
+                                      const newSet = new Set(prev);
+                                      if (newSet.has(globalIndex)) {
+                                        newSet.delete(globalIndex);
+                                      } else {
+                                        newSet.add(globalIndex);
+                                      }
+                                      return newSet;
+                                    });
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="mt-1 flex-shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-base font-bold text-slate-900 mb-1 truncate">{assetDetail.assetName}</h3>
+                                  <Badge variant="outline" size="sm" className="text-xs">
+                                    {assetDetail.assetStatus}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="text-left flex-shrink-0 mr-2">
+                                <div className="text-lg font-black text-success-600">
+                                  {assetDetail.value.toLocaleString('ar-SA')}
+                                </div>
+                                <div className="text-xs text-success-600">ريال</div>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 gap-2 text-sm">
+                              {visibleColumns.department && (
+                                <div className="flex items-center gap-2 text-slate-600">
+                                  <MaterialIcon name="business" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <span className="truncate">{assetDetail.departmentName}</span>
+                                </div>
+                              )}
+                              {visibleColumns.office && (
+                                <div className="flex items-center gap-2 text-slate-600">
+                                  <MaterialIcon name="meeting_room" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <span className="truncate">{assetDetail.officeName}</span>
+                                </div>
+                              )}
+                              {visibleColumns.assetType && (
+                                <div className="flex items-center gap-2 text-slate-600">
+                                  <MaterialIcon name="category" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <span className="truncate">{assetDetail.assetType}</span>
+                                </div>
+                              )}
+                              {visibleColumns.custodian && (
+                                <div className="flex items-center gap-2 text-slate-600">
+                                  <MaterialIcon name="person" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <span className="truncate">{assetDetail.custodianName}</span>
+                                </div>
+                              )}
+                              {visibleColumns.assetTag && (
+                                <div className="flex items-center gap-2 text-slate-600">
+                                  <MaterialIcon name="tag" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <span className="truncate font-mono text-xs">
+                                    {assetDetail.asset.get('asset_tag') || '-'}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                      );
+                    })}
+                  </div>
+
                   {/* Desktop Table View */}
-                  <div className="hidden lg:block w-full overflow-x-auto reports-table-wrapper">
-                    <table className="w-full text-sm border-collapse">
+                  <div className="hidden lg:block w-full overflow-x-auto reports-table-wrapper rounded-lg border border-slate-200">
+                    <table className="w-full text-sm border-collapse" role="table" aria-label="جدول الأصول المفلترة">
                       <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 first:border-l-0 min-w-[120px]">
-                            <div className="flex items-center gap-2 justify-end">
-                              <MaterialIcon name="business" className="text-primary-600" size="sm" />
-                              <span>الإدارة</span>
-                            </div>
-                          </th>
-                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
-                            <div className="flex items-center gap-2 justify-end">
-                              <MaterialIcon name="meeting_room" className="text-primary-600" size="sm" />
-                              <span>المكتب</span>
-                            </div>
-                          </th>
-                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[150px]">
-                            <div className="flex items-center gap-2 justify-end">
-                              <MaterialIcon name="inventory_2" className="text-primary-600" size="sm" />
-                              <span>اسم الأصل</span>
-                            </div>
-                          </th>
-                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
-                            <div className="flex items-center gap-2 justify-end">
-                              <MaterialIcon name="category" className="text-primary-600" size="sm" />
-                              <span>نوع الأصل</span>
-                            </div>
-                          </th>
-                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
-                            <div className="flex items-center gap-2 justify-end">
-                              <MaterialIcon name="info" className="text-primary-600" size="sm" />
-                              <span>حالة الأصل</span>
-                            </div>
-                          </th>
-                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
-                            <div className="flex items-center gap-2 justify-end">
-                              <MaterialIcon name="person" className="text-primary-600" size="sm" />
-                              <span>حامل الأصل</span>
-                            </div>
-                          </th>
-                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[100px]">
-                            <div className="flex items-center gap-2 justify-end">
-                              <MaterialIcon name="tag" className="text-primary-600" size="sm" />
-                              <span>رقم الأصل</span>
-                            </div>
-                          </th>
-                          <th className="text-right p-3 font-semibold text-slate-700 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
-                            <div className="flex items-center gap-2 justify-end">
-                              <MaterialIcon name="attach_money" className="text-primary-600" size="sm" />
-                              <span>القيمة</span>
-                            </div>
-                          </th>
+                        <tr className="bg-gradient-to-r from-primary-50 via-slate-50 to-primary-50 border-b-2 border-primary-200" role="row">
+                          {visibleColumns.department && (
+                            <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 first:border-l-0 min-w-[140px] sticky right-0 bg-inherit" role="columnheader" scope="col">
+                              <button
+                                onClick={() => handleSort('department')}
+                                className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                                aria-label={`ترتيب حسب الإدارة ${sortColumn === 'department' ? (sortDirection === 'asc' ? 'تصاعدي' : 'تنازلي') : ''}`}
+                                aria-sort={sortColumn === 'department' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                              >
+                                <MaterialIcon name="business" className="text-primary-600" size="sm" />
+                                <span>الإدارة</span>
+                                {sortColumn === 'department' && (
+                                  <MaterialIcon 
+                                    name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
+                                    className="text-primary-600" 
+                                    size="sm" 
+                                  />
+                                )}
+                              </button>
+                            </th>
+                          )}
+                          {visibleColumns.office && (
+                            <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[140px]">
+                              <button
+                                onClick={() => handleSort('office')}
+                                className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
+                              >
+                                <MaterialIcon name="meeting_room" className="text-primary-600" size="sm" />
+                                <span>المكتب</span>
+                                {sortColumn === 'office' && (
+                                  <MaterialIcon 
+                                    name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
+                                    className="text-primary-600" 
+                                    size="sm" 
+                                  />
+                                )}
+                              </button>
+                            </th>
+                          )}
+                          {visibleColumns.assetName && (
+                            <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[180px]">
+                              <button
+                                onClick={() => handleSort('assetName')}
+                                className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
+                              >
+                                <MaterialIcon name="inventory_2" className="text-primary-600" size="sm" />
+                                <span>اسم الأصل</span>
+                                {sortColumn === 'assetName' && (
+                                  <MaterialIcon 
+                                    name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
+                                    className="text-primary-600" 
+                                    size="sm" 
+                                  />
+                                )}
+                              </button>
+                            </th>
+                          )}
+                          {visibleColumns.assetType && (
+                            <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[140px]">
+                              <button
+                                onClick={() => handleSort('assetType')}
+                                className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
+                              >
+                                <MaterialIcon name="category" className="text-primary-600" size="sm" />
+                                <span>نوع الأصل</span>
+                                {sortColumn === 'assetType' && (
+                                  <MaterialIcon 
+                                    name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
+                                    className="text-primary-600" 
+                                    size="sm" 
+                                  />
+                                )}
+                              </button>
+                            </th>
+                          )}
+                          {visibleColumns.assetStatus && (
+                            <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[140px]">
+                              <button
+                                onClick={() => handleSort('assetStatus')}
+                                className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
+                              >
+                                <MaterialIcon name="info" className="text-primary-600" size="sm" />
+                                <span>حالة الأصل</span>
+                                {sortColumn === 'assetStatus' && (
+                                  <MaterialIcon 
+                                    name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
+                                    className="text-primary-600" 
+                                    size="sm" 
+                                  />
+                                )}
+                              </button>
+                            </th>
+                          )}
+                          {visibleColumns.custodian && (
+                            <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[140px]">
+                              <button
+                                onClick={() => handleSort('custodian')}
+                                className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
+                              >
+                                <MaterialIcon name="person" className="text-primary-600" size="sm" />
+                                <span>حامل الأصل</span>
+                                {sortColumn === 'custodian' && (
+                                  <MaterialIcon 
+                                    name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
+                                    className="text-primary-600" 
+                                    size="sm" 
+                                  />
+                                )}
+                              </button>
+                            </th>
+                          )}
+                          {visibleColumns.assetTag && (
+                            <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[120px]">
+                              <div className="flex items-center gap-2 justify-end">
+                                <MaterialIcon name="tag" className="text-primary-600" size="sm" />
+                                <span>رقم الأصل</span>
+                              </div>
+                            </th>
+                          )}
+                          {visibleColumns.value && (
+                            <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[140px] sticky left-0 bg-inherit z-10 shadow-lg">
+                              <button
+                                onClick={() => handleSort('value')}
+                                className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
+                              >
+                                <MaterialIcon name="attach_money" className="text-primary-600" size="sm" />
+                                <span>القيمة</span>
+                                {sortColumn === 'value' && (
+                                  <MaterialIcon 
+                                    name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
+                                    className="text-primary-600" 
+                                    size="sm" 
+                                  />
+                                )}
+                              </button>
+                            </th>
+                          )}
                           </tr>
                         </thead>
                       <tbody>
-                        {filteredAssets.map((assetDetail, idx) => (
+                        {sortedAndPaginatedAssets.map((assetDetail, idx) => {
+                          const globalIndex = (currentPage - 1) * itemsPerPage + idx;
+                          const isSelected = selectedRows.has(globalIndex);
+                          return (
                           <tr 
                             key={idx} 
-                            className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${
-                              idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-                            }`}
+                            className={`border-b border-slate-200 hover:bg-primary-50/30 transition-all duration-150 cursor-pointer ${
+                              idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
+                            } ${isSelected ? 'bg-primary-100 border-primary-300' : ''}`}
+                            role="row"
+                            aria-rowindex={idx + 1}
+                            onClick={() => {
+                              setSelectedRows(prev => {
+                                const newSet = new Set(prev);
+                                if (newSet.has(globalIndex)) {
+                                  newSet.delete(globalIndex);
+                                } else {
+                                  newSet.add(globalIndex);
+                                }
+                                return newSet;
+                              });
+                            }}
                           >
-                            <td className="p-3 text-slate-700 text-sm border-l border-slate-100">
-                              <span className="truncate block max-w-[150px]" title={assetDetail.departmentName}>{assetDetail.departmentName}</span>
+                            <td className="p-2 border-l border-slate-200 sticky right-0 bg-inherit z-10" onClick={(e) => e.stopPropagation()} role="gridcell">
+                              <Checkbox
+                                checked={isSelected}
+                                onChange={() => {
+                                  setSelectedRows(prev => {
+                                    const newSet = new Set(prev);
+                                    if (newSet.has(globalIndex)) {
+                                      newSet.delete(globalIndex);
+                                    } else {
+                                      newSet.add(globalIndex);
+                                    }
+                                    return newSet;
+                                  });
+                                }}
+                                aria-label={`تحديد ${assetDetail.assetName}`}
+                                onClick={(e) => e.stopPropagation()}
+                              />
                             </td>
-                            <td className="p-3 text-slate-700 text-sm border-l border-slate-100">
-                              <span className="truncate block max-w-[150px]" title={assetDetail.officeName}>{assetDetail.officeName}</span>
-                            </td>
-                            <td className="p-3 text-slate-900 font-semibold text-sm border-l border-slate-100">
-                              <span className="truncate block max-w-[200px]" title={assetDetail.assetName}>{assetDetail.assetName}</span>
-                            </td>
-                            <td className="p-3 text-slate-700 text-sm border-l border-slate-100">
-                              <span className="truncate block max-w-[150px]" title={assetDetail.assetType}>{assetDetail.assetType}</span>
-                            </td>
-                            <td className="p-3 border-l border-slate-100">
-                              <Badge variant="outline" size="sm" className="whitespace-nowrap">
-                                {assetDetail.assetStatus}
-                              </Badge>
-                            </td>
-                            <td className="p-3 text-slate-700 text-sm border-l border-slate-100">
-                              <span className="truncate block max-w-[150px]" title={assetDetail.custodianName}>{assetDetail.custodianName}</span>
-                            </td>
-                            <td className="p-3 text-slate-600 font-mono text-xs border-l border-slate-100">
-                              <span className="truncate block max-w-[100px]" title={assetDetail.asset.get('asset_tag') || '-'}>{assetDetail.asset.get('asset_tag') || '-'}</span>
-                            </td>
-                            <td className="p-3 text-slate-900 font-semibold text-sm border-l border-slate-100 text-right">
-                              <div className="flex items-center gap-1 justify-end whitespace-nowrap">
-                                <span>{assetDetail.value.toLocaleString('ar-SA')}</span>
-                                <span className="text-slate-500 text-xs">ريال</span>
-                              </div>
-                            </td>
+                            {visibleColumns.department && (
+                              <td className="p-4 text-slate-700 text-sm border-l border-slate-200" role="gridcell" aria-label={`الإدارة: ${assetDetail.departmentName}`}>
+                                <div className="flex items-center gap-2">
+                                  <span className="truncate block max-w-[160px]" title={assetDetail.departmentName}>
+                                    {assetDetail.departmentName}
+                                  </span>
+                                </div>
+                              </td>
+                            )}
+                            {visibleColumns.office && (
+                              <td className="p-4 text-slate-700 text-sm border-l border-slate-200">
+                                <span className="truncate block max-w-[160px]" title={assetDetail.officeName}>
+                                  {assetDetail.officeName}
+                                </span>
+                              </td>
+                            )}
+                            {visibleColumns.assetName && (
+                              <td className="p-4 text-slate-900 font-bold text-sm border-l border-slate-200">
+                                <div className="flex items-center gap-2">
+                                  <MaterialIcon name="inventory_2" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <span className="truncate block max-w-[220px]" title={assetDetail.assetName}>
+                                    {assetDetail.assetName}
+                                  </span>
+                                </div>
+                              </td>
+                            )}
+                            {visibleColumns.assetType && (
+                              <td className="p-4 text-slate-700 text-sm border-l border-slate-200">
+                                <span className="truncate block max-w-[160px]" title={assetDetail.assetType}>
+                                  {assetDetail.assetType}
+                                </span>
+                              </td>
+                            )}
+                            {visibleColumns.assetStatus && (
+                              <td className="p-4 border-l border-slate-200">
+                                <Badge variant="outline" size="sm" className="whitespace-nowrap font-semibold">
+                                  {assetDetail.assetStatus}
+                                </Badge>
+                              </td>
+                            )}
+                            {visibleColumns.custodian && (
+                              <td className="p-4 text-slate-700 text-sm border-l border-slate-200">
+                                <div className="flex items-center gap-2">
+                                  <MaterialIcon name="person" className="text-slate-400 flex-shrink-0" size="sm" />
+                                  <span className="truncate block max-w-[160px]" title={assetDetail.custodianName}>
+                                    {assetDetail.custodianName}
+                                  </span>
+                                </div>
+                              </td>
+                            )}
+                            {visibleColumns.assetTag && (
+                              <td className="p-4 text-slate-600 font-mono text-xs border-l border-slate-200 bg-slate-50/50">
+                                <div className="flex items-center gap-1">
+                                  <MaterialIcon name="tag" className="text-slate-400" size="sm" />
+                                  <span className="truncate block max-w-[120px]" title={assetDetail.asset.get('asset_tag') || '-'}>
+                                    {assetDetail.asset.get('asset_tag') || '-'}
+                                  </span>
+                                </div>
+                              </td>
+                            )}
+                            {visibleColumns.value && (
+                              <td className="p-4 text-slate-900 font-bold text-sm border-l border-slate-200 text-right sticky left-0 bg-inherit z-10 shadow-lg">
+                                <div className="flex items-center gap-1 justify-end whitespace-nowrap">
+                                  <MaterialIcon name="attach_money" className="text-success-600" size="sm" />
+                                  <span className="text-success-700">{assetDetail.value.toLocaleString('ar-SA')}</span>
+                                  <span className="text-slate-500 text-xs">ريال</span>
+                                </div>
+                              </td>
+                            )}
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                       <tfoot>
-                        <tr className="bg-slate-100 border-t-2 border-slate-300 font-semibold">
-                          <td colSpan={7} className="p-3 text-right text-slate-900 text-sm border-l border-slate-200">
-                            <span>الإجمالي:</span>
-                          </td>
-                          <td className="p-3 text-slate-900 text-base border-l border-slate-200 text-right">
-                            <div className="flex items-center gap-1 justify-end">
-                              <span>{totalFilteredValue.toLocaleString('ar-SA')}</span>
-                              <span className="text-slate-600 text-sm">ريال</span>
+                        <tr className="bg-gradient-to-r from-primary-100 via-slate-100 to-primary-100 border-t-2 border-primary-300 font-bold">
+                          <td 
+                            colSpan={Object.values(visibleColumns).filter(v => v).length - (visibleColumns.value ? 1 : 0)} 
+                            className="p-4 text-right text-slate-900 text-sm border-l border-slate-200"
+                          >
+                            <div className="flex items-center gap-2 justify-end">
+                              <MaterialIcon name="calculate" className="text-primary-600" size="sm" />
+                              <span>الإجمالي:</span>
                             </div>
                           </td>
+                          {visibleColumns.value && (
+                            <td className="p-4 text-slate-900 text-lg border-l border-slate-200 text-right sticky left-0 bg-inherit z-10 shadow-lg">
+                              <div className="flex items-center gap-1 justify-end">
+                                <MaterialIcon name="attach_money" className="text-success-600" size="md" />
+                                <span className="text-success-700">{totalFilteredValue.toLocaleString('ar-SA')}</span>
+                                <span className="text-slate-600 text-sm">ريال</span>
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       </tfoot>
                     </table>
                   </div>
 
+                  {/* Pagination Controls */}
+                  {filteredAssets.length > itemsPerPage && (
+                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <span>
+                          عرض {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAssets.length)} من {filteredAssets.length.toLocaleString('ar-SA')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() => handlePageChange(1)}
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage === 1}
+                          leftIcon={<MaterialIcon name="arrow_back" size="sm" />}
+                          className="disabled:opacity-50"
+                        >
+                          <span className="hidden sm:inline">الأولى</span>
+                        </Button>
+                        <Button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage === 1}
+                          leftIcon={<MaterialIcon name="chevron_right" size="sm" />}
+                          className="disabled:opacity-50"
+                        >
+                          <span className="hidden sm:inline">السابقة</span>
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum: number;
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = currentPage - 2 + i;
+                            }
+                            return (
+                              <Button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                variant={currentPage === pageNum ? "primary" : "outline"}
+                                size="sm"
+                                className="min-w-[40px]"
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                        <Button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage === totalPages}
+                          rightIcon={<MaterialIcon name="chevron_left" size="sm" />}
+                          className="disabled:opacity-50"
+                        >
+                          <span className="hidden sm:inline">التالية</span>
+                        </Button>
+                        <Button
+                          onClick={() => handlePageChange(totalPages)}
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage === totalPages}
+                          rightIcon={<MaterialIcon name="arrow_forward" size="sm" />}
+                          className="disabled:opacity-50"
+                        >
+                          <span className="hidden sm:inline">الأخيرة</span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Mobile/Tablet Card View */}
                   <div className="lg:hidden space-y-3">
-                    {filteredAssets.map((assetDetail, idx) => (
+                    {sortedAndPaginatedAssets.map((assetDetail, idx) => (
                       <Card 
                         key={idx} 
                         className="hover:shadow-xl transition-all duration-300 hover:scale-[1.01] border-2 border-slate-200/60 bg-gradient-to-br from-white to-slate-50/30 animate-fade-in"
@@ -1967,6 +3920,78 @@ function ReportsPageContent() {
                         </div>
                       </CardBody>
                     </Card>
+
+                    {/* Mobile Pagination */}
+                    {filteredAssets.length > itemsPerPage && (
+                      <div className="mt-4 flex flex-col items-center gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="text-sm text-slate-600 text-center">
+                          عرض {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAssets.length)} من {filteredAssets.length.toLocaleString('ar-SA')}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap justify-center">
+                          <Button
+                            onClick={() => handlePageChange(1)}
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage === 1}
+                            className="disabled:opacity-50"
+                          >
+                            <MaterialIcon name="arrow_back" size="sm" />
+                          </Button>
+                          <Button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage === 1}
+                            className="disabled:opacity-50"
+                          >
+                            <MaterialIcon name="chevron_right" size="sm" />
+                          </Button>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNum: number;
+                              if (totalPages <= 5) {
+                                pageNum = i + 1;
+                              } else if (currentPage <= 3) {
+                                pageNum = i + 1;
+                              } else if (currentPage >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                              } else {
+                                pageNum = currentPage - 2 + i;
+                              }
+                              return (
+                                <Button
+                                  key={pageNum}
+                                  onClick={() => handlePageChange(pageNum)}
+                                  variant={currentPage === pageNum ? "primary" : "outline"}
+                                  size="sm"
+                                  className="min-w-[36px]"
+                                >
+                                  {pageNum}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                          <Button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage === totalPages}
+                            className="disabled:opacity-50"
+                          >
+                            <MaterialIcon name="chevron_left" size="sm" />
+                          </Button>
+                          <Button
+                            onClick={() => handlePageChange(totalPages)}
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage === totalPages}
+                            className="disabled:opacity-50"
+                          >
+                            <MaterialIcon name="arrow_forward" size="sm" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1974,6 +3999,331 @@ function ReportsPageContent() {
           </Card>
         </div>
       </div>
+
+      {/* Export Columns Modal */}
+      {showExportColumnsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowExportColumnsModal(false)}>
+          <Card 
+            className="w-full max-w-md bg-white shadow-2xl animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="border-b-2 border-slate-200 bg-gradient-to-r from-primary-50 to-slate-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MaterialIcon name="settings" className="text-primary-600" size="md" />
+                  <span className="text-lg font-bold text-slate-800">تخصيص أعمدة التصدير</span>
+                </div>
+                <Button
+                  onClick={() => setShowExportColumnsModal(false)}
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<MaterialIcon name="close" size="sm" />}
+                />
+              </div>
+            </CardHeader>
+            <CardBody className="p-4">
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {[
+                  { key: 'department', label: 'الإدارة' },
+                  { key: 'office', label: 'المكتب' },
+                  { key: 'assetName', label: 'اسم الأصل' },
+                  { key: 'assetType', label: 'نوع الأصل' },
+                  { key: 'assetStatus', label: 'حالة الأصل' },
+                  { key: 'custodian', label: 'حامل الأصل' },
+                  { key: 'assetTag', label: 'رقم الأصل' },
+                  { key: 'serialNumber', label: 'الرقم التسلسلي' },
+                  { key: 'value', label: 'القيمة' },
+                  { key: 'purchaseValue', label: 'القيمة الشرائية' },
+                  { key: 'currentValue', label: 'القيمة الحالية' },
+                  { key: 'purchaseDate', label: 'تاريخ الشراء' },
+                  { key: 'lastMaintenanceDate', label: 'تاريخ آخر صيانة' },
+                  { key: 'description', label: 'الوصف' },
+                  { key: 'notes', label: 'ملاحظات' },
+                ].map(({ key, label }) => (
+                  <label
+                    key={key}
+                    className="flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg cursor-pointer transition-colors"
+                  >
+                    <Checkbox
+                      checked={exportColumns[key as keyof typeof exportColumns]}
+                      onChange={() => {
+                        setExportColumns(prev => ({
+                          ...prev,
+                          [key]: !prev[key as keyof typeof exportColumns],
+                        }));
+                      }}
+                      label={label}
+                      className="text-sm"
+                    />
+                  </label>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-200">
+                <Button
+                  onClick={() => {
+                    setExportColumns({
+                      department: true,
+                      office: true,
+                      assetName: true,
+                      assetType: true,
+                      assetStatus: true,
+                      custodian: true,
+                      assetTag: true,
+                      serialNumber: true,
+                      value: true,
+                      purchaseValue: true,
+                      currentValue: true,
+                      purchaseDate: true,
+                      lastMaintenanceDate: true,
+                      description: true,
+                      notes: true,
+                    });
+                  }}
+                  variant="outline"
+                  size="sm"
+                  fullWidth
+                  leftIcon={<MaterialIcon name="check_box" size="sm" />}
+                >
+                  تحديد الكل
+                </Button>
+                <Button
+                  onClick={() => {
+                    setExportColumns({
+                      department: false,
+                      office: false,
+                      assetName: false,
+                      assetType: false,
+                      assetStatus: false,
+                      custodian: false,
+                      assetTag: false,
+                      serialNumber: false,
+                      value: false,
+                      purchaseValue: false,
+                      currentValue: false,
+                      purchaseDate: false,
+                      lastMaintenanceDate: false,
+                      description: false,
+                      notes: false,
+                    });
+                  }}
+                  variant="outline"
+                  size="sm"
+                  fullWidth
+                  leftIcon={<MaterialIcon name="check_box_outline_blank" size="sm" />}
+                >
+                  إلغاء الكل
+                </Button>
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <Button
+                  onClick={() => setShowExportColumnsModal(false)}
+                  variant="primary"
+                  fullWidth
+                  leftIcon={<MaterialIcon name="check" size="sm" />}
+                >
+                  حفظ
+                </Button>
+                <Button
+                  onClick={() => setShowExportColumnsModal(false)}
+                  variant="outline"
+                  fullWidth
+                  leftIcon={<MaterialIcon name="close" size="sm" />}
+                >
+                  إلغاء
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      )}
+
+      {/* Saved Searches Modal */}
+      {showSavedSearchesModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowSavedSearchesModal(false)}>
+          <Card 
+            className="w-full max-w-lg bg-white shadow-2xl animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="border-b-2 border-slate-200 bg-gradient-to-r from-primary-50 to-slate-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MaterialIcon name="bookmark" className="text-primary-600" size="md" />
+                  <span className="text-lg font-bold text-slate-800">البحوث المحفوظة</span>
+                </div>
+                <Button
+                  onClick={() => setShowSavedSearchesModal(false)}
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<MaterialIcon name="close" size="sm" />}
+                />
+              </div>
+            </CardHeader>
+            <CardBody className="p-4">
+              {savedSearches.length === 0 ? (
+                <div className="text-center py-8">
+                  <MaterialIcon name="bookmark_border" className="text-slate-400 mx-auto mb-3" size="3xl" />
+                  <p className="text-slate-600">لا توجد بحوث محفوظة</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {savedSearches.map((search) => (
+                    <div
+                      key={search.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-slate-800 truncate">{search.name}</div>
+                        <div className="text-xs text-slate-600 truncate">{search.searchTerm}</div>
+                        <div className="text-xs text-slate-500 mt-1">
+                          {search.date.toLocaleDateString('ar-SA', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mr-2">
+                        <Button
+                          onClick={() => {
+                            setSearchTerm(search.searchTerm);
+                            // Apply saved search fields - convert boolean to string for searchFields state
+                            if (search.searchFields && typeof search.searchFields === 'object') {
+                              setSearchFields(prev => ({
+                                ...prev,
+                                assetName: search.searchFields.assetName ? (prev.assetName || search.searchTerm) : '',
+                                assetTag: search.searchFields.assetTag ? (prev.assetTag || search.searchTerm) : '',
+                                serialNumber: search.searchFields.serialNumber ? (prev.serialNumber || search.searchTerm) : '',
+                                description: search.searchFields.description ? (prev.description || search.searchTerm) : '',
+                              }));
+                            }
+                            setShowSavedSearchesModal(false);
+                            showSuccess('تم تطبيق البحث المحفوظ');
+                          }}
+                          variant="primary"
+                          size="sm"
+                          className="text-xs"
+                          leftIcon={<MaterialIcon name="search" size="sm" />}
+                        >
+                          تطبيق
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setSavedSearches(prev => {
+                              const updated = prev.filter(s => s.id !== search.id);
+                              localStorage.setItem('reportsSavedSearches', JSON.stringify(updated));
+                              return updated;
+                            });
+                            showSuccess('تم حذف البحث');
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          leftIcon={<MaterialIcon name="delete" size="sm" />}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+      )}
+
+      {/* Export History Modal */}
+      {showExportHistory && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowExportHistory(false)}>
+          <Card 
+            className="w-full max-w-lg bg-white shadow-2xl animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="border-b-2 border-slate-200 bg-gradient-to-r from-primary-50 to-slate-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MaterialIcon name="history" className="text-primary-600" size="md" />
+                  <span className="text-lg font-bold text-slate-800">سجل التصدير</span>
+                </div>
+                <Button
+                  onClick={() => setShowExportHistory(false)}
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<MaterialIcon name="close" size="sm" />}
+                />
+              </div>
+            </CardHeader>
+            <CardBody className="p-4">
+              {exportHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <MaterialIcon name="history" className="text-slate-400 mx-auto mb-3" size="3xl" />
+                  <p className="text-slate-600">لا يوجد سجل تصدير</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {exportHistory.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          entry.type === 'CSV' ? 'bg-success-100' :
+                          entry.type === 'Excel' ? 'bg-primary-100' :
+                          'bg-error-100'
+                        }`}>
+                          <MaterialIcon
+                            name={
+                              entry.type === 'CSV' ? 'description' :
+                              entry.type === 'Excel' ? 'table_chart' :
+                              'picture_as_pdf'
+                            }
+                            className={
+                              entry.type === 'CSV' ? 'text-success-600' :
+                              entry.type === 'Excel' ? 'text-primary-600' :
+                              'text-error-600'
+                            }
+                            size="sm"
+                          />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-800">{entry.type}</div>
+                          <div className="text-xs text-slate-600">
+                            {entry.count.toLocaleString('ar-SA')} أصل • {entry.columns} عمود
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-slate-500 text-left">
+                        {entry.date.toLocaleDateString('ar-SA', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {exportHistory.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <Button
+                    onClick={() => {
+                      setExportHistory([]);
+                      localStorage.removeItem('reportsExportHistory');
+                      showInfo('تم مسح سجل التصدير');
+                    }}
+                    variant="outline"
+                    fullWidth
+                    leftIcon={<MaterialIcon name="delete" size="sm" />}
+                  >
+                    مسح السجل
+                  </Button>
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+      )}
       </div>
     </MainLayout>
   );

@@ -851,9 +851,12 @@ function AssetsPageContent() {
         }
       }
       
-      // جمع المستخدمين الفريدين (فقط إذا لم يكونوا موجودين في Map)
-      if (custodianName && custodianName.trim() && !usersMap.has(custodianName.trim())) {
-        uniqueUsers.add(custodianName.trim());
+      // جمع المستخدمين الفريدين (فقط إذا لم يكونوا موجودين في Map) - المقارنة بالاسم الكامل (full_name) وليس username
+      if (custodianName && custodianName.trim()) {
+        const custodianNameTrimmed = custodianName.trim();
+        if (!usersMap.has(custodianNameTrimmed) && !uniqueUsers.has(custodianNameTrimmed)) {
+          uniqueUsers.add(custodianNameTrimmed);
+        }
       }
       
       // جمع العملات الفريدة (فقط إذا لم تكن موجودة في Map)
@@ -866,9 +869,12 @@ function AssetsPageContent() {
         uniqueAssetNames.add(assetName.trim());
       }
       
-      // جمع أنواع الأصول الفريدة (فقط إذا لم تكن موجودة في Map)
-      if (assetType && assetType.trim() && !assetTypesMap.has(assetType.trim())) {
-        uniqueAssetTypes.add(assetType.trim());
+      // جمع أنواع الأصول الفريدة (فقط إذا لم تكن موجودة في Map) - مع trim() لمنع التكرار
+      if (assetType && assetType.trim()) {
+        const assetTypeTrimmed = assetType.trim();
+        if (!assetTypesMap.has(assetTypeTrimmed) && !uniqueAssetTypes.has(assetTypeTrimmed)) {
+          uniqueAssetTypes.add(assetTypeTrimmed);
+        }
       }
       
       // جمع حالات الأصول الفريدة (فقط إذا لم تكن موجودة في Map)
@@ -936,10 +942,10 @@ function AssetsPageContent() {
       }
     }
 
-    // إضافة المستخدمين الفريدين (مع التحقق من عدم التكرار)
+    // إضافة المستخدمين الفريدين (مع التحقق من عدم التكرار) - المقارنة بالاسم الكامل (full_name) وليس username
     for (const userName of uniqueUsers) {
       const userNameTrimmed = userName.trim();
-      // التحقق مرة أخرى قبل الإضافة
+      // التحقق مرة أخرى قبل الإضافة (مع trim() للتأكد من عدم التكرار)
       if (userNameTrimmed && !usersMap.has(userNameTrimmed)) {
         const newUserId = firestoreApi.getNewId("users");
         const userDocRef = firestoreApi.getDocument("users", newUserId);
@@ -1009,10 +1015,10 @@ function AssetsPageContent() {
       }
     }
 
-    // إضافة أنواع الأصول الفريدة (مع التحقق من عدم التكرار)
+    // إضافة أنواع الأصول الفريدة (مع التحقق من عدم التكرار) - مع trim() لمنع التكرار
     for (const assetType of uniqueAssetTypes) {
       const assetTypeTrimmed = assetType.trim();
-      // التحقق مرة أخرى قبل الإضافة
+      // التحقق مرة أخرى قبل الإضافة (مع trim() للتأكد من عدم التكرار)
       if (assetTypeTrimmed && !assetTypesMap.has(assetTypeTrimmed)) {
         const newTypeId = firestoreApi.getNewId("assetTypes");
         const typeDocRef = firestoreApi.getDocument("assetTypes", newTypeId);
@@ -1101,10 +1107,11 @@ function AssetsPageContent() {
             assetNameId = found?.get('id') || '';
           }
 
-          // البحث عن type_id (تم إضافته في المرحلة الأولى) - مع trim
+          // البحث عن type_id (تم إضافته في المرحلة الأولى) - مع trim() لمنع التكرار
           let typeId = '';
           if (assetType && assetType.trim()) {
-            const found = assetTypesMap.get(assetType.trim());
+            const assetTypeTrimmed = assetType.trim();
+            const found = assetTypesMap.get(assetTypeTrimmed);
             typeId = found?.get('id') || '';
           }
 
@@ -1130,10 +1137,11 @@ function AssetsPageContent() {
             }
           }
 
-          // البحث عن custodian_user_id (تم إضافته في المرحلة الأولى) - مع trim
+          // البحث عن custodian_user_id (تم إضافته في المرحلة الأولى) - المقارنة بالاسم الكامل (full_name) وليس username - مع trim()
           let custodianUserId = '';
           if (custodianName && custodianName.trim()) {
-            const found = usersMap.get(custodianName.trim());
+            const custodianNameTrimmed = custodianName.trim();
+            const found = usersMap.get(custodianNameTrimmed);
             custodianUserId = found?.get('id') || '';
           }
 
