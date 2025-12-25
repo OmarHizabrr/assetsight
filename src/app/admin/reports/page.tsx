@@ -138,8 +138,8 @@ function AdvancedFilter({
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="ابحث في القائمة..."
-              leftIcon={<MaterialIcon name="search" size="sm" />}
-              className="w-full"
+              leftIcon={<MaterialIcon name="search" className="text-primary-500 flex-shrink-0" size="sm" />}
+              className="w-full focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
@@ -148,7 +148,7 @@ function AdvancedFilter({
           {filteredOptions.length > 0 && (
             <div className="mb-3 pb-3 border-b border-slate-200">
               <div
-                className="flex items-center gap-2 p-2 hover:bg-primary-50 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center gap-2 p-2 hover:bg-primary-50 hover:shadow-sm rounded-lg transition-all duration-200 cursor-pointer group"
                 onClick={handleSelectAll}
               >
                 <Checkbox
@@ -158,7 +158,7 @@ function AdvancedFilter({
                   className="text-sm font-medium"
                 />
                 {someFilteredSelected && !allFilteredSelected && (
-                  <Badge variant="outline" size="sm" className="text-xs">
+                  <Badge variant="outline" size="sm" className="text-xs transition-all duration-150 group-hover:scale-105">
                     جزئي
                   </Badge>
                 )}
@@ -170,8 +170,10 @@ function AdvancedFilter({
           <div className="max-h-64 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-slate-100 pr-1">
             {filteredOptions.length === 0 ? (
               <div className="text-center py-6">
-                <MaterialIcon name="search_off" className="text-slate-400 mx-auto mb-2" size="md" />
-                <p className="text-xs text-slate-500">لا توجد نتائج</p>
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                  <MaterialIcon name="search_off" className="text-slate-400 transition-transform duration-200" size="md" />
+                </div>
+                <p className="text-xs text-slate-500 font-medium">لا توجد نتائج</p>
               </div>
             ) : (
               filteredOptions.map((option) => {
@@ -179,9 +181,9 @@ function AdvancedFilter({
                 return (
                   <div
                     key={option.id}
-                    className={`flex items-center justify-between p-2.5 rounded-lg transition-all duration-150 cursor-pointer ${isSelected
-                        ? 'bg-primary-50 border-2 border-primary-200 shadow-sm'
-                        : 'hover:bg-slate-50 border-2 border-transparent'
+                    className={`flex items-center justify-between p-2.5 rounded-lg transition-all duration-200 cursor-pointer ${isSelected
+                        ? 'bg-gradient-to-r from-primary-50 to-primary-100/50 border-2 border-primary-200 shadow-md'
+                        : 'hover:bg-slate-50 hover:shadow-sm border-2 border-transparent hover:border-slate-200'
                       }`}
                     onClick={(e) => handleToggle(option.id, e)}
                   >
@@ -199,7 +201,7 @@ function AdvancedFilter({
                     <Badge
                       variant={isSelected ? "primary" : "outline"}
                       size="sm"
-                      className="text-xs flex-shrink-0"
+                      className="text-xs flex-shrink-0 transition-all duration-150 hover:scale-110 shadow-sm"
                     >
                       {option.count}
                     </Badge>
@@ -246,19 +248,19 @@ function RangeFilter({
         className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-200 flex items-center justify-between group"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 group-hover:from-primary-200 group-hover:to-primary-100 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:shadow-md group-hover:scale-110">
             <MaterialIcon
               name={isOpen ? "expand_less" : "expand_more"}
-              className="text-primary-600"
+              className="text-primary-600 transition-transform duration-200"
               size="sm"
             />
           </div>
           <div className="flex items-center gap-2">
-            {icon && <MaterialIcon name={icon} className="text-slate-500" size="sm" />}
-            <span className="font-semibold text-slate-700 text-sm">{title}</span>
+            {icon && <MaterialIcon name={icon} className="text-primary-500 flex-shrink-0 transition-colors duration-200" size="sm" />}
+            <span className="font-semibold text-slate-700 text-sm group-hover:text-primary-700 transition-colors duration-200">{title}</span>
           </div>
           {hasValue && (
-            <Badge variant="primary" size="sm" className="text-xs animate-scale-in">
+            <Badge variant="primary" size="sm" className="text-xs animate-scale-in shadow-sm transition-all duration-150 group-hover:scale-110">
               مفعل
             </Badge>
           )}
@@ -266,35 +268,35 @@ function RangeFilter({
       </button>
 
       {isOpen && (
-        <div className="p-3 border-t border-slate-200 bg-white animate-fade-in">
+        <div className="p-3 border-t border-slate-200 bg-gradient-to-br from-white to-slate-50/30 animate-fade-in backdrop-blur-sm">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-2">
-                <MaterialIcon name="arrow_downward" className="inline-block ml-1" size="sm" />
-                {placeholder.min}
+              <label className="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
+                <MaterialIcon name="arrow_downward" className="text-primary-500 flex-shrink-0" size="sm" />
+                <span>{placeholder.min}</span>
               </label>
               <Input
                 type="number"
                 value={minValue}
                 onChange={(e) => onMinChange(e.target.value)}
                 placeholder={placeholder.min}
-                className="w-full text-sm"
-                leftIcon={<MaterialIcon name="numbers" size="sm" />}
+                className="w-full text-sm focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
+                leftIcon={<MaterialIcon name="numbers" className="text-primary-500 flex-shrink-0" size="sm" />}
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-2">
-                <MaterialIcon name="arrow_upward" className="inline-block ml-1" size="sm" />
-                {placeholder.max}
+              <label className="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
+                <MaterialIcon name="arrow_upward" className="text-primary-500 flex-shrink-0" size="sm" />
+                <span>{placeholder.max}</span>
               </label>
               <Input
                 type="number"
                 value={maxValue}
                 onChange={(e) => onMaxChange(e.target.value)}
                 placeholder={placeholder.max}
-                className="w-full text-sm"
-                leftIcon={<MaterialIcon name="numbers" size="sm" />}
+                className="w-full text-sm focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
+                leftIcon={<MaterialIcon name="numbers" className="text-primary-500 flex-shrink-0" size="sm" />}
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
@@ -308,8 +310,9 @@ function RangeFilter({
               variant="outline"
               size="sm"
               fullWidth
-              leftIcon={<MaterialIcon name="close" size="sm" />}
-              className="text-xs mt-3"
+              leftIcon={<MaterialIcon name="close" className="transition-transform duration-200 group-hover:rotate-90" size="sm" />}
+              className="text-xs mt-3 group hover:shadow-md transition-all duration-200"
+              title="مسح جميع القيم"
             >
               مسح القيم
             </Button>
@@ -1979,10 +1982,10 @@ function ReportsPageContent() {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <Card className="max-w-md w-full">
+            <Card className="max-w-md w-full shadow-xl border-2 border-error-200 bg-gradient-to-br from-white to-error-50/30">
             <CardBody className="p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-error-100 flex items-center justify-center mx-auto mb-4">
-                <MaterialIcon name="error" className="text-error-600" size="2xl" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-error-100 to-error-50 flex items-center justify-center mx-auto mb-4 shadow-lg transition-all duration-300 hover:scale-110">
+                <MaterialIcon name="error" className="text-error-600 transition-transform duration-300" size="2xl" />
               </div>
               <h2 className="text-xl font-bold text-slate-900 mb-2">حدث خطأ</h2>
               <p className="text-slate-600 mb-4">{error}</p>
@@ -1992,7 +1995,9 @@ function ReportsPageContent() {
                   window.location.reload();
                 }}
                 variant="primary"
-                leftIcon={<MaterialIcon name="refresh" size="sm" />}
+                leftIcon={<MaterialIcon name="refresh" className="transition-transform duration-200 group-hover:rotate-180" size="sm" />}
+                className="group hover:shadow-md transition-all duration-200"
+                title="إعادة تحميل الصفحة"
               >
                 إعادة المحاولة
               </Button>
@@ -2009,8 +2014,8 @@ function ReportsPageContent() {
         {/* Page Header */}
         <div className="mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30 flex-shrink-0">
-              <MaterialIcon name="assessment" className="text-white" size="lg" />
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30 flex-shrink-0 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-primary-500/40">
+              <MaterialIcon name="assessment" className="text-white transition-transform duration-300 hover:scale-110" size="lg" />
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-0.5" id="reports-page-title">التقارير والإحصائيات</h1>
@@ -2024,63 +2029,63 @@ function ReportsPageContent() {
 
         {/* إحصائيات عامة */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
-          <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <Card className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
             <CardBody padding="sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-500 mb-1">إجمالي الأصول</p>
-                  <p className="text-2xl font-bold text-slate-900 transition-all duration-300">{stats.totalAssets.toLocaleString('ar-SA')}</p>
+                  <p className="text-xs font-medium text-slate-500 mb-1 group-hover:text-primary-600 transition-colors duration-200">إجمالي الأصول</p>
+                  <p className="text-2xl font-bold text-slate-900 transition-all duration-300 group-hover:text-primary-700">{stats.totalAssets.toLocaleString('ar-SA')}</p>
                   <p className="text-xs text-slate-500">أصل</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-primary-200">
-                  <MaterialIcon name="inventory" className="text-primary-600" size="md" />
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
+                  <MaterialIcon name="inventory" className="text-primary-600 transition-transform duration-200 group-hover:scale-110" size="md" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <Card className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
             <CardBody padding="sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-500 mb-1">القيمة الإجمالية</p>
-                  <p className="text-xl font-bold text-slate-900 truncate transition-all duration-300">
+                  <p className="text-xs font-medium text-slate-500 mb-1 group-hover:text-success-600 transition-colors duration-200">القيمة الإجمالية</p>
+                  <p className="text-xl font-bold text-slate-900 truncate transition-all duration-300 group-hover:text-success-700">
                     {stats.totalValue.toLocaleString('ar-SA')}
                   </p>
                   <p className="text-xs text-slate-500">ريال</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-success-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-success-200">
-                  <MaterialIcon name="attach_money" className="text-success-600" size="md" />
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-success-100 to-success-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
+                  <MaterialIcon name="attach_money" className="text-success-600 transition-transform duration-200 group-hover:scale-110" size="md" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <Card className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
             <CardBody padding="sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-500 mb-1">أصول نشطة</p>
-                  <p className="text-2xl font-bold text-slate-900 transition-all duration-300">{stats.activeAssets.toLocaleString('ar-SA')}</p>
+                  <p className="text-xs font-medium text-slate-500 mb-1 group-hover:text-accent-600 transition-colors duration-200">أصول نشطة</p>
+                  <p className="text-2xl font-bold text-slate-900 transition-all duration-300 group-hover:text-accent-700">{stats.activeAssets.toLocaleString('ar-SA')}</p>
                   <p className="text-xs text-slate-500">نشط</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-accent-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-accent-200">
-                  <MaterialIcon name="check_circle" className="text-accent-600" size="md" />
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-100 to-accent-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
+                  <MaterialIcon name="check_circle" className="text-accent-600 transition-transform duration-200 group-hover:scale-110" size="md" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <Card className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
             <CardBody padding="sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-500 mb-1">النتائج المفلترة</p>
-                  <p className="text-2xl font-bold text-slate-900 transition-all duration-300">{filteredAssets.length.toLocaleString('ar-SA')}</p>
+                  <p className="text-xs font-medium text-slate-500 mb-1 group-hover:text-warning-600 transition-colors duration-200">النتائج المفلترة</p>
+                  <p className="text-2xl font-bold text-slate-900 transition-all duration-300 group-hover:text-warning-700">{filteredAssets.length.toLocaleString('ar-SA')}</p>
                   <p className="text-xs text-slate-500">من {stats.totalAssets.toLocaleString('ar-SA')}</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-warning-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-warning-200">
-                  <MaterialIcon name="filter_list" className="text-warning-600" size="md" />
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-warning-100 to-warning-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
+                  <MaterialIcon name="filter_list" className="text-warning-600 transition-transform duration-200 group-hover:scale-110" size="md" />
                 </div>
               </div>
             </CardBody>
@@ -2187,10 +2192,10 @@ function ReportsPageContent() {
 
         {/* Summary Banner */}
         {filteredAssets.length > 0 && filteredAssets.length < allAssetDetails.length && (
-          <div className="mb-4 p-4 bg-gradient-to-r from-primary-50 via-blue-50 to-primary-50 border-2 border-primary-200 rounded-xl">
+          <div className="mb-4 p-4 bg-gradient-to-r from-primary-50 via-blue-50 to-primary-50 border-2 border-primary-200 rounded-xl shadow-sm backdrop-blur-sm">
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
-                <MaterialIcon name="info" className="text-primary-600" size="md" />
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center flex-shrink-0 shadow-md transition-all duration-200 hover:scale-110">
+                <MaterialIcon name="info" className="text-primary-600 transition-transform duration-200" size="md" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-slate-800">
@@ -2204,7 +2209,9 @@ function ReportsPageContent() {
                 onClick={resetFilters}
                 variant="outline"
                 size="sm"
-                leftIcon={<MaterialIcon name="refresh" size="sm" />}
+                leftIcon={<MaterialIcon name="refresh" className="transition-transform duration-200 group-hover:rotate-180" size="sm" />}
+                className="group hover:shadow-md transition-all duration-200"
+                title="إعادة تعيين جميع الفلاتر"
               >
                 عرض الكل
               </Button>
@@ -2215,12 +2222,12 @@ function ReportsPageContent() {
         <div className="flex flex-col lg:flex-row gap-4 w-full">
           {/* لوحة الفلاتر */}
           <div className="w-full lg:w-80 flex-shrink-0">
-            <Card className="lg:sticky lg:top-4 shadow-lg border-2 border-slate-200 bg-white h-fit lg:max-h-[calc(100vh-120px)] flex flex-col">
-              <CardHeader className="pb-3 border-b-2 border-slate-200 bg-gradient-to-r from-primary-50 to-slate-50">
+            <Card className="lg:sticky lg:top-4 shadow-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50/30 h-fit lg:max-h-[calc(100vh-120px)] flex flex-col backdrop-blur-sm">
+              <CardHeader className="pb-3 border-b-2 border-slate-200 bg-gradient-to-r from-primary-50 via-slate-50 to-primary-50 shadow-sm">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center">
-                      <MaterialIcon name="tune" className="text-primary-600" size="sm" />
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center shadow-md transition-all duration-200 hover:scale-110">
+                      <MaterialIcon name="tune" className="text-primary-600 transition-transform duration-200" size="sm" />
                     </div>
                     <span className="text-base font-bold text-slate-800" id="filters-panel-title">الفلاتر المتقدمة</span>
                   </div>
@@ -2288,7 +2295,9 @@ function ReportsPageContent() {
                                     variant="primary"
                                     size="sm"
                                     disabled={!presetName.trim()}
-                                    leftIcon={<MaterialIcon name="save" size="sm" />}
+                                    leftIcon={<MaterialIcon name="save" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                                    className="group hover:shadow-md transition-all duration-200"
+                                    title="حفظ مجموعة الفلاتر الحالية"
                                   >
                                     حفظ
                                   </Button>
@@ -2307,8 +2316,9 @@ function ReportsPageContent() {
                           onClick={resetFilters}
                           variant="outline"
                           size="sm"
-                          leftIcon={<MaterialIcon name="refresh" size="sm" />}
-                          className="text-xs"
+                          leftIcon={<MaterialIcon name="refresh" className="transition-transform duration-200 group-hover:rotate-180" size="sm" />}
+                          className="text-xs group hover:shadow-md transition-all duration-200"
+                          title="إعادة تعيين جميع الفلاتر"
                         >
                           إعادة تعيين
                         </Button>
@@ -2332,8 +2342,8 @@ function ReportsPageContent() {
                         }}
                         variant={isActiveFilter === 'active' ? 'primary' : 'outline'}
                         size="sm"
-                        className="text-xs"
-                        leftIcon={<MaterialIcon name="check_circle" size="sm" />}
+                        className="text-xs group hover:shadow-md transition-all duration-200"
+                        leftIcon={<MaterialIcon name="check_circle" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
                       >
                         نشط فقط
                       </Button>
@@ -2344,8 +2354,8 @@ function ReportsPageContent() {
                         }}
                         variant={isActiveFilter === 'inactive' ? 'primary' : 'outline'}
                         size="sm"
-                        className="text-xs"
-                        leftIcon={<MaterialIcon name="cancel" size="sm" />}
+                        className="text-xs group hover:shadow-md transition-all duration-200"
+                        leftIcon={<MaterialIcon name="cancel" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
                       >
                         غير نشط
                       </Button>
@@ -2361,8 +2371,9 @@ function ReportsPageContent() {
                         }}
                         variant="outline"
                         size="sm"
-                        className="text-xs"
-                        leftIcon={<MaterialIcon name="attach_money" size="sm" />}
+                        className="text-xs group hover:shadow-md transition-all duration-200"
+                        leftIcon={<MaterialIcon name="attach_money" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                        title="مسح جميع قيم الفلاتر"
                       >
                         مسح القيم
                       </Button>
@@ -2372,17 +2383,18 @@ function ReportsPageContent() {
                   {/* البحث العام */}
                   <div className="mb-4 pb-3 border-b-2 border-slate-200">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-xs font-semibold text-slate-600">
-                        <MaterialIcon name="search" className="inline-block ml-1" size="sm" />
-                        البحث السريع
+                      <label className="block text-xs font-semibold text-slate-600 flex items-center gap-1">
+                        <MaterialIcon name="search" className="text-primary-500 flex-shrink-0" size="sm" />
+                        <span>البحث السريع</span>
                         <span className="text-xs text-slate-400 mr-2">(Ctrl+K)</span>
                       </label>
                       <Button
                         onClick={() => setAdvancedSearchOpen(!advancedSearchOpen)}
                         variant="ghost"
                         size="sm"
-                        className="text-xs"
-                        leftIcon={<MaterialIcon name={advancedSearchOpen ? "expand_less" : "expand_more"} size="sm" />}
+                        className="text-xs group hover:bg-primary-50 transition-all duration-200"
+                        leftIcon={<MaterialIcon name={advancedSearchOpen ? "expand_less" : "expand_more"} className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                        title={advancedSearchOpen ? "إخفاء البحث المتقدم" : "إظهار البحث المتقدم"}
                       >
                         <span className="hidden sm:inline">بحث متقدم</span>
                       </Button>
@@ -2408,8 +2420,8 @@ function ReportsPageContent() {
                           setTimeout(() => setShowSuggestions(false), 200);
                         }}
                         placeholder="ابحث في جميع الحقول..."
-                        leftIcon={<MaterialIcon name="search" size="sm" />}
-                        className="w-full"
+                        leftIcon={<MaterialIcon name="search" className="text-primary-500 flex-shrink-0" size="sm" />}
+                        className="w-full focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
                         aria-label="البحث السريع في جميع الحقول"
                         aria-autocomplete="list"
                         aria-expanded={showSuggestions}
@@ -2419,7 +2431,7 @@ function ReportsPageContent() {
                       {showSuggestions && searchSuggestions.length > 0 && (
                         <div
                           id="search-suggestions"
-                          className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-slate-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto animate-scale-in"
+                          className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-primary-200 rounded-lg shadow-2xl z-50 max-h-60 overflow-y-auto animate-scale-in backdrop-blur-sm"
                           role="listbox"
                           aria-label="اقتراحات البحث"
                         >
@@ -2430,7 +2442,7 @@ function ReportsPageContent() {
                                 setSearchTerm(suggestion);
                                 setShowSuggestions(false);
                               }}
-                              className="w-full px-4 py-2 text-right text-sm text-slate-700 hover:bg-primary-50 transition-colors flex items-center gap-2 border-b border-slate-100 last:border-b-0 focus:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              className="w-full px-4 py-2 text-right text-sm text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-all duration-150 flex items-center gap-2 border-b border-slate-100 last:border-b-0 focus:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
                               role="option"
                               aria-label={`اختر ${suggestion}`}
                             >
@@ -2448,10 +2460,10 @@ function ReportsPageContent() {
                           setSearchSuggestions([]);
                           setShowSuggestions(false);
                         }}
-                        className="mt-2 text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                        className="mt-2 text-xs text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-2 py-1 rounded transition-all duration-150 flex items-center gap-1 group"
                       >
-                        <MaterialIcon name="close" size="sm" />
-                        مسح البحث
+                        <MaterialIcon name="close" className="transition-transform duration-200 group-hover:rotate-90" size="sm" />
+                        <span>مسح البحث</span>
                       </button>
                     )}
 
@@ -2481,8 +2493,9 @@ function ReportsPageContent() {
                           }}
                           variant="ghost"
                           size="sm"
-                          className="text-xs"
-                          leftIcon={<MaterialIcon name="bookmark" size="sm" />}
+                          className="text-xs group hover:shadow-md transition-all duration-200"
+                          leftIcon={<MaterialIcon name="bookmark" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                          title="حفظ البحث الحالي"
                         >
                           حفظ البحث
                         </Button>
@@ -2491,8 +2504,9 @@ function ReportsPageContent() {
                             onClick={() => setShowSavedSearchesModal(true)}
                             variant="outline"
                             size="sm"
-                            className="text-xs"
-                            leftIcon={<MaterialIcon name="history" size="sm" />}
+                            className="text-xs group hover:shadow-md transition-all duration-200"
+                            leftIcon={<MaterialIcon name="history" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                            title="عرض البحوث المحفوظة"
                           >
                             البحوث المحفوظة ({savedSearches.length})
                           </Button>
@@ -2502,40 +2516,43 @@ function ReportsPageContent() {
 
                     {/* Advanced Search */}
                     {advancedSearchOpen && (
-                      <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2 animate-fade-in">
-                        <div className="text-xs font-semibold text-slate-700 mb-2">البحث في حقول محددة:</div>
+                      <div className="mt-3 p-3 bg-gradient-to-br from-slate-50 to-white rounded-lg border border-slate-200 shadow-sm space-y-2 animate-fade-in backdrop-blur-sm">
+                        <div className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
+                          <MaterialIcon name="tune" className="text-primary-500 flex-shrink-0" size="sm" />
+                          <span>البحث في حقول محددة:</span>
+                        </div>
                         <div className="grid grid-cols-1 gap-2">
                           <Input
                             type="text"
                             value={searchFields.assetName}
                             onChange={(e) => setSearchFields(prev => ({ ...prev, assetName: e.target.value }))}
                             placeholder="اسم الأصل..."
-                            leftIcon={<MaterialIcon name="inventory_2" size="sm" />}
-                            className="text-sm"
+                            leftIcon={<MaterialIcon name="inventory_2" className="text-primary-500 flex-shrink-0" size="sm" />}
+                            className="text-sm focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
                           />
                           <Input
                             type="text"
                             value={searchFields.assetTag}
                             onChange={(e) => setSearchFields(prev => ({ ...prev, assetTag: e.target.value }))}
                             placeholder="رقم الأصل..."
-                            leftIcon={<MaterialIcon name="tag" size="sm" />}
-                            className="text-sm"
+                            leftIcon={<MaterialIcon name="tag" className="text-primary-500 flex-shrink-0" size="sm" />}
+                            className="text-sm focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
                           />
                           <Input
                             type="text"
                             value={searchFields.serialNumber}
                             onChange={(e) => setSearchFields(prev => ({ ...prev, serialNumber: e.target.value }))}
                             placeholder="الرقم التسلسلي..."
-                            leftIcon={<MaterialIcon name="qr_code" size="sm" />}
-                            className="text-sm"
+                            leftIcon={<MaterialIcon name="qr_code" className="text-primary-500 flex-shrink-0" size="sm" />}
+                            className="text-sm focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
                           />
                           <Input
                             type="text"
                             value={searchFields.description}
                             onChange={(e) => setSearchFields(prev => ({ ...prev, description: e.target.value }))}
                             placeholder="الوصف..."
-                            leftIcon={<MaterialIcon name="description" size="sm" />}
-                            className="text-sm"
+                            leftIcon={<MaterialIcon name="description" className="text-primary-500 flex-shrink-0" size="sm" />}
+                            className="text-sm focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
                           />
                         </div>
                         {(searchFields.assetName || searchFields.assetTag || searchFields.serialNumber || searchFields.description) && (
@@ -2556,8 +2573,9 @@ function ReportsPageContent() {
                             variant="outline"
                             size="sm"
                             fullWidth
-                            leftIcon={<MaterialIcon name="close" size="sm" />}
-                            className="text-xs mt-2"
+                            leftIcon={<MaterialIcon name="close" className="transition-transform duration-200 group-hover:rotate-90" size="sm" />}
+                            className="text-xs mt-2 group hover:shadow-md transition-all duration-200"
+                            title="مسح جميع حقول البحث"
                           >
                             مسح جميع الحقول
                           </Button>
@@ -3041,8 +3059,9 @@ function ReportsPageContent() {
                           onClick={() => setViewMode('table')}
                           variant={viewMode === 'table' ? 'primary' : 'ghost'}
                           size="sm"
-                          className="px-2"
-                          leftIcon={<MaterialIcon name="table_chart" size="sm" />}
+                          className="px-2 group hover:shadow-md transition-all duration-200"
+                          leftIcon={<MaterialIcon name="table_chart" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                          title="عرض الجدول"
                         >
                           <span className="hidden sm:inline">جدول</span>
                         </Button>
@@ -3050,8 +3069,9 @@ function ReportsPageContent() {
                           onClick={() => setViewMode('grid')}
                           variant={viewMode === 'grid' ? 'primary' : 'ghost'}
                           size="sm"
-                          className="px-2"
-                          leftIcon={<MaterialIcon name="dashboard" size="sm" />}
+                          className="px-2 group hover:shadow-md transition-all duration-200"
+                          leftIcon={<MaterialIcon name="dashboard" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                          title="عرض الشبكة"
                         >
                           <span className="hidden sm:inline">شبكة</span>
                         </Button>
@@ -3064,8 +3084,10 @@ function ReportsPageContent() {
                             onClick={() => setColumnVisibilityOpen(!columnVisibilityOpen)}
                             variant="outline"
                             size="sm"
-                            leftIcon={<MaterialIcon name="visibility" size="sm" />}
-                            rightIcon={<MaterialIcon name={columnVisibilityOpen ? "expand_less" : "expand_more"} size="sm" />}
+                            leftIcon={<MaterialIcon name="visibility" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                            rightIcon={<MaterialIcon name={columnVisibilityOpen ? "expand_less" : "expand_more"} className="transition-transform duration-200" size="sm" />}
+                            className="group hover:shadow-md transition-all duration-200"
+                            title="إظهار/إخفاء الأعمدة"
                           >
                             <span className="hidden sm:inline">الأعمدة</span>
                           </Button>
@@ -3122,9 +3144,9 @@ function ReportsPageContent() {
                                 setShowExportColumnsModal(true);
                                 setExportDropdownOpen(false);
                               }}
-                              className="w-full px-4 py-3 text-right hover:bg-slate-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-b border-slate-200"
+                              className="w-full px-4 py-3 text-right hover:bg-slate-50 hover:text-primary-700 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-b border-slate-200 group"
                             >
-                              <MaterialIcon name="settings" className="text-slate-600" size="sm" />
+                              <MaterialIcon name="settings" className="text-slate-600 group-hover:text-primary-600 transition-colors duration-200" size="sm" />
                               <span>تخصيص الأعمدة</span>
                             </button>
                             {exportHistory.length > 0 && (
@@ -3133,9 +3155,9 @@ function ReportsPageContent() {
                                   setShowExportHistory(true);
                                   setExportDropdownOpen(false);
                                 }}
-                                className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-b border-slate-200"
+                                className="w-full px-4 py-3 text-right hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-b border-slate-200 group"
                               >
-                                <MaterialIcon name="history" className="text-primary-600" size="sm" />
+                                <MaterialIcon name="history" className="text-primary-600 group-hover:scale-110 transition-transform duration-200" size="sm" />
                                 <span>سجل التصدير</span>
                                 {exportHistory.length > 0 && (
                                   <Badge variant="primary" size="sm" className="mr-auto">
@@ -3147,7 +3169,7 @@ function ReportsPageContent() {
                             <button
                               onClick={exportToCSV}
                               disabled={isExporting}
-                              className="w-full px-4 py-3 text-right hover:bg-success-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-t border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full px-4 py-3 text-right hover:bg-success-50 hover:text-success-700 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-t border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed group"
                             >
                               {isExporting && exportType === 'CSV' ? (
                                 <>
@@ -3156,7 +3178,7 @@ function ReportsPageContent() {
                                 </>
                               ) : (
                                 <>
-                                  <MaterialIcon name="description" className="text-success-600" size="sm" />
+                                  <MaterialIcon name="description" className="text-success-600 group-hover:scale-110 transition-transform duration-200" size="sm" />
                                   <span>CSV</span>
                                 </>
                               )}
@@ -3164,7 +3186,7 @@ function ReportsPageContent() {
                             <button
                               onClick={exportToExcel}
                               disabled={isExporting}
-                              className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full px-4 py-3 text-right hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed group"
                             >
                               {isExporting && exportType === 'Excel' ? (
                                 <>
@@ -3173,7 +3195,7 @@ function ReportsPageContent() {
                                 </>
                               ) : (
                                 <>
-                                  <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
+                                  <MaterialIcon name="table_chart" className="text-primary-600 group-hover:scale-110 transition-transform duration-200" size="sm" />
                                   <span>Excel</span>
                                 </>
                               )}
@@ -3202,7 +3224,9 @@ function ReportsPageContent() {
                         onClick={handlePrint}
                         variant="outline"
                         size="sm"
-                        leftIcon={<MaterialIcon name="print" size="sm" />}
+                        leftIcon={<MaterialIcon name="print" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                        className="group hover:shadow-md transition-all duration-200"
+                        title="طباعة التقرير"
                       >
                         <span className="hidden sm:inline">طباعة</span>
                       </Button>
@@ -3210,20 +3234,20 @@ function ReportsPageContent() {
                         onClick={copyToClipboard}
                         variant="outline"
                         size="sm"
-                        leftIcon={<MaterialIcon name="content_copy" size="sm" />}
+                        leftIcon={<MaterialIcon name="content_copy" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
                         disabled={filteredAssets.length === 0 || isCopying}
                         isLoading={isCopying}
-                        className="disabled:opacity-50"
+                        className="disabled:opacity-50 group hover:shadow-md transition-all duration-200"
                         title="نسخ البيانات إلى الحافظة"
                       >
                         <span className="hidden sm:inline">{isCopying ? 'جاري النسخ...' : 'نسخ'}</span>
                       </Button>
                       {selectedRowsCount > 0 && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-100 rounded-lg border-2 border-primary-300 shadow-sm animate-fade-in">
-                          <Badge variant="primary" size="sm" className="font-bold">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-primary-100 to-primary-50 rounded-lg border-2 border-primary-300 shadow-md animate-fade-in backdrop-blur-sm">
+                          <Badge variant="primary" size="sm" className="font-bold shadow-sm">
                             {selectedRowsCount}
                           </Badge>
-                          <span className="text-xs font-semibold text-primary-700 hidden sm:inline">عنصر محدد</span>
+                          <span className="text-xs font-semibold text-primary-700 hidden sm:inline">{selectedRowsCount === 1 ? 'عنصر محدد' : 'عناصر محددة'}</span>
                           <div className="flex items-center gap-1 mr-2 border-r border-primary-300 pr-2">
                             <Button
                               onClick={() => {
@@ -3239,8 +3263,8 @@ function ReportsPageContent() {
                               }}
                               variant="outline"
                               size="sm"
-                              className="text-xs"
-                              leftIcon={<MaterialIcon name="content_copy" size="sm" />}
+                              className="text-xs group hover:shadow-md transition-all duration-200"
+                              leftIcon={<MaterialIcon name="content_copy" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
                               title="نسخ المحدد"
                               disabled={!selectedAssetsSummary || selectedAssetsSummary.count === 0}
                             >
@@ -3255,9 +3279,10 @@ function ReportsPageContent() {
                             }}
                             variant="ghost"
                             size="sm"
-                            className="text-xs p-1"
-                            leftIcon={<MaterialIcon name="close" size="sm" />}
+                            className="text-xs p-1 group hover:bg-error-50 hover:text-error-600 transition-all duration-200"
+                            leftIcon={<MaterialIcon name="close" className="transition-transform duration-200 group-hover:rotate-90" size="sm" />}
                             aria-label="إلغاء التحديد"
+                            title="إلغاء تحديد جميع العناصر"
                           />
                         </div>
                       )}
@@ -3303,14 +3328,20 @@ function ReportsPageContent() {
                       <div className="absolute inset-0 bg-primary-100 rounded-full blur-2xl opacity-50 animate-pulse"></div>
                       <MaterialIcon name="filter_alt_off" className="text-slate-400 mx-auto relative z-10" size="5xl" />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-700 mb-3">لا توجد نتائج</h3>
-                    <p className="text-slate-500 mb-6">جرب تغيير الفلاتر أو البحث</p>
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center shadow-lg">
+                        <MaterialIcon name="search_off" className="text-slate-500" size="2xl" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-slate-700">لا توجد نتائج</h3>
+                    </div>
+                    <p className="text-slate-500 mb-6 text-center">جرب تغيير الفلاتر أو البحث</p>
                     <div className="flex flex-wrap gap-2 justify-center">
                       <Button
                         onClick={resetFilters}
                         variant="outline"
-                        leftIcon={<MaterialIcon name="refresh" size="sm" />}
-                        className="transition-all hover:scale-105"
+                        leftIcon={<MaterialIcon name="refresh" className="transition-transform duration-200 group-hover:rotate-180" size="sm" />}
+                        className="transition-all hover:scale-105 group hover:shadow-md"
+                        title="إعادة تعيين جميع الفلاتر"
                       >
                         إعادة تعيين الفلاتر
                       </Button>
@@ -3320,19 +3351,35 @@ function ReportsPageContent() {
                           setCurrentPage(1);
                         }}
                         variant="outline"
-                        leftIcon={<MaterialIcon name="search" size="sm" />}
-                        className="transition-all hover:scale-105"
+                        leftIcon={<MaterialIcon name="search" className="transition-transform duration-200 group-hover:scale-110" size="sm" />}
+                        className="transition-all hover:scale-105 group hover:shadow-md"
+                        title="مسح البحث"
                       >
                         مسح البحث
                       </Button>
                     </div>
-                    <div className="mt-6 p-4 bg-slate-50 rounded-lg max-w-md mx-auto">
-                      <p className="text-sm text-slate-600 mb-2 font-semibold">اقتراحات:</p>
-                      <ul className="text-xs text-slate-500 text-right space-y-1">
-                        <li>• تأكد من أن الفلاتر المحددة صحيحة</li>
-                        <li>• جرب البحث بكلمات مختلفة</li>
-                        <li>• أزل بعض الفلاتر لتوسيع النتائج</li>
-                        <li>• تحقق من نطاق القيم المحدد</li>
+                    <div className="mt-6 p-4 bg-gradient-to-br from-slate-50 to-white rounded-lg max-w-md mx-auto border border-slate-200 shadow-sm">
+                      <p className="text-sm text-slate-600 mb-2 font-semibold flex items-center gap-2">
+                        <MaterialIcon name="lightbulb" className="text-warning-500 flex-shrink-0" size="sm" />
+                        <span>اقتراحات:</span>
+                      </p>
+                      <ul className="text-xs text-slate-500 text-right space-y-1.5">
+                        <li className="flex items-center gap-2 justify-end">
+                          <MaterialIcon name="check_circle" className="text-success-500 flex-shrink-0" size="sm" />
+                          <span>تأكد من أن الفلاتر المحددة صحيحة</span>
+                        </li>
+                        <li className="flex items-center gap-2 justify-end">
+                          <MaterialIcon name="check_circle" className="text-success-500 flex-shrink-0" size="sm" />
+                          <span>جرب البحث بكلمات مختلفة</span>
+                        </li>
+                        <li className="flex items-center gap-2 justify-end">
+                          <MaterialIcon name="check_circle" className="text-success-500 flex-shrink-0" size="sm" />
+                          <span>أزل بعض الفلاتر لتوسيع النتائج</span>
+                        </li>
+                        <li className="flex items-center gap-2 justify-end">
+                          <MaterialIcon name="check_circle" className="text-success-500 flex-shrink-0" size="sm" />
+                          <span>تحقق من نطاق القيم المحدد</span>
+                        </li>
                       </ul>
                     </div>
                   </div>
@@ -3340,7 +3387,7 @@ function ReportsPageContent() {
                   <div className="w-full">
                     {/* Grid View - Select All */}
                     {sortedAndPaginatedAssets.length > 0 && (
-                      <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
+                      <div className="mb-4 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 shadow-sm flex items-center justify-between backdrop-blur-sm">
                         <div className="flex items-center gap-3">
                           <Checkbox
                             checked={allCurrentPageSelected}
@@ -3350,22 +3397,22 @@ function ReportsPageContent() {
                             title="تحديد جميع العناصر في هذه الصفحة"
                           />
                           {selectedRowsCount > 0 && (
-                            <Badge variant="primary" size="sm" className="font-bold">
-                              {selectedRowsCount} محدد
+                            <Badge variant="primary" size="sm" className="font-bold shadow-sm">
+                              {selectedRowsCount} {selectedRowsCount === 1 ? 'محدد' : 'محدد'}
                             </Badge>
                           )}
                         </div>
                       </div>
                     )}
                     {/* Grid View */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" role="grid" aria-label="عرض الشبكة للأصول">
                       {sortedAndPaginatedAssets.map((assetDetail, idx) => {
                         const globalIndex = (currentPage - 1) * itemsPerPage + idx;
                         const isSelected = selectedRows.has(globalIndex);
                         return (
                           <Card
                             key={idx}
-                            className={`hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-2 ${isSelected ? 'border-primary-400 bg-primary-50/50' : 'border-slate-200/60'
+                            className={`hover:shadow-xl hover:border-primary-300 transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98] border-2 ${isSelected ? 'border-primary-400 bg-primary-50/50 shadow-md' : 'border-slate-200/60'
                               } bg-gradient-to-br from-white to-slate-50/30 cursor-pointer`}
                             onClick={(e) => handleRowToggle(globalIndex, idx, e)}
                           >
@@ -3373,33 +3420,33 @@ function ReportsPageContent() {
                               <div className="space-y-3">
                                 <div className="flex items-start justify-between border-b-2 border-primary-200/50 pb-2">
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="text-sm font-bold text-slate-900 truncate mb-1">{assetDetail.assetName}</h3>
-                                    <Badge variant="outline" size="sm" className="text-xs">
+                                    <h3 className="text-sm font-bold text-slate-900 truncate mb-1 hover:text-primary-700 transition-colors duration-150">{assetDetail.assetName}</h3>
+                                    <Badge variant="outline" size="sm" className="text-xs transition-all duration-150 hover:scale-105">
                                       {assetDetail.assetStatus}
                                     </Badge>
                                   </div>
                                   <div className="text-left flex-shrink-0 mr-2">
-                                    <div className="text-base font-black text-success-600">
+                                    <div className="text-base font-black text-success-600 drop-shadow-sm">
                                       {assetDetail.value.toLocaleString('ar-SA')}
                                     </div>
-                                    <div className="text-xs text-success-600">ريال</div>
+                                    <div className="text-xs text-success-600 opacity-80">ريال</div>
                                   </div>
                                 </div>
                                 <div className="space-y-1.5 text-xs">
-                                  <div className="flex items-center gap-1.5 text-slate-600">
-                                    <MaterialIcon name="business" className="text-primary-500" size="sm" />
+                                  <div className="flex items-center gap-1.5 text-slate-600 hover:text-primary-600 transition-colors duration-150">
+                                    <MaterialIcon name="business" className="text-primary-500 flex-shrink-0" size="sm" />
                                     <span className="truncate">{assetDetail.departmentName}</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-slate-600">
-                                    <MaterialIcon name="meeting_room" className="text-primary-500" size="sm" />
+                                  <div className="flex items-center gap-1.5 text-slate-600 hover:text-primary-600 transition-colors duration-150">
+                                    <MaterialIcon name="meeting_room" className="text-primary-500 flex-shrink-0" size="sm" />
                                     <span className="truncate">{assetDetail.officeName}</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-slate-600">
-                                    <MaterialIcon name="category" className="text-primary-500" size="sm" />
+                                  <div className="flex items-center gap-1.5 text-slate-600 hover:text-primary-600 transition-colors duration-150">
+                                    <MaterialIcon name="category" className="text-primary-500 flex-shrink-0" size="sm" />
                                     <span className="truncate">{assetDetail.assetType}</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-slate-600">
-                                    <MaterialIcon name="person" className="text-primary-500" size="sm" />
+                                  <div className="flex items-center gap-1.5 text-slate-600 hover:text-primary-600 transition-colors duration-150">
+                                    <MaterialIcon name="person" className="text-primary-500 flex-shrink-0" size="sm" />
                                     <span className="truncate">{assetDetail.custodianName}</span>
                                   </div>
                                 </div>
@@ -3424,18 +3471,20 @@ function ReportsPageContent() {
                             variant="outline"
                             size="sm"
                             disabled={currentPage === 1}
-                            className="disabled:opacity-50"
+                            className="disabled:opacity-50 group hover:shadow-md transition-all duration-200"
+                            title="الصفحة الأولى"
                           >
-                            <MaterialIcon name="arrow_back" size="sm" />
+                            <MaterialIcon name="arrow_back" className="transition-transform duration-200 group-hover:-translate-x-1" size="sm" />
                           </Button>
                           <Button
                             onClick={() => handlePageChange(currentPage - 1)}
                             variant="outline"
                             size="sm"
                             disabled={currentPage === 1}
-                            className="disabled:opacity-50"
+                            className="disabled:opacity-50 group hover:shadow-md transition-all duration-200"
+                            title="الصفحة السابقة"
                           >
-                            <MaterialIcon name="chevron_right" size="sm" />
+                            <MaterialIcon name="chevron_right" className="transition-transform duration-200 group-hover:translate-x-1" size="sm" />
                           </Button>
                           <div className="flex items-center gap-1">
                             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -3467,18 +3516,20 @@ function ReportsPageContent() {
                             variant="outline"
                             size="sm"
                             disabled={currentPage === totalPages}
-                            className="disabled:opacity-50"
+                            className="disabled:opacity-50 group hover:shadow-md transition-all duration-200"
+                            title="الصفحة التالية"
                           >
-                            <MaterialIcon name="chevron_left" size="sm" />
+                            <MaterialIcon name="chevron_left" className="transition-transform duration-200 group-hover:-translate-x-1" size="sm" />
                           </Button>
                           <Button
                             onClick={() => handlePageChange(totalPages)}
                             variant="outline"
                             size="sm"
                             disabled={currentPage === totalPages}
-                            className="disabled:opacity-50"
+                            className="disabled:opacity-50 group hover:shadow-md transition-all duration-200"
+                            title="الصفحة الأخيرة"
                           >
-                            <MaterialIcon name="arrow_forward" size="sm" />
+                            <MaterialIcon name="arrow_forward" className="transition-transform duration-200 group-hover:translate-x-1" size="sm" />
                           </Button>
                         </div>
                       </div>
@@ -3488,7 +3539,7 @@ function ReportsPageContent() {
                   <div className="w-full">
                     {/* Mobile/Tablet Card View - Select All */}
                     {sortedAndPaginatedAssets.length > 0 && (
-                      <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
+                      <div className="mb-4 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 shadow-sm flex items-center justify-between backdrop-blur-sm">
                         <div className="flex items-center gap-3">
                           <Checkbox
                             checked={allCurrentPageSelected}
@@ -3498,8 +3549,8 @@ function ReportsPageContent() {
                             title="تحديد جميع العناصر في هذه الصفحة"
                           />
                           {selectedRowsCount > 0 && (
-                            <Badge variant="primary" size="sm" className="font-bold">
-                              {selectedRowsCount} محدد
+                            <Badge variant="primary" size="sm" className="font-bold shadow-sm">
+                              {selectedRowsCount} {selectedRowsCount === 1 ? 'محدد' : 'محدد'}
                             </Badge>
                           )}
                         </div>
@@ -3513,7 +3564,7 @@ function ReportsPageContent() {
                         return (
                           <Card
                             key={idx}
-                            className={`hover:shadow-lg transition-all duration-300 border-2 ${isSelected ? 'border-primary-400 bg-primary-50/50' : 'border-slate-200/60'
+                            className={`hover:shadow-xl hover:border-primary-300 transition-all duration-300 ease-out hover:scale-[1.01] active:scale-[0.99] border-2 ${isSelected ? 'border-primary-400 bg-primary-50/50 shadow-md' : 'border-slate-200/60'
                               } bg-gradient-to-br from-white to-slate-50/30 cursor-pointer`}
                             onClick={(e) => handleRowToggle(globalIndex, idx, e)}
                           >
@@ -3539,46 +3590,46 @@ function ReportsPageContent() {
                                       className="mt-1 flex-shrink-0"
                                     />
                                     <div className="flex-1 min-w-0">
-                                      <h3 className="text-base font-bold text-slate-900 mb-1 truncate">{assetDetail.assetName}</h3>
-                                      <Badge variant="outline" size="sm" className="text-xs">
+                                      <h3 className="text-base font-bold text-slate-900 mb-1 truncate hover:text-primary-700 transition-colors duration-150">{assetDetail.assetName}</h3>
+                                      <Badge variant="outline" size="sm" className="text-xs transition-all duration-150 hover:scale-105">
                                         {assetDetail.assetStatus}
                                       </Badge>
                                     </div>
                                   </div>
                                   <div className="text-left flex-shrink-0 mr-2">
-                                    <div className="text-lg font-black text-success-600">
+                                    <div className="text-lg font-black text-success-600 drop-shadow-sm">
                                       {assetDetail.value.toLocaleString('ar-SA')}
                                     </div>
-                                    <div className="text-xs text-success-600">ريال</div>
+                                    <div className="text-xs text-success-600 opacity-80">ريال</div>
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-1 gap-2 text-sm">
                                   {visibleColumns.department && (
-                                    <div className="flex items-center gap-2 text-slate-600">
+                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
                                       <MaterialIcon name="business" className="text-primary-500 flex-shrink-0" size="sm" />
                                       <span className="truncate">{assetDetail.departmentName}</span>
                                     </div>
                                   )}
                                   {visibleColumns.office && (
-                                    <div className="flex items-center gap-2 text-slate-600">
+                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
                                       <MaterialIcon name="meeting_room" className="text-primary-500 flex-shrink-0" size="sm" />
                                       <span className="truncate">{assetDetail.officeName}</span>
                                     </div>
                                   )}
                                   {visibleColumns.assetType && (
-                                    <div className="flex items-center gap-2 text-slate-600">
+                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
                                       <MaterialIcon name="category" className="text-primary-500 flex-shrink-0" size="sm" />
                                       <span className="truncate">{assetDetail.assetType}</span>
                                     </div>
                                   )}
                                   {visibleColumns.custodian && (
-                                    <div className="flex items-center gap-2 text-slate-600">
+                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
                                       <MaterialIcon name="person" className="text-primary-500 flex-shrink-0" size="sm" />
                                       <span className="truncate">{assetDetail.custodianName}</span>
                                     </div>
                                   )}
                                   {visibleColumns.assetTag && (
-                                    <div className="flex items-center gap-2 text-slate-600">
+                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
                                       <MaterialIcon name="tag" className="text-primary-500 flex-shrink-0" size="sm" />
                                       <span className="truncate font-mono text-xs">
                                         {assetDetail.asset.get('asset_tag') || '-'}
@@ -3594,33 +3645,41 @@ function ReportsPageContent() {
                     </div>
 
                     {/* Desktop Table View */}
-                    <div className="hidden lg:block w-full overflow-x-auto reports-table-wrapper rounded-lg border border-slate-200">
+                    <div className="hidden lg:block w-full overflow-x-auto reports-table-wrapper rounded-lg border-2 border-slate-200 shadow-md bg-white">
                       <table className="w-full text-sm border-collapse" role="table" aria-label="جدول الأصول المفلترة">
                         <thead>
-                          <tr className="bg-gradient-to-r from-primary-50 via-slate-50 to-primary-50 border-b-2 border-primary-200" role="row">
+                          <tr className="bg-gradient-to-r from-primary-50 via-slate-50 to-primary-50 border-b-2 border-primary-200 shadow-sm" role="row">
                             <th className="p-2 border-l border-slate-200 sticky right-0 bg-inherit z-10" role="columnheader" scope="col">
                               <Checkbox
                                 checked={allCurrentPageSelected}
                                 onChange={handleSelectAllToggle}
-                                aria-label="تحديد الكل"
+                                aria-label="تحديد جميع العناصر في هذه الصفحة"
+                                aria-describedby="select-all-help"
                                 onClick={(e) => e.stopPropagation()}
                                 title="تحديد جميع العناصر في هذه الصفحة (Shift+Click لتحديد نطاق، Ctrl+Click لتحديد متعدد)"
                               />
+                              <span id="select-all-help" className="sr-only">
+                                استخدم Shift+Click لتحديد نطاق، Ctrl+Click لتحديد متعدد
+                              </span>
                             </th>
                             {visibleColumns.department && (
                               <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 first:border-l-0 min-w-[140px] sticky right-0 bg-inherit" role="columnheader" scope="col">
                                 <button
                                   onClick={() => handleSort('department')}
-                                  className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                                  className="flex items-center gap-2 justify-end w-full hover:opacity-80 hover:bg-primary-50/50 active:bg-primary-100/50 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 rounded px-2 py-1"
                                   aria-label={`ترتيب حسب الإدارة ${sortColumn === 'department' ? (sortDirection === 'asc' ? 'تصاعدي' : 'تنازلي') : ''}`}
                                   aria-sort={sortColumn === 'department' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                                 >
-                                  <MaterialIcon name="business" className="text-primary-600" size="sm" />
-                                  <span>الإدارة</span>
+                                  <MaterialIcon 
+                                    name="business" 
+                                    className="text-primary-600 flex-shrink-0 transition-colors duration-200" 
+                                    size="sm" 
+                                  />
+                                  <span className="font-semibold">الإدارة</span>
                                   {sortColumn === 'department' && (
                                     <MaterialIcon
                                       name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                                      className="text-primary-600"
+                                      className="text-primary-600 flex-shrink-0 animate-fade-in"
                                       size="sm"
                                     />
                                   )}
@@ -3752,11 +3811,19 @@ function ReportsPageContent() {
                             return (
                               <tr
                                 key={idx}
-                                className={`border-b border-slate-200 hover:bg-primary-50/30 transition-all duration-150 cursor-pointer ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
-                                  } ${isSelected ? 'bg-primary-100 border-primary-300' : ''}`}
+                                className={`border-b border-slate-200 hover:bg-primary-50/50 hover:shadow-sm transition-all duration-200 ease-in-out cursor-pointer ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
+                                  } ${isSelected ? 'bg-primary-100 border-primary-300 shadow-sm' : ''}`}
                                 role="row"
                                 aria-rowindex={idx + 1}
+                                aria-selected={isSelected}
                                 onClick={(e) => handleRowToggle(globalIndex, idx, e)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleRowToggle(globalIndex, idx);
+                                  }
+                                }}
+                                tabIndex={0}
                               >
                                 <td className="p-2 border-l border-slate-200 sticky right-0 bg-inherit z-10" onClick={(e) => e.stopPropagation()} role="gridcell">
                                   <Checkbox
@@ -3767,8 +3834,9 @@ function ReportsPageContent() {
                                   />
                                 </td>
                                 {visibleColumns.department && (
-                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200" role="gridcell" aria-label={`الإدارة: ${assetDetail.departmentName}`}>
+                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200 hover:text-slate-900 transition-colors duration-150" role="gridcell" aria-label={`الإدارة: ${assetDetail.departmentName}`}>
                                     <div className="flex items-center gap-2">
+                                      <MaterialIcon name="business" className="text-primary-500 flex-shrink-0 opacity-60" size="sm" />
                                       <span className="truncate block max-w-[160px]" title={assetDetail.departmentName}>
                                         {assetDetail.departmentName}
                                       </span>
@@ -3776,14 +3844,17 @@ function ReportsPageContent() {
                                   </td>
                                 )}
                                 {visibleColumns.office && (
-                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200">
-                                    <span className="truncate block max-w-[160px]" title={assetDetail.officeName}>
-                                      {assetDetail.officeName}
-                                    </span>
+                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200 hover:text-slate-900 transition-colors duration-150">
+                                    <div className="flex items-center gap-2">
+                                      <MaterialIcon name="meeting_room" className="text-primary-500 flex-shrink-0 opacity-60" size="sm" />
+                                      <span className="truncate block max-w-[160px]" title={assetDetail.officeName}>
+                                        {assetDetail.officeName}
+                                      </span>
+                                    </div>
                                   </td>
                                 )}
                                 {visibleColumns.assetName && (
-                                  <td className="p-4 text-slate-900 font-bold text-sm border-l border-slate-200">
+                                  <td className="p-4 text-slate-900 font-bold text-sm border-l border-slate-200 hover:text-primary-700 transition-colors duration-150">
                                     <div className="flex items-center gap-2">
                                       <MaterialIcon name="inventory_2" className="text-primary-500 flex-shrink-0" size="sm" />
                                       <span className="truncate block max-w-[220px]" title={assetDetail.assetName}>
@@ -3793,23 +3864,26 @@ function ReportsPageContent() {
                                   </td>
                                 )}
                                 {visibleColumns.assetType && (
-                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200">
-                                    <span className="truncate block max-w-[160px]" title={assetDetail.assetType}>
-                                      {assetDetail.assetType}
-                                    </span>
+                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200 hover:text-slate-900 transition-colors duration-150">
+                                    <div className="flex items-center gap-2">
+                                      <MaterialIcon name="category" className="text-primary-500 flex-shrink-0 opacity-60" size="sm" />
+                                      <span className="truncate block max-w-[160px]" title={assetDetail.assetType}>
+                                        {assetDetail.assetType}
+                                      </span>
+                                    </div>
                                   </td>
                                 )}
                                 {visibleColumns.assetStatus && (
                                   <td className="p-4 border-l border-slate-200">
-                                    <Badge variant="outline" size="sm" className="whitespace-nowrap font-semibold">
+                                    <Badge variant="outline" size="sm" className="whitespace-nowrap font-semibold transition-all duration-150 hover:scale-105">
                                       {assetDetail.assetStatus}
                                     </Badge>
                                   </td>
                                 )}
                                 {visibleColumns.custodian && (
-                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200">
+                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200 hover:text-slate-900 transition-colors duration-150">
                                     <div className="flex items-center gap-2">
-                                      <MaterialIcon name="person" className="text-slate-400 flex-shrink-0" size="sm" />
+                                      <MaterialIcon name="person" className="text-primary-500 flex-shrink-0 opacity-60" size="sm" />
                                       <span className="truncate block max-w-[160px]" title={assetDetail.custodianName}>
                                         {assetDetail.custodianName}
                                       </span>
@@ -3840,22 +3914,22 @@ function ReportsPageContent() {
                           })}
                         </tbody>
                         <tfoot>
-                          <tr className="bg-gradient-to-r from-primary-100 via-slate-100 to-primary-100 border-t-2 border-primary-300 font-bold">
+                          <tr className="bg-gradient-to-r from-primary-100 via-slate-100 to-primary-100 border-t-2 border-primary-300 font-bold shadow-md">
                             <td
                               colSpan={Object.values(visibleColumns).filter(v => v).length - (visibleColumns.value ? 1 : 0)}
                               className="p-4 text-right text-slate-900 text-sm border-l border-slate-200"
                             >
                               <div className="flex items-center gap-2 justify-end">
-                                <MaterialIcon name="calculate" className="text-primary-600" size="sm" />
-                                <span>الإجمالي:</span>
+                                <MaterialIcon name="calculate" className="text-primary-600 flex-shrink-0 transition-transform duration-200" size="sm" />
+                                <span className="font-bold">الإجمالي:</span>
                               </div>
                             </td>
                             {visibleColumns.value && (
                               <td className="p-4 text-slate-900 text-lg border-l border-slate-200 text-right sticky left-0 bg-inherit z-10 shadow-lg">
                                 <div className="flex items-center gap-1 justify-end">
-                                  <MaterialIcon name="attach_money" className="text-success-600" size="md" />
-                                  <span className="text-success-700">{totalFilteredValue.toLocaleString('ar-SA')}</span>
-                                  <span className="text-slate-600 text-sm">ريال</span>
+                                  <MaterialIcon name="attach_money" className="text-success-600 flex-shrink-0 transition-transform duration-200" size="md" />
+                                  <span className="text-success-700 font-black drop-shadow-sm">{totalFilteredValue.toLocaleString('ar-SA')}</span>
+                                  <span className="text-slate-600 text-sm font-semibold">ريال</span>
                                 </div>
                               </td>
                             )}
@@ -3866,9 +3940,10 @@ function ReportsPageContent() {
 
                     {/* Pagination Controls */}
                     {filteredAssets.length > itemsPerPage && (
-                      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <span>
+                      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 shadow-sm backdrop-blur-sm">
+                        <div className="flex items-center gap-2 text-sm text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                          <MaterialIcon name="info" className="text-primary-500 flex-shrink-0" size="sm" />
+                          <span className="font-medium">
                             عرض {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAssets.length)} من {filteredAssets.length.toLocaleString('ar-SA')}
                           </span>
                         </div>
@@ -4040,15 +4115,15 @@ function ReportsPageContent() {
                       ))}
 
                       {/* Mobile Footer Summary */}
-                      <Card className="bg-gradient-to-r from-primary-100 via-primary-200/50 to-primary-100 border-2 border-primary-300">
+                      <Card className="bg-gradient-to-r from-primary-100 via-primary-200/50 to-primary-100 border-2 border-primary-300 shadow-lg">
                         <CardBody padding="lg">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <MaterialIcon name="calculate" className="text-primary-700" size="lg" />
+                              <MaterialIcon name="calculate" className="text-primary-700 transition-transform duration-200" size="lg" />
                               <span className="text-lg font-bold text-slate-900">الإجمالي:</span>
                             </div>
                             <div className="text-right">
-                              <div className="text-2xl font-black bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
+                              <div className="text-2xl font-black bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent drop-shadow-sm">
                                 {totalFilteredValue.toLocaleString('ar-SA')}
                               </div>
                               <div className="text-sm text-primary-700 font-bold">ريال</div>
@@ -4059,9 +4134,12 @@ function ReportsPageContent() {
 
                       {/* Mobile Pagination */}
                       {filteredAssets.length > itemsPerPage && (
-                        <div className="mt-4 flex flex-col items-center gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                          <div className="text-sm text-slate-600 text-center">
-                            عرض {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAssets.length)} من {filteredAssets.length.toLocaleString('ar-SA')}
+                        <div className="mt-4 flex flex-col items-center gap-3 p-4 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 shadow-sm backdrop-blur-sm">
+                          <div className="text-sm text-slate-600 text-center bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2 justify-center">
+                            <MaterialIcon name="info" className="text-primary-500 flex-shrink-0" size="sm" />
+                            <span className="font-medium">
+                              عرض {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAssets.length)} من {filteredAssets.length.toLocaleString('ar-SA')}
+                            </span>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap justify-center">
                             <Button
@@ -4069,18 +4147,20 @@ function ReportsPageContent() {
                               variant="outline"
                               size="sm"
                               disabled={currentPage === 1}
-                              className="disabled:opacity-50"
+                              className="disabled:opacity-50 group hover:shadow-md transition-all duration-200"
+                              title="الصفحة الأولى"
                             >
-                              <MaterialIcon name="arrow_back" size="sm" />
+                              <MaterialIcon name="arrow_back" className="transition-transform duration-200 group-hover:-translate-x-1" size="sm" />
                             </Button>
                             <Button
                               onClick={() => handlePageChange(currentPage - 1)}
                               variant="outline"
                               size="sm"
                               disabled={currentPage === 1}
-                              className="disabled:opacity-50"
+                              className="disabled:opacity-50 group hover:shadow-md transition-all duration-200"
+                              title="الصفحة السابقة"
                             >
-                              <MaterialIcon name="chevron_right" size="sm" />
+                              <MaterialIcon name="chevron_right" className="transition-transform duration-200 group-hover:translate-x-1" size="sm" />
                             </Button>
                             <div className="flex items-center gap-1">
                               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -4100,7 +4180,8 @@ function ReportsPageContent() {
                                     onClick={() => handlePageChange(pageNum)}
                                     variant={currentPage === pageNum ? "primary" : "outline"}
                                     size="sm"
-                                    className="min-w-[36px]"
+                                    className="min-w-[36px] group hover:shadow-md transition-all duration-200"
+                                    title={`الصفحة ${pageNum}`}
                                   >
                                     {pageNum}
                                   </Button>
@@ -4112,18 +4193,20 @@ function ReportsPageContent() {
                               variant="outline"
                               size="sm"
                               disabled={currentPage === totalPages}
-                              className="disabled:opacity-50"
+                              className="disabled:opacity-50 group hover:shadow-md transition-all duration-200"
+                              title="الصفحة التالية"
                             >
-                              <MaterialIcon name="chevron_left" size="sm" />
+                              <MaterialIcon name="chevron_left" className="transition-transform duration-200 group-hover:-translate-x-1" size="sm" />
                             </Button>
                             <Button
                               onClick={() => handlePageChange(totalPages)}
                               variant="outline"
                               size="sm"
                               disabled={currentPage === totalPages}
-                              className="disabled:opacity-50"
+                              className="disabled:opacity-50 group hover:shadow-md transition-all duration-200"
+                              title="الصفحة الأخيرة"
                             >
-                              <MaterialIcon name="arrow_forward" size="sm" />
+                              <MaterialIcon name="arrow_forward" className="transition-transform duration-200 group-hover:translate-x-1" size="sm" />
                             </Button>
                           </div>
                         </div>
