@@ -804,7 +804,7 @@ function ReportsPageContent() {
     setAllAssetDetails(assetDetails);
   };
 
-  // حساب خيارات الفلاتر مع عدد الأصول لكل خيار
+  // حساب خيارات الفلاتر مع عدد الأصول لكل خيار مع فلترة متداخلة
   const filterOptions = useMemo(() => {
     const departmentCounts = new Map<string, number>();
     const officeCounts = new Map<string, number>();
@@ -813,7 +813,33 @@ function ReportsPageContent() {
     const assetNameCounts = new Map<string, number>();
     const custodianCounts = new Map<string, number>();
 
-    allAssetDetails.forEach(detail => {
+    // فلترة أولية للأصول بناءً على الفلاتر المحددة
+    let filteredDetails = allAssetDetails;
+
+    // إذا تم تحديد إدارات، فلتر الأصول بناءً على المكاتب التابعة لتلك الإدارات
+    if (selectedDepartmentIds.size > 0) {
+      const selectedOfficeIdsFromDepts = new Set<string>();
+      allOffices.forEach(office => {
+        if (selectedDepartmentIds.has(office.get('department_id') || '')) {
+          selectedOfficeIdsFromDepts.add(office.get('id') || '');
+        }
+      });
+      filteredDetails = filteredDetails.filter(detail => {
+        const officeId = allOffices.find(o => o.get('name') === detail.officeName)?.get('id');
+        return officeId && selectedOfficeIdsFromDepts.has(officeId);
+      });
+    }
+
+    // إذا تم تحديد مكاتب، فلتر الأصول بناءً على المكاتب المحددة
+    if (selectedOfficeIds.size > 0) {
+      filteredDetails = filteredDetails.filter(detail => {
+        const officeId = allOffices.find(o => o.get('name') === detail.officeName)?.get('id');
+        return officeId && selectedOfficeIds.has(officeId);
+      });
+    }
+
+    // حساب العدادات بناءً على الأصول المفلترة
+    filteredDetails.forEach(detail => {
       // حساب الإدارات
       const deptId = allOffices.find(o => o.get('name') === detail.officeName)?.get('department_id');
       if (deptId) {
@@ -853,6 +879,14 @@ function ReportsPageContent() {
       }
     });
 
+    // فلترة المكاتب بناءً على الإدارات المحددة
+    let filteredOffices = allOffices;
+    if (selectedDepartmentIds.size > 0) {
+      filteredOffices = allOffices.filter(office => 
+        selectedDepartmentIds.has(office.get('department_id') || '')
+      );
+    }
+
     return {
       departments: allDepartments
         .map(dept => ({
@@ -862,7 +896,7 @@ function ReportsPageContent() {
         }))
         .filter(opt => opt.count > 0)
         .sort((a, b) => b.count - a.count),
-      offices: allOffices
+      offices: filteredOffices
         .map(office => ({
           id: office.get('id') || '',
           label: office.get('name') || 'غير محدد',
@@ -903,7 +937,7 @@ function ReportsPageContent() {
         .filter(opt => opt.count > 0)
         .sort((a, b) => b.count - a.count),
     };
-  }, [allAssetDetails, allDepartments, allOffices, assetTypes, statuses, assetNames, users]);
+  }, [allAssetDetails, allDepartments, allOffices, assetTypes, statuses, assetNames, users, selectedDepartmentIds, selectedOfficeIds]);
 
   // تطبيق الفلاتر على البيانات
   const filteredAssets = useMemo(() => {
@@ -1158,7 +1192,27 @@ function ReportsPageContent() {
 
     switch (filterType) {
       case 'departments':
-        toggleSet(setSelectedDepartmentIds);
+        setSelectedDepartmentIds(prev => {
+          const newSet = new Set(prev);
+          const isRemoving = newSet.has(id);
+          
+          if (isRemoving) {
+            newSet.delete(id);
+            // إلغاء تحديد جميع المكاتب التابعة لهذه الإدارة
+            setSelectedOfficeIds(prevOffices => {
+              const newOfficeSet = new Set(prevOffices);
+              allOffices.forEach(office => {
+                if (office.get('department_id') === id) {
+                  newOfficeSet.delete(office.get('id') || '');
+                }
+              });
+              return newOfficeSet;
+            });
+          } else {
+            newSet.add(id);
+          }
+          return newSet;
+        });
         break;
       case 'offices':
         toggleSet(setSelectedOfficeIds);
@@ -1176,7 +1230,7 @@ function ReportsPageContent() {
         toggleSet(setSelectedCustodianIds);
         break;
     }
-  }, []);
+  }, [allOffices]);
 
   const resetFilters = useCallback(() => {
     setSelectedDepartmentIds(new Set());
@@ -1756,9 +1810,9 @@ function ReportsPageContent() {
   }, [allCurrentPageSelected, sortedAndPaginatedAssets, currentPage, itemsPerPage]);
 
   // Handle row selection with Shift and Ctrl support
-  const handleRowToggle = useCallback((globalIndex: number, localIndex: number, event?: React.MouseEvent) => {
-    const isShiftPressed = event?.shiftKey;
-    const isCtrlPressed = event?.ctrlKey || event?.metaKey;
+  const handleRowToggle = useCallback((globalIndex: number, localIndex: number, event?: React.MouseEvent | React.ChangeEvent<HTMLInputElement>) => {
+    const isShiftPressed = event && 'shiftKey' in event ? (event as React.MouseEvent).shiftKey : false;
+    const isCtrlPressed = event && ('ctrlKey' in event || 'metaKey' in event) ? ((event as React.MouseEvent).ctrlKey || (event as React.MouseEvent).metaKey) : false;
 
     setSelectedRows(prev => {
       const newSet = new Set(prev);
@@ -3576,15 +3630,7 @@ function ReportsPageContent() {
                                       checked={isSelected}
                                       onChange={(e) => {
                                         e.stopPropagation();
-                                        setSelectedRows(prev => {
-                                          const newSet = new Set(prev);
-                                          if (newSet.has(globalIndex)) {
-                                            newSet.delete(globalIndex);
-                                          } else {
-                                            newSet.add(globalIndex);
-                                          }
-                                          return newSet;
-                                        });
+                                        handleRowToggle(globalIndex, idx, e as any);
                                       }}
                                       onClick={(e) => e.stopPropagation()}
                                       className="mt-1 flex-shrink-0"
@@ -3828,7 +3874,10 @@ function ReportsPageContent() {
                                 <td className="p-2 border-l border-slate-200 sticky right-0 bg-inherit z-10" onClick={(e) => e.stopPropagation()} role="gridcell">
                                   <Checkbox
                                     checked={isSelected}
-                                    onChange={() => handleRowToggle(globalIndex, idx)}
+                                    onChange={(e) => {
+                                      e.stopPropagation();
+                                      handleRowToggle(globalIndex, idx, e as any);
+                                    }}
                                     aria-label={`تحديد ${assetDetail.assetName}`}
                                     onClick={(e) => e.stopPropagation()}
                                   />
