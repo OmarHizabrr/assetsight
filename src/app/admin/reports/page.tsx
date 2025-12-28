@@ -102,22 +102,22 @@ const AdvancedFilter = memo(function AdvancedFilter({
   }, [allFilteredSelected, filteredOptions, selectedIds, onToggle]);
 
   return (
-    <div className="border-2 border-slate-200 rounded-xl overflow-hidden bg-white shadow-md hover:shadow-lg transition-all duration-200 hover:border-primary-300">
+    <div className="border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-md hover:shadow-lg transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600">
       <button
         onClick={onToggleOpen}
-        className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-200 flex items-center justify-between group"
+        className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 dark:from-slate-700 dark:via-slate-700/70 dark:to-slate-700 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 dark:hover:from-primary-900/30 dark:hover:via-primary-800/30 dark:hover:to-primary-900/30 transition-all duration-200 flex items-center justify-between group"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
+          <div className="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/50 group-hover:bg-primary-200 dark:group-hover:bg-primary-800 flex items-center justify-center transition-colors">
             <MaterialIcon
               name={isOpen ? "expand_less" : "expand_more"}
-              className="text-primary-600"
+              className="text-primary-600 dark:text-primary-400"
               size="sm"
             />
           </div>
           <div className="flex items-center gap-2">
-            {icon && <MaterialIcon name={icon} className="text-slate-500" size="sm" />}
-            <span className="font-semibold text-slate-700 text-sm">{title}</span>
+            {icon && <MaterialIcon name={icon} className="text-slate-500 dark:text-slate-400" size="sm" />}
+            <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm">{title}</span>
           </div>
           {selectedIds.size > 0 && (
             <Badge variant="primary" size="sm" className="text-xs animate-scale-in">
@@ -125,13 +125,13 @@ const AdvancedFilter = memo(function AdvancedFilter({
             </Badge>
           )}
         </div>
-        <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-1 rounded">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
           {filteredOptions.length}
         </span>
       </button>
 
       {isOpen && (
-        <div className="p-3 border-t border-slate-200 bg-white animate-fade-in">
+        <div className="p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 animate-fade-in">
           {/* البحث */}
           <div className="mb-3">
             <Input
@@ -147,9 +147,9 @@ const AdvancedFilter = memo(function AdvancedFilter({
 
           {/* اختيار الكل / إلغاء الكل */}
           {filteredOptions.length > 0 && (
-            <div className="mb-3 pb-3 border-b border-slate-200">
+            <div className="mb-3 pb-3 border-b border-slate-200 dark:border-slate-700">
               <div
-                className="flex items-center gap-2 p-2 hover:bg-primary-50 hover:shadow-sm rounded-lg transition-all duration-200 cursor-pointer group"
+                className="flex items-center gap-2 p-2 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:shadow-sm rounded-lg transition-all duration-200 cursor-pointer group"
                 onClick={handleSelectAll}
               >
                 <Checkbox
@@ -168,13 +168,13 @@ const AdvancedFilter = memo(function AdvancedFilter({
           )}
 
           {/* قائمة الخيارات */}
-          <div className="max-h-64 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-slate-100 pr-1">
+          <div className="max-h-64 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-primary-300 dark:scrollbar-thumb-primary-600 scrollbar-track-slate-100 dark:scrollbar-track-slate-700 pr-1">
             {filteredOptions.length === 0 ? (
               <div className="text-center py-6">
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                  <MaterialIcon name="search_off" className="text-slate-400 transition-transform duration-200" size="md" />
+                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-3">
+                  <MaterialIcon name="search_off" className="text-slate-400 dark:text-slate-500 transition-transform duration-200" size="md" />
                 </div>
-                <p className="text-xs text-slate-500 font-medium">لا توجد نتائج</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">لا توجد نتائج</p>
               </div>
             ) : (
               filteredOptions.map((option) => {
@@ -183,10 +183,14 @@ const AdvancedFilter = memo(function AdvancedFilter({
                   <div
                     key={option.id}
                     className={`flex items-center justify-between p-2.5 rounded-lg transition-all duration-200 cursor-pointer ${isSelected
-                        ? 'bg-gradient-to-r from-primary-50 to-primary-100/50 border-2 border-primary-200 shadow-md'
-                        : 'hover:bg-slate-50 hover:shadow-sm border-2 border-transparent hover:border-slate-200'
+                        ? 'bg-gradient-to-r from-primary-50 to-primary-100/50 dark:from-primary-900/40 dark:to-primary-800/40 border-2 border-primary-200 dark:border-primary-700 shadow-md'
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:shadow-sm border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-600'
                       }`}
                     onClick={(e) => {
+                      // منع النقر على div إذا كان النقر على checkbox
+                      if ((e.target as HTMLElement).closest('input[type="checkbox"]')) {
+                        return;
+                      }
                       e.preventDefault();
                       e.stopPropagation();
                       handleToggle(option.id, e);
@@ -198,7 +202,8 @@ const AdvancedFilter = memo(function AdvancedFilter({
                         onChange={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          handleToggle(option.id, e as any);
+                          // استدعاء مباشر لـ onToggle بدلاً من handleToggle لتجنب التكرار
+                          onToggle(option.id);
                         }}
                         onClick={(e) => {
                           e.preventDefault();
@@ -252,22 +257,22 @@ function RangeFilter({
   const hasValue = minValue || maxValue;
 
   return (
-    <div className="border-2 border-slate-200 rounded-xl overflow-hidden bg-white shadow-md hover:shadow-lg transition-all duration-200 hover:border-primary-300">
+    <div className="border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-md hover:shadow-lg transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600">
       <button
         onClick={onToggleOpen}
-        className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-200 flex items-center justify-between group"
+        className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 dark:from-slate-700 dark:via-slate-700/70 dark:to-slate-700 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 dark:hover:from-primary-900/30 dark:hover:via-primary-800/30 dark:hover:to-primary-900/30 transition-all duration-200 flex items-center justify-between group"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 group-hover:from-primary-200 group-hover:to-primary-100 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:shadow-md group-hover:scale-110">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/50 dark:to-primary-800/50 group-hover:from-primary-200 group-hover:to-primary-100 dark:group-hover:from-primary-800 dark:group-hover:to-primary-700 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:shadow-md group-hover:scale-110">
             <MaterialIcon
               name={isOpen ? "expand_less" : "expand_more"}
-              className="text-primary-600 transition-transform duration-200"
+              className="text-primary-600 dark:text-primary-400 transition-transform duration-200"
               size="sm"
             />
           </div>
           <div className="flex items-center gap-2">
-            {icon && <MaterialIcon name={icon} className="text-primary-500 flex-shrink-0 transition-colors duration-200" size="sm" />}
-            <span className="font-semibold text-slate-700 text-sm group-hover:text-primary-700 transition-colors duration-200">{title}</span>
+            {icon && <MaterialIcon name={icon} className="text-primary-500 dark:text-primary-400 flex-shrink-0 transition-colors duration-200" size="sm" />}
+            <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors duration-200">{title}</span>
           </div>
           {hasValue && (
             <Badge variant="primary" size="sm" className="text-xs animate-scale-in shadow-sm transition-all duration-150 group-hover:scale-110">
@@ -278,11 +283,11 @@ function RangeFilter({
       </button>
 
       {isOpen && (
-        <div className="p-3 border-t border-slate-200 bg-gradient-to-br from-white to-slate-50/30 animate-fade-in backdrop-blur-sm">
+        <div className="p-3 border-t border-slate-200 dark:border-slate-700 bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-800 dark:to-slate-700/30 animate-fade-in backdrop-blur-sm">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
-                <MaterialIcon name="arrow_downward" className="text-primary-500 flex-shrink-0" size="sm" />
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2 flex items-center gap-1">
+                <MaterialIcon name="arrow_downward" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                 <span>{placeholder.min}</span>
               </label>
               <Input
@@ -296,8 +301,8 @@ function RangeFilter({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
-                <MaterialIcon name="arrow_upward" className="text-primary-500 flex-shrink-0" size="sm" />
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2 flex items-center gap-1">
+                <MaterialIcon name="arrow_upward" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                 <span>{placeholder.max}</span>
               </label>
               <Input
@@ -2145,13 +2150,13 @@ function ReportsPageContent() {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-            <Card className="max-w-md w-full shadow-xl border-2 border-error-200 bg-gradient-to-br from-white to-error-50/30">
+            <Card className="max-w-md w-full shadow-xl border-2 border-error-200 dark:border-error-800 bg-gradient-to-br from-white to-error-50/30 dark:from-slate-800 dark:to-error-900/20">
             <CardBody className="p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-error-100 to-error-50 flex items-center justify-center mx-auto mb-4 shadow-lg transition-all duration-300 hover:scale-110">
-                <MaterialIcon name="error" className="text-error-600 transition-transform duration-300" size="2xl" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-error-100 to-error-50 dark:from-error-900/50 dark:to-error-800/50 flex items-center justify-center mx-auto mb-4 shadow-lg transition-all duration-300 hover:scale-110">
+                <MaterialIcon name="error" className="text-error-600 dark:text-error-400 transition-transform duration-300" size="2xl" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">حدث خطأ</h2>
-              <p className="text-slate-600 mb-4">{error}</p>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">حدث خطأ</h2>
+              <p className="text-slate-600 dark:text-slate-300 mb-4">{error}</p>
               <Button
                 onClick={() => {
                   setError(null);
@@ -2181,10 +2186,10 @@ function ReportsPageContent() {
               <MaterialIcon name="assessment" className="text-white transition-transform duration-300 hover:scale-110" size="lg" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-0.5" id="reports-page-title">التقارير والإحصائيات</h1>
-              <p className="text-slate-600 text-sm font-medium" aria-describedby="reports-page-title">
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-0.5" id="reports-page-title">التقارير والإحصائيات</h1>
+              <p className="text-slate-600 dark:text-slate-300 text-sm font-medium" aria-describedby="reports-page-title">
                 نظام فلترة متقدم مع Sorting و Pagination
-                <span className="text-xs text-slate-400 mr-2" aria-label="اختصارات لوحة المفاتيح">(Ctrl+K للبحث، Ctrl+R لإعادة التعيين)</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 mr-2" aria-label="اختصارات لوحة المفاتيح">(Ctrl+K للبحث، Ctrl+R لإعادة التعيين)</span>
               </p>
             </div>
           </div>
@@ -2192,80 +2197,80 @@ function ReportsPageContent() {
 
         {/* إحصائيات عامة */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
-          <Card className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
+          <Card className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700/50 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
             <CardBody padding="sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-500 mb-1 group-hover:text-primary-600 transition-colors duration-200">إجمالي الأصول</p>
-                  <p className="text-2xl font-bold text-slate-900 transition-all duration-300 group-hover:text-primary-700">{stats.totalAssets.toLocaleString('ar-SA')}</p>
-                  <p className="text-xs text-slate-500">أصل</p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">إجمالي الأصول</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 transition-all duration-300 group-hover:text-primary-700 dark:group-hover:text-primary-400">{stats.totalAssets.toLocaleString('ar-SA')}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">أصل</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
-                  <MaterialIcon name="inventory" className="text-primary-600 transition-transform duration-200 group-hover:scale-110" size="md" />
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/50 dark:to-primary-800/50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
+                  <MaterialIcon name="inventory" className="text-primary-600 dark:text-primary-400 transition-transform duration-200 group-hover:scale-110" size="md" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
+          <Card className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700/50 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
             <CardBody padding="sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-500 mb-1 group-hover:text-success-600 transition-colors duration-200">القيمة الإجمالية</p>
-                  <p className="text-xl font-bold text-slate-900 truncate transition-all duration-300 group-hover:text-success-700">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 group-hover:text-success-600 dark:group-hover:text-success-400 transition-colors duration-200">القيمة الإجمالية</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-slate-100 truncate transition-all duration-300 group-hover:text-success-700 dark:group-hover:text-success-400">
                     {stats.totalValue.toLocaleString('ar-SA')}
                   </p>
-                  <p className="text-xs text-slate-500">ريال</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">ريال</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-success-100 to-success-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
-                  <MaterialIcon name="attach_money" className="text-success-600 transition-transform duration-200 group-hover:scale-110" size="md" />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
-            <CardBody padding="sm">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-500 mb-1 group-hover:text-accent-600 transition-colors duration-200">أصول نشطة</p>
-                  <p className="text-2xl font-bold text-slate-900 transition-all duration-300 group-hover:text-accent-700">{stats.activeAssets.toLocaleString('ar-SA')}</p>
-                  <p className="text-xs text-slate-500">نشط</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-100 to-accent-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
-                  <MaterialIcon name="check_circle" className="text-accent-600 transition-transform duration-200 group-hover:scale-110" size="md" />
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-success-100 to-success-50 dark:from-success-900/50 dark:to-success-800/50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
+                  <MaterialIcon name="attach_money" className="text-success-600 dark:text-success-400 transition-transform duration-200 group-hover:scale-110" size="md" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
+          <Card className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700/50 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
             <CardBody padding="sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-500 mb-1 group-hover:text-warning-600 transition-colors duration-200">النتائج المفلترة</p>
-                  <p className="text-2xl font-bold text-slate-900 transition-all duration-300 group-hover:text-warning-700">{filteredAssets.length.toLocaleString('ar-SA')}</p>
-                  <p className="text-xs text-slate-500">من {stats.totalAssets.toLocaleString('ar-SA')}</p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 group-hover:text-accent-600 dark:group-hover:text-accent-400 transition-colors duration-200">أصول نشطة</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 transition-all duration-300 group-hover:text-accent-700 dark:group-hover:text-accent-400">{stats.activeAssets.toLocaleString('ar-SA')}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">نشط</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-warning-100 to-warning-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
-                  <MaterialIcon name="filter_list" className="text-warning-600 transition-transform duration-200 group-hover:scale-110" size="md" />
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-100 to-accent-50 dark:from-accent-900/50 dark:to-accent-800/50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
+                  <MaterialIcon name="check_circle" className="text-accent-600 dark:text-accent-400 transition-transform duration-200 group-hover:scale-110" size="md" />
                 </div>
               </div>
             </CardBody>
           </Card>
 
-          <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+          <Card className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700/50 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer group">
             <CardBody padding="sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-500 mb-1">قيمة المفلترة</p>
-                  <p className="text-xl font-bold text-slate-900 truncate transition-all duration-300">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 group-hover:text-warning-600 dark:group-hover:text-warning-400 transition-colors duration-200">النتائج المفلترة</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 transition-all duration-300 group-hover:text-warning-700 dark:group-hover:text-warning-400">{filteredAssets.length.toLocaleString('ar-SA')}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">من {stats.totalAssets.toLocaleString('ar-SA')}</p>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-warning-100 to-warning-50 dark:from-warning-900/50 dark:to-warning-800/50 flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md">
+                  <MaterialIcon name="filter_list" className="text-warning-600 dark:text-warning-400 transition-transform duration-200 group-hover:scale-110" size="md" />
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+            <CardBody padding="sm">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">قيمة المفلترة</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-slate-100 truncate transition-all duration-300">
                     {totalFilteredValue.toLocaleString('ar-SA')}
                   </p>
-                  <p className="text-xs text-slate-500">ريال</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">ريال</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-primary-200">
-                  <MaterialIcon name="calculate" className="text-primary-600" size="md" />
+                <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center flex-shrink-0 transition-colors hover:bg-primary-200 dark:hover:bg-primary-800">
+                  <MaterialIcon name="calculate" className="text-primary-600 dark:text-primary-400" size="md" />
                 </div>
               </div>
             </CardBody>
@@ -2325,14 +2330,14 @@ function ReportsPageContent() {
               </CardBody>
             </Card>
 
-            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200">
+            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600 border-2 border-slate-200 dark:border-slate-600">
               <CardBody padding="sm">
                 <div className="text-center">
-                  <p className="text-xs font-medium text-slate-700 mb-1">غير نشط</p>
-                  <p className="text-lg font-bold text-slate-900">
+                  <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">غير نشط</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
                     {filteredStats.inactiveCount.toLocaleString('ar-SA')}
                   </p>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     ({filteredAssets.length > 0 ? Math.round((filteredStats.inactiveCount / filteredAssets.length) * 100) : 0}%)
                   </p>
                 </div>
@@ -2357,14 +2362,14 @@ function ReportsPageContent() {
         {filteredAssets.length > 0 && filteredAssets.length < allAssetDetails.length && (
           <div className="mb-4 p-4 bg-gradient-to-r from-primary-50 via-blue-50 to-primary-50 border-2 border-primary-200 rounded-xl shadow-sm backdrop-blur-sm">
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center flex-shrink-0 shadow-md transition-all duration-200 hover:scale-110">
-                <MaterialIcon name="info" className="text-primary-600 transition-transform duration-200" size="md" />
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/50 dark:to-primary-800/50 flex items-center justify-center flex-shrink-0 shadow-md transition-all duration-200 hover:scale-110">
+                <MaterialIcon name="info" className="text-primary-600 dark:text-primary-400 transition-transform duration-200" size="md" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-800">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   عرض {filteredAssets.length.toLocaleString('ar-SA')} من {allAssetDetails.length.toLocaleString('ar-SA')} أصل
                 </p>
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   النسبة: {((filteredAssets.length / allAssetDetails.length) * 100).toFixed(1)}% من إجمالي الأصول
                 </p>
               </div>
@@ -2385,14 +2390,14 @@ function ReportsPageContent() {
         <div className="flex flex-col lg:flex-row gap-4 w-full">
           {/* لوحة الفلاتر */}
           <div className="w-full lg:w-80 flex-shrink-0">
-            <Card className="lg:sticky lg:top-4 shadow-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50/30 h-fit lg:max-h-[calc(100vh-120px)] flex flex-col backdrop-blur-sm">
-              <CardHeader className="pb-3 border-b-2 border-slate-200 bg-gradient-to-r from-primary-50 via-slate-50 to-primary-50 shadow-sm">
+            <Card className="lg:sticky lg:top-4 shadow-xl border-2 border-slate-200 dark:border-slate-700 bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-800 dark:to-slate-700/30 h-fit lg:max-h-[calc(100vh-120px)] flex flex-col backdrop-blur-sm">
+              <CardHeader className="pb-3 border-b-2 border-slate-200 dark:border-slate-700 bg-gradient-to-r from-primary-50 via-slate-50 to-primary-50 dark:from-primary-900/30 dark:via-slate-700 dark:to-primary-900/30 shadow-sm">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center shadow-md transition-all duration-200 hover:scale-110">
-                      <MaterialIcon name="tune" className="text-primary-600 transition-transform duration-200" size="sm" />
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/50 dark:to-primary-800/50 flex items-center justify-center shadow-md transition-all duration-200 hover:scale-110">
+                      <MaterialIcon name="tune" className="text-primary-600 dark:text-primary-400 transition-transform duration-200" size="sm" />
                     </div>
-                    <span className="text-base font-bold text-slate-800" id="filters-panel-title">الفلاتر المتقدمة</span>
+                    <span className="text-base font-bold text-slate-800 dark:text-slate-200" id="filters-panel-title">الفلاتر المتقدمة</span>
                     {/* عرض عدد الفلاتر المحددة */}
                     {(selectedDepartmentIds.size > 0 || selectedOfficeIds.size > 0 || selectedAssetTypeIds.size > 0 || 
                       selectedAssetStatusIds.size > 0 || selectedAssetNameIds.size > 0 || selectedCustodianIds.size > 0 ||
@@ -2442,9 +2447,9 @@ function ReportsPageContent() {
                         )}
                       </Button>
                       {showPresetModal && (
-                        <div className="absolute top-full left-0 mt-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in min-w-[250px] bg-white border border-slate-200">
+                        <div className="absolute top-full left-0 mt-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in min-w-[250px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                           <div className="p-2 max-h-64 overflow-y-auto">
-                            <div className="text-xs font-semibold text-slate-700 mb-2 px-2">مجموعات الفلاتر المحفوظة:</div>
+                            <div className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 px-2">مجموعات الفلاتر المحفوظة:</div>
                             {filterPresets.map((preset, idx) => (
                               <div
                                 key={idx}
@@ -2455,7 +2460,7 @@ function ReportsPageContent() {
                                     applyFilterPreset(preset);
                                     setShowPresetModal(false);
                                   }}
-                                  className="flex-1 text-right text-sm text-slate-700 hover:text-primary-600"
+                                  className="flex-1 text-right text-sm text-slate-700 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-400"
                                 >
                                   {preset.name}
                                 </button>
@@ -2467,9 +2472,9 @@ function ReportsPageContent() {
                                 </button>
                               </div>
                             ))}
-                            <div className="border-t border-slate-200 mt-2 pt-2">
+                            <div className="border-t border-slate-200 dark:border-slate-700 mt-2 pt-2">
                               <div className="p-2 space-y-2">
-                                <div className="text-xs font-semibold text-slate-700 mb-1">حفظ الفلاتر الحالية:</div>
+                                <div className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">حفظ الفلاتر الحالية:</div>
                                 <div className="flex items-center gap-2">
                                   <Input
                                     type="text"
@@ -2522,8 +2527,8 @@ function ReportsPageContent() {
               <CardBody className="pt-4 flex-1 flex flex-col min-h-0" aria-labelledby="filters-panel-title">
                 <div className="space-y-3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-primary-300 scrollbar-track-slate-100 pr-1" role="group" aria-label="خيارات الفلترة">
                   {/* Quick Filters */}
-                  <div className="mb-4 pb-3 border-b-2 border-slate-200">
-                    <label className="block text-xs font-semibold text-slate-600 mb-2">
+                  <div className="mb-4 pb-3 border-b-2 border-slate-200 dark:border-slate-700">
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
                       <MaterialIcon name="star" className="inline-block ml-1" size="sm" />
                       فلاتر سريعة
                     </label>
@@ -2574,12 +2579,12 @@ function ReportsPageContent() {
                   </div>
 
                   {/* البحث العام */}
-                  <div className="mb-4 pb-3 border-b-2 border-slate-200">
+                  <div className="mb-4 pb-3 border-b-2 border-slate-200 dark:border-slate-700">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-xs font-semibold text-slate-600 flex items-center gap-1">
-                        <MaterialIcon name="search" className="text-primary-500 flex-shrink-0" size="sm" />
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                        <MaterialIcon name="search" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                         <span>البحث السريع</span>
-                        <span className="text-xs text-slate-400 mr-2">(Ctrl+K)</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500 mr-2">(Ctrl+K)</span>
                       </label>
                       <Button
                         onClick={() => setAdvancedSearchOpen(!advancedSearchOpen)}
@@ -2624,7 +2629,7 @@ function ReportsPageContent() {
                       {showSuggestions && searchSuggestions.length > 0 && (
                         <div
                           id="search-suggestions"
-                          className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-primary-200 rounded-lg shadow-2xl z-50 max-h-60 overflow-y-auto animate-scale-in backdrop-blur-sm"
+                          className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border-2 border-primary-200 dark:border-primary-700 rounded-lg shadow-2xl z-50 max-h-60 overflow-y-auto animate-scale-in backdrop-blur-sm"
                           role="listbox"
                           aria-label="اقتراحات البحث"
                         >
@@ -2635,7 +2640,7 @@ function ReportsPageContent() {
                                 setSearchTerm(suggestion);
                                 setShowSuggestions(false);
                               }}
-                              className="w-full px-4 py-2 text-right text-sm text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-all duration-150 flex items-center gap-2 border-b border-slate-100 last:border-b-0 focus:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                              className="w-full px-4 py-2 text-right text-sm text-slate-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-400 transition-all duration-150 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 last:border-b-0 focus:bg-primary-50 dark:focus:bg-primary-900/30 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 rounded"
                               role="option"
                               aria-label={`اختر ${suggestion}`}
                             >
@@ -2709,9 +2714,9 @@ function ReportsPageContent() {
 
                     {/* Advanced Search */}
                     {advancedSearchOpen && (
-                      <div className="mt-3 p-3 bg-gradient-to-br from-slate-50 to-white rounded-lg border border-slate-200 shadow-sm space-y-2 animate-fade-in backdrop-blur-sm">
-                        <div className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
-                          <MaterialIcon name="tune" className="text-primary-500 flex-shrink-0" size="sm" />
+                      <div className="mt-3 p-3 bg-gradient-to-br from-slate-50 to-white dark:from-slate-700 dark:to-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm space-y-2 animate-fade-in backdrop-blur-sm">
+                        <div className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-1">
+                          <MaterialIcon name="tune" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                           <span>البحث في حقول محددة:</span>
                         </div>
                         <div className="grid grid-cols-1 gap-2">
@@ -2979,22 +2984,22 @@ function ReportsPageContent() {
                   />
 
                   {/* فلتر الحالة النشطة */}
-                  <div className="border-2 border-slate-200/60 rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 hover:border-primary-300/50">
+                  <div className="border-2 border-slate-200/60 dark:border-slate-700/60 rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-md hover:shadow-xl transition-all duration-300 hover:border-primary-300/50 dark:hover:border-primary-600/50">
                     <button
                       onClick={() => setFilterOpenStates(prev => ({ ...prev, status: !prev.status }))}
-                      className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-200 flex items-center justify-between group"
+                      className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 dark:from-slate-700 dark:via-slate-700/70 dark:to-slate-700 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 dark:hover:from-primary-900/30 dark:hover:via-primary-800/30 dark:hover:to-primary-900/30 transition-all duration-200 flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/50 group-hover:bg-primary-200 dark:group-hover:bg-primary-800 flex items-center justify-center transition-colors">
                           <MaterialIcon
                             name={filterOpenStates.status ? "expand_less" : "expand_more"}
-                            className="text-primary-600"
+                            className="text-primary-600 dark:text-primary-400"
                             size="sm"
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <MaterialIcon name="toggle_on" className="text-slate-500" size="sm" />
-                          <span className="font-semibold text-slate-700 text-sm">الحالة</span>
+                          <MaterialIcon name="toggle_on" className="text-slate-500 dark:text-slate-400" size="sm" />
+                          <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm">الحالة</span>
                         </div>
                         {isActiveFilter !== 'all' && (
                           <Badge variant="primary" size="sm" className="animate-scale-in text-xs">
@@ -3005,11 +3010,11 @@ function ReportsPageContent() {
                     </button>
 
                     {filterOpenStates.status && (
-                      <div className="p-3 border-t border-slate-200 bg-white filter-panel-open space-y-2 animate-fade-in">
+                      <div className="p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 filter-panel-open space-y-2 animate-fade-in">
                         <div
                           className={`p-2.5 rounded-lg transition-all cursor-pointer ${isActiveFilter === 'all'
-                              ? 'bg-primary-50 border-2 border-primary-200'
-                              : 'hover:bg-slate-50 border-2 border-transparent'
+                              ? 'bg-primary-50 dark:bg-primary-900/40 border-2 border-primary-200 dark:border-primary-700'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border-2 border-transparent'
                             }`}
                           onClick={() => setIsActiveFilter('all')}
                         >
@@ -3022,8 +3027,8 @@ function ReportsPageContent() {
                         </div>
                         <div
                           className={`p-2.5 rounded-lg transition-all cursor-pointer ${isActiveFilter === 'active'
-                              ? 'bg-primary-50 border-2 border-primary-200'
-                              : 'hover:bg-slate-50 border-2 border-transparent'
+                              ? 'bg-primary-50 dark:bg-primary-900/40 border-2 border-primary-200 dark:border-primary-700'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border-2 border-transparent'
                             }`}
                           onClick={() => setIsActiveFilter('active')}
                         >
@@ -3036,8 +3041,8 @@ function ReportsPageContent() {
                         </div>
                         <div
                           className={`p-2.5 rounded-lg transition-all cursor-pointer ${isActiveFilter === 'inactive'
-                              ? 'bg-primary-50 border-2 border-primary-200'
-                              : 'hover:bg-slate-50 border-2 border-transparent'
+                              ? 'bg-primary-50 dark:bg-primary-900/40 border-2 border-primary-200 dark:border-primary-700'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border-2 border-transparent'
                             }`}
                           onClick={() => setIsActiveFilter('inactive')}
                         >
@@ -3053,22 +3058,22 @@ function ReportsPageContent() {
                   </div>
 
                   {/* فلتر تاريخ الشراء */}
-                  <div className="border-2 border-slate-200/60 rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 hover:border-primary-300/50">
+                  <div className="border-2 border-slate-200/60 dark:border-slate-700/60 rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-md hover:shadow-xl transition-all duration-300 hover:border-primary-300/50 dark:hover:border-primary-600/50">
                     <button
                       onClick={() => setFilterOpenStates(prev => ({ ...prev, dates: !prev.dates }))}
-                      className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 transition-all duration-200 flex items-center justify-between group"
+                      className="w-full p-3 bg-gradient-to-r from-slate-50 via-slate-100/70 to-slate-50 dark:from-slate-700 dark:via-slate-700/70 dark:to-slate-700 hover:from-primary-50 hover:via-primary-100/50 hover:to-primary-50 dark:hover:from-primary-900/30 dark:hover:via-primary-800/30 dark:hover:to-primary-900/30 transition-all duration-200 flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary-100 group-hover:bg-primary-200 flex items-center justify-center transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/50 group-hover:bg-primary-200 dark:group-hover:bg-primary-800 flex items-center justify-center transition-colors">
                           <MaterialIcon
                             name={filterOpenStates.dates ? "expand_less" : "expand_more"}
-                            className="text-primary-600"
+                            className="text-primary-600 dark:text-primary-400"
                             size="sm"
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <MaterialIcon name="calendar_today" className="text-slate-500" size="sm" />
-                          <span className="font-semibold text-slate-700 text-sm">تاريخ الشراء</span>
+                          <MaterialIcon name="calendar_today" className="text-slate-500 dark:text-slate-400" size="sm" />
+                          <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm">تاريخ الشراء</span>
                         </div>
                         {(purchaseDateFrom || purchaseDateTo) && (
                           <Badge variant="primary" size="sm" className="animate-scale-in text-xs">
@@ -3079,10 +3084,10 @@ function ReportsPageContent() {
                     </button>
 
                     {filterOpenStates.dates && (
-                      <div className="p-3 border-t border-slate-200 bg-white filter-panel-open animate-fade-in">
+                      <div className="p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 filter-panel-open animate-fade-in">
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-2">
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
                               <MaterialIcon name="event" className="inline-block ml-1" size="sm" />
                               من تاريخ
                             </label>
@@ -3096,7 +3101,7 @@ function ReportsPageContent() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-2">
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
                               <MaterialIcon name="event" className="inline-block ml-1" size="sm" />
                               إلى تاريخ
                             </label>
@@ -3130,7 +3135,7 @@ function ReportsPageContent() {
                   </div>
 
                   {/* أزرار التحكم */}
-                  <div className="pt-4 mt-4 border-t-2 border-slate-200 space-y-2 sticky bottom-0 bg-white pb-2 z-10">
+                  <div className="pt-4 mt-4 border-t-2 border-slate-200 dark:border-slate-700 space-y-2 sticky bottom-0 bg-white dark:bg-slate-800 pb-2 z-10">
                     {filteredAssets.length > 0 && (
                       <>
                         <div className="relative" ref={exportButtonRef}>
@@ -3145,21 +3150,21 @@ function ReportsPageContent() {
                             تصدير ({filteredAssets.length})
                           </Button>
                           {exportDropdownOpen && (
-                            <div className="absolute bottom-full left-0 right-0 mb-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in">
+                            <div className="absolute bottom-full left-0 right-0 mb-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                               <button
                                 onClick={() => {
                                   setShowExportColumnsModal(true);
                                   setExportDropdownOpen(false);
                                 }}
-                                className="w-full px-4 py-3 text-right hover:bg-slate-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-b border-slate-200"
+                                className="w-full px-4 py-3 text-right hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-200 hover:translate-x-[-2px] border-b border-slate-200 dark:border-slate-700"
                               >
-                                <MaterialIcon name="settings" className="text-slate-600" size="sm" />
+                                <MaterialIcon name="settings" className="text-slate-600 dark:text-slate-400" size="sm" />
                                 <span>تخصيص الأعمدة</span>
                               </button>
                               <button
                                 onClick={exportToCSV}
                                 disabled={isExporting}
-                                className="w-full px-4 py-3 text-right hover:bg-success-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 hover:translate-x-[-2px] border-t border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 text-right hover:bg-success-50 dark:hover:bg-success-900/30 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-200 hover:translate-x-[-2px] border-t border-slate-200 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {isExporting && exportType === 'CSV' ? (
                                   <>
@@ -3176,16 +3181,16 @@ function ReportsPageContent() {
                               <button
                                 onClick={exportToExcel}
                                 disabled={isExporting}
-                                className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 text-right hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-200 border-t border-slate-200 dark:border-slate-700 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {isExporting && exportType === 'Excel' ? (
                                   <>
-                                    <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-4 h-4 border-2 border-primary-600 dark:border-primary-400 border-t-transparent rounded-full animate-spin" />
                                     <span>جاري التصدير...</span>
                                   </>
                                 ) : (
                                   <>
-                                    <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
+                                    <MaterialIcon name="table_chart" className="text-primary-600 dark:text-primary-400" size="sm" />
                                     <span>تصدير إلى Excel</span>
                                   </>
                                 )}
@@ -3193,7 +3198,7 @@ function ReportsPageContent() {
                               <button
                                 onClick={exportToPDF}
                                 disabled={isExporting}
-                                className="w-full px-4 py-3 text-right hover:bg-error-50 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 border-t border-slate-200 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 text-right hover:bg-error-50 dark:hover:bg-error-900/30 transition-all duration-200 flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-200 border-t border-slate-200 dark:border-slate-700 hover:translate-x-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {isExporting && exportType === 'PDF' ? (
                                   <>
@@ -3240,14 +3245,14 @@ function ReportsPageContent() {
 
           {/* جدول النتائج */}
           <div className="flex-1 min-w-0 w-full">
-            <Card className="shadow-lg border-2 border-slate-200 bg-white w-full">
+            <Card className="shadow-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 w-full">
               <CardHeader
-                className="pb-3 border-b-2 border-slate-200 flex-shrink-0 bg-gradient-to-r from-slate-50 to-white"
+                className="pb-3 border-b-2 border-slate-200 dark:border-slate-700 flex-shrink-0 bg-gradient-to-r from-slate-50 to-white dark:from-slate-700 dark:to-slate-800"
                 action={
                   filteredAssets.length > 0 ? (
                     <div className="flex items-center gap-2 flex-wrap">
                       {/* View Mode Toggle */}
-                      <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
                         <Button
                           onClick={() => setViewMode('table')}
                           variant={viewMode === 'table' ? 'primary' : 'ghost'}
@@ -3285,7 +3290,7 @@ function ReportsPageContent() {
                             <span className="hidden sm:inline">الأعمدة</span>
                           </Button>
                           {columnVisibilityOpen && (
-                            <div className="absolute top-full left-0 mt-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in min-w-[200px] bg-white border border-slate-200">
+                            <div className="absolute top-full left-0 mt-2 glass-effect rounded-xl shadow-2xl z-50 overflow-hidden animate-scale-in min-w-[200px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                               <div className="p-2 space-y-1 max-h-64 overflow-y-auto">
                                 {[
                                   { key: 'department', label: 'الإدارة' },
@@ -3486,11 +3491,11 @@ function ReportsPageContent() {
                 <div className="flex items-center justify-between w-full flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <MaterialIcon name="table_chart" className="text-primary-600" size="sm" />
-                    <span className="text-base font-semibold text-slate-800" id="results-count" aria-live="polite" aria-atomic="true">
+                    <span className="text-base font-semibold text-slate-800 dark:text-slate-200" id="results-count" aria-live="polite" aria-atomic="true">
                       النتائج ({filteredAssets.length.toLocaleString('ar-SA')})
                     </span>
                     {filteredAssets.length > itemsPerPage && (
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
                         (صفحة {currentPage} من {totalPages})
                       </span>
                     )}
@@ -3605,8 +3610,8 @@ function ReportsPageContent() {
                         return (
                           <Card
                             key={idx}
-                            className={`hover:shadow-xl hover:border-primary-300 transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98] border-2 ${isSelected ? 'border-primary-400 bg-primary-50/50 shadow-md' : 'border-slate-200/60'
-                              } bg-gradient-to-br from-white to-slate-50/30 cursor-pointer`}
+                            className={`hover:shadow-xl hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98] border-2 ${isSelected ? 'border-primary-400 dark:border-primary-600 bg-primary-50/50 dark:bg-primary-900/30 shadow-md' : 'border-slate-200/60 dark:border-slate-700/60'
+                              } bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-800 dark:to-slate-700/30 cursor-pointer`}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -3615,35 +3620,35 @@ function ReportsPageContent() {
                           >
                             <CardBody padding="md">
                               <div className="space-y-3">
-                                <div className="flex items-start justify-between border-b-2 border-primary-200/50 pb-2">
+                                <div className="flex items-start justify-between border-b-2 border-primary-200/50 dark:border-primary-700/50 pb-2">
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="text-sm font-bold text-slate-900 truncate mb-1 hover:text-primary-700 transition-colors duration-150">{assetDetail.assetName}</h3>
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate mb-1 hover:text-primary-700 dark:hover:text-primary-400 transition-colors duration-150">{assetDetail.assetName}</h3>
                                     <Badge variant="outline" size="sm" className="text-xs transition-all duration-150 hover:scale-105">
                                       {assetDetail.assetStatus}
                                     </Badge>
                                   </div>
                                   <div className="text-left flex-shrink-0 mr-2">
-                                    <div className="text-base font-black text-success-600 drop-shadow-sm">
+                                    <div className="text-base font-black text-success-600 dark:text-success-400 drop-shadow-sm">
                                       {assetDetail.value.toLocaleString('ar-SA')}
                                     </div>
-                                    <div className="text-xs text-success-600 opacity-80">ريال</div>
+                                    <div className="text-xs text-success-600 dark:text-success-400 opacity-80">ريال</div>
                                   </div>
                                 </div>
                                 <div className="space-y-1.5 text-xs">
-                                  <div className="flex items-center gap-1.5 text-slate-600 hover:text-primary-600 transition-colors duration-150">
-                                    <MaterialIcon name="business" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150">
+                                    <MaterialIcon name="business" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                     <span className="truncate">{assetDetail.departmentName}</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-slate-600 hover:text-primary-600 transition-colors duration-150">
-                                    <MaterialIcon name="meeting_room" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150">
+                                    <MaterialIcon name="meeting_room" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                     <span className="truncate">{assetDetail.officeName}</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-slate-600 hover:text-primary-600 transition-colors duration-150">
-                                    <MaterialIcon name="category" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150">
+                                    <MaterialIcon name="category" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                     <span className="truncate">{assetDetail.assetType}</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-slate-600 hover:text-primary-600 transition-colors duration-150">
-                                    <MaterialIcon name="person" className="text-primary-500 flex-shrink-0" size="sm" />
+                                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150">
+                                    <MaterialIcon name="person" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                     <span className="truncate">{assetDetail.custodianName}</span>
                                   </div>
                                 </div>
@@ -3656,7 +3661,7 @@ function ReportsPageContent() {
 
                     {/* Grid View Pagination */}
                     {filteredAssets.length > itemsPerPage && (
-                      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <span>
                             عرض {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredAssets.length)} من {filteredAssets.length.toLocaleString('ar-SA')}
@@ -3736,7 +3741,7 @@ function ReportsPageContent() {
                   <div className="w-full">
                     {/* Mobile/Tablet Card View - Select All */}
                     {sortedAndPaginatedAssets.length > 0 && (
-                      <div className="mb-4 p-3 bg-gradient-to-r from-slate-50 to-white rounded-lg border border-slate-200 shadow-sm flex items-center justify-between backdrop-blur-sm">
+                      <div className="mb-4 p-3 bg-gradient-to-r from-slate-50 to-white dark:from-slate-700 dark:to-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-between backdrop-blur-sm">
                         <div className="flex items-center gap-3">
                           <Checkbox
                             checked={allCurrentPageSelected}
@@ -3761,8 +3766,8 @@ function ReportsPageContent() {
                         return (
                           <Card
                             key={idx}
-                            className={`hover:shadow-xl hover:border-primary-300 transition-all duration-300 ease-out hover:scale-[1.01] active:scale-[0.99] border-2 ${isSelected ? 'border-primary-400 bg-primary-50/50 shadow-md' : 'border-slate-200/60'
-                              } bg-gradient-to-br from-white to-slate-50/30 cursor-pointer`}
+                            className={`hover:shadow-xl hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-300 ease-out hover:scale-[1.01] active:scale-[0.99] border-2 ${isSelected ? 'border-primary-400 dark:border-primary-600 bg-primary-50/50 dark:bg-primary-900/30 shadow-md' : 'border-slate-200/60 dark:border-slate-700/60'
+                              } bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-800 dark:to-slate-700/30 cursor-pointer`}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -3771,7 +3776,7 @@ function ReportsPageContent() {
                           >
                             <CardBody padding="md">
                               <div className="space-y-3">
-                                <div className="flex items-start justify-between border-b-2 border-primary-200/50 pb-2">
+                                <div className="flex items-start justify-between border-b-2 border-primary-200/50 dark:border-primary-700/50 pb-2">
                                   <div className="flex items-start gap-2 flex-1 min-w-0">
                                     <Checkbox
                                       checked={isSelected}
@@ -3787,47 +3792,47 @@ function ReportsPageContent() {
                                       className="mt-1 flex-shrink-0"
                                     />
                                     <div className="flex-1 min-w-0">
-                                      <h3 className="text-base font-bold text-slate-900 mb-1 truncate hover:text-primary-700 transition-colors duration-150">{assetDetail.assetName}</h3>
+                                      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 truncate hover:text-primary-700 dark:hover:text-primary-400 transition-colors duration-150">{assetDetail.assetName}</h3>
                                       <Badge variant="outline" size="sm" className="text-xs transition-all duration-150 hover:scale-105">
                                         {assetDetail.assetStatus}
                                       </Badge>
                                     </div>
                                   </div>
                                   <div className="text-left flex-shrink-0 mr-2">
-                                    <div className="text-lg font-black text-success-600 drop-shadow-sm">
+                                    <div className="text-lg font-black text-success-600 dark:text-success-400 drop-shadow-sm">
                                       {assetDetail.value.toLocaleString('ar-SA')}
                                     </div>
-                                    <div className="text-xs text-success-600 opacity-80">ريال</div>
+                                    <div className="text-xs text-success-600 dark:text-success-400 opacity-80">ريال</div>
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-1 gap-2 text-sm">
                                   {visibleColumns.department && (
-                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
-                                      <MaterialIcon name="business" className="text-primary-500 flex-shrink-0" size="sm" />
+                                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150">
+                                      <MaterialIcon name="business" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                       <span className="truncate">{assetDetail.departmentName}</span>
                                     </div>
                                   )}
                                   {visibleColumns.office && (
-                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
-                                      <MaterialIcon name="meeting_room" className="text-primary-500 flex-shrink-0" size="sm" />
+                                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150">
+                                      <MaterialIcon name="meeting_room" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                       <span className="truncate">{assetDetail.officeName}</span>
                                     </div>
                                   )}
                                   {visibleColumns.assetType && (
-                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
-                                      <MaterialIcon name="category" className="text-primary-500 flex-shrink-0" size="sm" />
+                                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150">
+                                      <MaterialIcon name="category" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                       <span className="truncate">{assetDetail.assetType}</span>
                                     </div>
                                   )}
                                   {visibleColumns.custodian && (
-                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
-                                      <MaterialIcon name="person" className="text-primary-500 flex-shrink-0" size="sm" />
+                                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150">
+                                      <MaterialIcon name="person" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                       <span className="truncate">{assetDetail.custodianName}</span>
                                     </div>
                                   )}
                                   {visibleColumns.assetTag && (
-                                    <div className="flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors duration-150">
-                                      <MaterialIcon name="tag" className="text-primary-500 flex-shrink-0" size="sm" />
+                                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150">
+                                      <MaterialIcon name="tag" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                       <span className="truncate font-mono text-xs">
                                         {assetDetail.asset.get('asset_tag') || '-'}
                                       </span>
@@ -3842,11 +3847,11 @@ function ReportsPageContent() {
                     </div>
 
                     {/* Desktop Table View */}
-                    <div className="hidden lg:block w-full overflow-x-auto reports-table-wrapper rounded-lg border-2 border-slate-200 shadow-md bg-white">
+                    <div className="hidden lg:block w-full overflow-x-auto reports-table-wrapper rounded-lg border-2 border-slate-200 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800">
                       <table className="w-full text-sm border-collapse" role="table" aria-label="جدول الأصول المفلترة">
                         <thead>
-                          <tr className="bg-gradient-to-r from-primary-50 via-slate-50 to-primary-50 border-b-2 border-primary-200 shadow-sm" role="row">
-                            <th className="p-2 border-l border-slate-200 sticky right-0 bg-inherit z-10" role="columnheader" scope="col">
+                          <tr className="bg-gradient-to-r from-primary-50 via-slate-50 to-primary-50 dark:from-primary-900/30 dark:via-slate-700 dark:to-primary-900/30 border-b-2 border-primary-200 dark:border-primary-700 shadow-sm" role="row">
+                            <th className="p-2 border-l border-slate-200 dark:border-slate-600 sticky right-0 bg-inherit z-10" role="columnheader" scope="col">
                               <Checkbox
                                 checked={allCurrentPageSelected}
                                 onChange={handleSelectAllToggle}
@@ -3860,10 +3865,10 @@ function ReportsPageContent() {
                               </span>
                             </th>
                             {visibleColumns.department && (
-                              <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 first:border-l-0 min-w-[140px] sticky right-0 bg-inherit" role="columnheader" scope="col">
+                              <th className="text-right p-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-600 first:border-l-0 min-w-[140px] sticky right-0 bg-inherit" role="columnheader" scope="col">
                                 <button
                                   onClick={() => handleSort('department')}
-                                  className="flex items-center gap-2 justify-end w-full hover:opacity-80 hover:bg-primary-50/50 active:bg-primary-100/50 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 rounded px-2 py-1"
+                                  className="flex items-center gap-2 justify-end w-full hover:opacity-80 hover:bg-primary-50/50 dark:hover:bg-primary-900/30 active:bg-primary-100/50 dark:active:bg-primary-800/30 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 rounded px-2 py-1"
                                   aria-label={`ترتيب حسب الإدارة ${sortColumn === 'department' ? (sortDirection === 'asc' ? 'تصاعدي' : 'تنازلي') : ''}`}
                                   aria-sort={sortColumn === 'department' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                                 >
@@ -3884,17 +3889,17 @@ function ReportsPageContent() {
                               </th>
                             )}
                             {visibleColumns.office && (
-                              <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[140px]">
+                              <th className="text-right p-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-600 min-w-[140px]">
                                 <button
                                   onClick={() => handleSort('office')}
                                   className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
                                 >
-                                  <MaterialIcon name="meeting_room" className="text-primary-600" size="sm" />
+                                  <MaterialIcon name="meeting_room" className="text-primary-600 dark:text-primary-400" size="sm" />
                                   <span>المكتب</span>
                                   {sortColumn === 'office' && (
                                     <MaterialIcon
                                       name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                                      className="text-primary-600"
+                                      className="text-primary-600 dark:text-primary-400"
                                       size="sm"
                                     />
                                   )}
@@ -3902,17 +3907,17 @@ function ReportsPageContent() {
                               </th>
                             )}
                             {visibleColumns.assetName && (
-                              <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[180px]">
+                              <th className="text-right p-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-600 min-w-[180px]">
                                 <button
                                   onClick={() => handleSort('assetName')}
                                   className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
                                 >
-                                  <MaterialIcon name="inventory_2" className="text-primary-600" size="sm" />
+                                  <MaterialIcon name="inventory_2" className="text-primary-600 dark:text-primary-400" size="sm" />
                                   <span>اسم الأصل</span>
                                   {sortColumn === 'assetName' && (
                                     <MaterialIcon
                                       name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                                      className="text-primary-600"
+                                      className="text-primary-600 dark:text-primary-400"
                                       size="sm"
                                     />
                                   )}
@@ -3920,17 +3925,17 @@ function ReportsPageContent() {
                               </th>
                             )}
                             {visibleColumns.assetType && (
-                              <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[140px]">
+                              <th className="text-right p-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-600 min-w-[140px]">
                                 <button
                                   onClick={() => handleSort('assetType')}
                                   className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
                                 >
-                                  <MaterialIcon name="category" className="text-primary-600" size="sm" />
+                                  <MaterialIcon name="category" className="text-primary-600 dark:text-primary-400" size="sm" />
                                   <span>نوع الأصل</span>
                                   {sortColumn === 'assetType' && (
                                     <MaterialIcon
                                       name={sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                                      className="text-primary-600"
+                                      className="text-primary-600 dark:text-primary-400"
                                       size="sm"
                                     />
                                   )}
@@ -3938,7 +3943,7 @@ function ReportsPageContent() {
                               </th>
                             )}
                             {visibleColumns.assetStatus && (
-                              <th className="text-right p-4 font-bold text-slate-800 text-xs whitespace-nowrap border-l border-slate-200 min-w-[140px]">
+                              <th className="text-right p-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-600 min-w-[140px]">
                                 <button
                                   onClick={() => handleSort('assetStatus')}
                                   className="flex items-center gap-2 justify-end w-full hover:opacity-70 transition-opacity"
@@ -4008,8 +4013,8 @@ function ReportsPageContent() {
                             return (
                               <tr
                                 key={idx}
-                                className={`border-b border-slate-200 hover:bg-primary-50/50 hover:shadow-sm transition-all duration-200 ease-in-out cursor-pointer ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
-                                  } ${isSelected ? 'bg-primary-100 border-primary-300 shadow-sm' : ''}`}
+                                className={`border-b border-slate-200 dark:border-slate-700 hover:bg-primary-50/50 dark:hover:bg-primary-900/30 hover:shadow-sm transition-all duration-200 ease-in-out cursor-pointer ${idx % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/30 dark:bg-slate-700/30'
+                                  } ${isSelected ? 'bg-primary-100 dark:bg-primary-900/50 border-primary-300 dark:border-primary-700 shadow-sm' : ''}`}
                                 role="row"
                                 aria-rowindex={idx + 1}
                                 aria-selected={isSelected}
@@ -4027,7 +4032,7 @@ function ReportsPageContent() {
                                 }}
                                 tabIndex={0}
                               >
-                                <td className="p-2 border-l border-slate-200 sticky right-0 bg-inherit z-10" onClick={(e) => e.stopPropagation()} role="gridcell">
+                                <td className="p-2 border-l border-slate-200 dark:border-slate-600 sticky right-0 bg-inherit z-10" onClick={(e) => e.stopPropagation()} role="gridcell">
                                   <Checkbox
                                     checked={isSelected}
                                     onChange={(e) => {
@@ -4043,9 +4048,9 @@ function ReportsPageContent() {
                                   />
                                 </td>
                                 {visibleColumns.department && (
-                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200 hover:text-slate-900 transition-colors duration-150" role="gridcell" aria-label={`الإدارة: ${assetDetail.departmentName}`}>
+                                  <td className="p-4 text-slate-700 dark:text-slate-200 text-sm border-l border-slate-200 dark:border-slate-600 hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-150" role="gridcell" aria-label={`الإدارة: ${assetDetail.departmentName}`}>
                                     <div className="flex items-center gap-2">
-                                      <MaterialIcon name="business" className="text-primary-500 flex-shrink-0 opacity-60" size="sm" />
+                                      <MaterialIcon name="business" className="text-primary-500 dark:text-primary-400 flex-shrink-0 opacity-60" size="sm" />
                                       <span className="truncate block max-w-[160px]" title={assetDetail.departmentName}>
                                         {assetDetail.departmentName}
                                       </span>
@@ -4053,9 +4058,9 @@ function ReportsPageContent() {
                                   </td>
                                 )}
                                 {visibleColumns.office && (
-                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200 hover:text-slate-900 transition-colors duration-150">
+                                  <td className="p-4 text-slate-700 dark:text-slate-200 text-sm border-l border-slate-200 dark:border-slate-600 hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-150">
                                     <div className="flex items-center gap-2">
-                                      <MaterialIcon name="meeting_room" className="text-primary-500 flex-shrink-0 opacity-60" size="sm" />
+                                      <MaterialIcon name="meeting_room" className="text-primary-500 dark:text-primary-400 flex-shrink-0 opacity-60" size="sm" />
                                       <span className="truncate block max-w-[160px]" title={assetDetail.officeName}>
                                         {assetDetail.officeName}
                                       </span>
@@ -4063,9 +4068,9 @@ function ReportsPageContent() {
                                   </td>
                                 )}
                                 {visibleColumns.assetName && (
-                                  <td className="p-4 text-slate-900 font-bold text-sm border-l border-slate-200 hover:text-primary-700 transition-colors duration-150">
+                                  <td className="p-4 text-slate-900 dark:text-slate-100 font-bold text-sm border-l border-slate-200 dark:border-slate-600 hover:text-primary-700 dark:hover:text-primary-400 transition-colors duration-150">
                                     <div className="flex items-center gap-2">
-                                      <MaterialIcon name="inventory_2" className="text-primary-500 flex-shrink-0" size="sm" />
+                                      <MaterialIcon name="inventory_2" className="text-primary-500 dark:text-primary-400 flex-shrink-0" size="sm" />
                                       <span className="truncate block max-w-[220px]" title={assetDetail.assetName}>
                                         {assetDetail.assetName}
                                       </span>
@@ -4073,9 +4078,9 @@ function ReportsPageContent() {
                                   </td>
                                 )}
                                 {visibleColumns.assetType && (
-                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200 hover:text-slate-900 transition-colors duration-150">
+                                  <td className="p-4 text-slate-700 dark:text-slate-200 text-sm border-l border-slate-200 dark:border-slate-600 hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-150">
                                     <div className="flex items-center gap-2">
-                                      <MaterialIcon name="category" className="text-primary-500 flex-shrink-0 opacity-60" size="sm" />
+                                      <MaterialIcon name="category" className="text-primary-500 dark:text-primary-400 flex-shrink-0 opacity-60" size="sm" />
                                       <span className="truncate block max-w-[160px]" title={assetDetail.assetType}>
                                         {assetDetail.assetType}
                                       </span>
@@ -4083,16 +4088,16 @@ function ReportsPageContent() {
                                   </td>
                                 )}
                                 {visibleColumns.assetStatus && (
-                                  <td className="p-4 border-l border-slate-200">
+                                  <td className="p-4 border-l border-slate-200 dark:border-slate-600">
                                     <Badge variant="outline" size="sm" className="whitespace-nowrap font-semibold transition-all duration-150 hover:scale-105">
                                       {assetDetail.assetStatus}
                                     </Badge>
                                   </td>
                                 )}
                                 {visibleColumns.custodian && (
-                                  <td className="p-4 text-slate-700 text-sm border-l border-slate-200 hover:text-slate-900 transition-colors duration-150">
+                                  <td className="p-4 text-slate-700 dark:text-slate-200 text-sm border-l border-slate-200 dark:border-slate-600 hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-150">
                                     <div className="flex items-center gap-2">
-                                      <MaterialIcon name="person" className="text-primary-500 flex-shrink-0 opacity-60" size="sm" />
+                                      <MaterialIcon name="person" className="text-primary-500 dark:text-primary-400 flex-shrink-0 opacity-60" size="sm" />
                                       <span className="truncate block max-w-[160px]" title={assetDetail.custodianName}>
                                         {assetDetail.custodianName}
                                       </span>
@@ -4100,9 +4105,9 @@ function ReportsPageContent() {
                                   </td>
                                 )}
                                 {visibleColumns.assetTag && (
-                                  <td className="p-4 text-slate-600 font-mono text-xs border-l border-slate-200 bg-slate-50/50">
+                                  <td className="p-4 text-slate-600 dark:text-slate-300 font-mono text-xs border-l border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30">
                                     <div className="flex items-center gap-1">
-                                      <MaterialIcon name="tag" className="text-slate-400" size="sm" />
+                                      <MaterialIcon name="tag" className="text-slate-400 dark:text-slate-500" size="sm" />
                                       <span className="truncate block max-w-[120px]" title={assetDetail.asset.get('asset_tag') || '-'}>
                                         {assetDetail.asset.get('asset_tag') || '-'}
                                       </span>
@@ -4110,11 +4115,11 @@ function ReportsPageContent() {
                                   </td>
                                 )}
                                 {visibleColumns.value && (
-                                  <td className="p-4 text-slate-900 font-bold text-sm border-l border-slate-200 text-right sticky left-0 bg-inherit z-10 shadow-lg">
+                                  <td className="p-4 text-slate-900 dark:text-slate-100 font-bold text-sm border-l border-slate-200 dark:border-slate-600 text-right sticky left-0 bg-inherit z-10 shadow-lg">
                                     <div className="flex items-center gap-1 justify-end whitespace-nowrap">
-                                      <MaterialIcon name="attach_money" className="text-success-600" size="sm" />
-                                      <span className="text-success-700">{assetDetail.value.toLocaleString('ar-SA')}</span>
-                                      <span className="text-slate-500 text-xs">ريال</span>
+                                      <MaterialIcon name="attach_money" className="text-success-600 dark:text-success-400" size="sm" />
+                                      <span className="text-success-700 dark:text-success-400">{assetDetail.value.toLocaleString('ar-SA')}</span>
+                                      <span className="text-slate-500 dark:text-slate-400 text-xs">ريال</span>
                                     </div>
                                   </td>
                                 )}
