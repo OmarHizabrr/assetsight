@@ -14,7 +14,7 @@ import { BaseModel } from "@/lib/BaseModel";
 import { firestoreApi } from "@/lib/FirestoreApi";
 import { PdfSettingsService } from "@/lib/services/PdfSettingsService";
 import { getBothDates } from "@/lib/utils/hijriDate";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from 'xlsx';
 
 interface AssetDetail {
@@ -50,7 +50,7 @@ interface AdvancedFilterProps {
   icon?: string;
 }
 
-function AdvancedFilter({
+const AdvancedFilter = memo(function AdvancedFilter({
   title,
   options,
   selectedIds,
@@ -76,6 +76,7 @@ function AdvancedFilter({
 
   const handleToggle = useCallback((id: string, e?: React.MouseEvent) => {
     if (e) {
+      e.preventDefault();
       e.stopPropagation();
     }
     onToggle(id);
@@ -185,14 +186,23 @@ function AdvancedFilter({
                         ? 'bg-gradient-to-r from-primary-50 to-primary-100/50 border-2 border-primary-200 shadow-md'
                         : 'hover:bg-slate-50 hover:shadow-sm border-2 border-transparent hover:border-slate-200'
                       }`}
-                    onClick={(e) => handleToggle(option.id, e)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleToggle(option.id, e);
+                    }}
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Checkbox
                         checked={isSelected}
                         onChange={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
-                          handleToggle(option.id);
+                          handleToggle(option.id, e as any);
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                         }}
                         label={option.label}
                         className="flex-1 text-sm"
@@ -214,7 +224,7 @@ function AdvancedFilter({
       )}
     </div>
   );
-}
+});
 
 interface RangeFilterProps {
   title: string;
@@ -542,6 +552,20 @@ function ReportsPageContent() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+R أو Cmd+R: مسح جميع الفلاتر
+      if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        resetFilters();
+        showInfo('تم مسح جميع الفلاتر');
+      }
+      // Ctrl+K أو Cmd+K: التركيز على البحث
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
       // Ctrl/Cmd + K للبحث
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
@@ -838,8 +862,33 @@ function ReportsPageContent() {
       });
     }
 
-    // حساب العدادات بناءً على الأصول المفلترة
-    filteredDetails.forEach(detail => {
+    // تحديد المكاتب المتاحة بناءً على الإدارات المحددة
+    let availableOfficeIds = new Set<string>();
+    if (selectedDepartmentIds.size > 0) {
+      allOffices.forEach(office => {
+        if (selectedDepartmentIds.has(office.get('department_id') || '')) {
+          availableOfficeIds.add(office.get('id') || '');
+        }
+      });
+    } else {
+      // إذا لم يتم تحديد إدارات، جميع المكاتب متاحة
+      allOffices.forEach(office => {
+        availableOfficeIds.add(office.get('id') || '');
+      });
+    }
+
+    // إذا تم تحديد مكاتب، استخدم المكاتب المحددة فقط
+    if (selectedOfficeIds.size > 0) {
+      availableOfficeIds = new Set(selectedOfficeIds);
+    }
+
+    // حساب العدادات بناءً على الأصول في المكاتب المتاحة (وليس المفلترة)
+    const availableDetails = allAssetDetails.filter(detail => {
+      const officeId = allOffices.find(o => o.get('name') === detail.officeName)?.get('id');
+      return officeId && availableOfficeIds.has(officeId);
+    });
+
+    availableDetails.forEach(detail => {
       // حساب الإدارات
       const deptId = allOffices.find(o => o.get('name') === detail.officeName)?.get('department_id');
       if (deptId) {
@@ -879,6 +928,15 @@ function ReportsPageContent() {
       }
     });
 
+    // حساب العدادات الكاملة لجميع الإدارات (لإظهار جميع الإدارات حتى لو كانت count = 0)
+    const allDepartmentCounts = new Map<string, number>();
+    allAssetDetails.forEach(detail => {
+      const deptId = allOffices.find(o => o.get('name') === detail.officeName)?.get('department_id');
+      if (deptId) {
+        allDepartmentCounts.set(deptId, (allDepartmentCounts.get(deptId) || 0) + 1);
+      }
+    });
+
     // فلترة المكاتب بناءً على الإدارات المحددة
     let filteredOffices = allOffices;
     if (selectedDepartmentIds.size > 0) {
@@ -888,46 +946,102 @@ function ReportsPageContent() {
     }
 
     return {
+      // إظهار جميع الإدارات دائماً (لا يتم فلترتها)، لكن العدادات تعتمد على الأصول المفلترة
       departments: allDepartments
-        .map(dept => ({
-          id: dept.get('id') || '',
-          label: dept.get('name') || 'غير محدد',
-          count: departmentCounts.get(dept.get('id') || '') || 0,
-        }))
-        .filter(opt => opt.count > 0)
-        .sort((a, b) => b.count - a.count),
+        .map(dept => {
+          const deptId = dept.get('id') || '';
+          // استخدام العدادات الكاملة لجميع الإدارات (لإظهار جميع الإدارات)
+          const totalCount = allDepartmentCounts.get(deptId) ?? 0;
+          
+          return {
+            id: deptId,
+            label: dept.get('name') || 'غير محدد',
+            // إظهار العدد الكامل دائماً (لإظهار جميع الإدارات)
+            count: totalCount,
+          };
+        })
+        .filter(opt => opt.count > 0) // إظهار فقط الإدارات التي لديها أصول
+        .sort((a, b) => {
+          // ترتيب الإدارات المحددة أولاً، ثم حسب العدد
+          const aSelected = selectedDepartmentIds.has(a.id);
+          const bSelected = selectedDepartmentIds.has(b.id);
+          if (aSelected && !bSelected) return -1;
+          if (!aSelected && bSelected) return 1;
+          return b.count - a.count;
+        }),
       offices: filteredOffices
-        .map(office => ({
-          id: office.get('id') || '',
-          label: office.get('name') || 'غير محدد',
-          count: officeCounts.get(office.get('id') || '') || 0,
-        }))
-        .filter(opt => opt.count > 0)
-        .sort((a, b) => b.count - a.count),
+        .map(office => {
+          const officeId = office.get('id') || '';
+          const isSelected = selectedOfficeIds.has(officeId);
+          return {
+            id: officeId,
+            label: office.get('name') || 'غير محدد',
+            count: officeCounts.get(officeId) || 0,
+          };
+        })
+        .filter(opt => opt.count > 0 || selectedOfficeIds.has(opt.id)) // إظهار المكاتب المحددة حتى لو كانت count = 0
+        .sort((a, b) => {
+          // ترتيب المكاتب المحددة أولاً، ثم حسب العدد
+          const aSelected = selectedOfficeIds.has(a.id);
+          const bSelected = selectedOfficeIds.has(b.id);
+          if (aSelected && !bSelected) return -1;
+          if (!aSelected && bSelected) return 1;
+          return b.count - a.count;
+        }),
       assetTypes: assetTypes
-        .map(type => ({
-          id: type.get('id') || '',
-          label: type.get('name') || 'غير محدد',
-          count: assetTypeCounts.get(type.get('id') || '') || 0,
-        }))
-        .filter(opt => opt.count > 0)
-        .sort((a, b) => b.count - a.count),
+        .map(type => {
+          const typeId = type.get('id') || '';
+          const isSelected = selectedAssetTypeIds.has(typeId);
+          return {
+            id: typeId,
+            label: type.get('name') || 'غير محدد',
+            count: assetTypeCounts.get(typeId) || 0,
+          };
+        })
+        .filter(opt => opt.count > 0 || selectedAssetTypeIds.has(opt.id)) // إظهار الأنواع المحددة حتى لو كانت count = 0
+        .sort((a, b) => {
+          const aSelected = selectedAssetTypeIds.has(a.id);
+          const bSelected = selectedAssetTypeIds.has(b.id);
+          if (aSelected && !bSelected) return -1;
+          if (!aSelected && bSelected) return 1;
+          return b.count - a.count;
+        }),
       assetStatuses: statuses
-        .map(status => ({
-          id: status.get('id') || '',
-          label: status.get('name') || 'غير محدد',
-          count: assetStatusCounts.get(status.get('id') || '') || 0,
-        }))
-        .filter(opt => opt.count > 0)
-        .sort((a, b) => b.count - a.count),
+        .map(status => {
+          const statusId = status.get('id') || '';
+          const isSelected = selectedAssetStatusIds.has(statusId);
+          return {
+            id: statusId,
+            label: status.get('name') || 'غير محدد',
+            count: assetStatusCounts.get(statusId) || 0,
+          };
+        })
+        .filter(opt => opt.count > 0 || selectedAssetStatusIds.has(opt.id)) // إظهار الحالات المحددة حتى لو كانت count = 0
+        .sort((a, b) => {
+          const aSelected = selectedAssetStatusIds.has(a.id);
+          const bSelected = selectedAssetStatusIds.has(b.id);
+          if (aSelected && !bSelected) return -1;
+          if (!aSelected && bSelected) return 1;
+          return b.count - a.count;
+        }),
       assetNames: assetNames
-        .map(name => ({
-          id: name.get('id') || '',
-          label: name.get('name') || 'غير محدد',
-          count: assetNameCounts.get(name.get('id') || '') || 0,
-        }))
-        .filter(opt => opt.count > 0)
-        .sort((a, b) => b.count - a.count),
+        .map(name => {
+          const nameId = name.get('id') || '';
+          const isSelected = selectedAssetNameIds.has(nameId);
+          return {
+            id: nameId,
+            label: name.get('name') || 'غير محدد',
+            count: assetNameCounts.get(nameId) || 0,
+          };
+        })
+        .filter(opt => opt.count > 0 || selectedAssetNameIds.has(opt.id)) // إظهار الأسماء المحددة حتى لو كانت count = 0
+        .sort((a, b) => {
+          const aSelected = selectedAssetNameIds.has(a.id);
+          const bSelected = selectedAssetNameIds.has(b.id);
+          if (aSelected && !bSelected) return -1;
+          if (!aSelected && bSelected) return 1;
+          return b.count - a.count;
+        }),
       custodians: users
         .map(user => ({
           id: user.get('id') || '',
@@ -1810,9 +1924,11 @@ function ReportsPageContent() {
   }, [allCurrentPageSelected, sortedAndPaginatedAssets, currentPage, itemsPerPage]);
 
   // Handle row selection with Shift and Ctrl support
-  const handleRowToggle = useCallback((globalIndex: number, localIndex: number, event?: React.MouseEvent | React.ChangeEvent<HTMLInputElement>) => {
-    const isShiftPressed = event && 'shiftKey' in event ? (event as React.MouseEvent).shiftKey : false;
-    const isCtrlPressed = event && ('ctrlKey' in event || 'metaKey' in event) ? ((event as React.MouseEvent).ctrlKey || (event as React.MouseEvent).metaKey) : false;
+  const handleRowToggle = useCallback((globalIndex: number, localIndex: number, event?: React.MouseEvent | React.ChangeEvent<HTMLInputElement> | React.KeyboardEvent) => {
+    // Check if event is a MouseEvent to access shiftKey/ctrlKey
+    const isMouseEvent = event && 'shiftKey' in event && 'ctrlKey' in event;
+    const isShiftPressed = isMouseEvent ? (event as React.MouseEvent).shiftKey : false;
+    const isCtrlPressed = isMouseEvent ? ((event as React.MouseEvent).ctrlKey || (event as React.MouseEvent).metaKey) : false;
 
     setSelectedRows(prev => {
       const newSet = new Set(prev);
@@ -1825,15 +1941,8 @@ function ReportsPageContent() {
           const idx = (currentPage - 1) * itemsPerPage + i;
           newSet.add(idx);
         }
-      } else if (isCtrlPressed) {
-        // Toggle single row (Ctrl + Click)
-        if (newSet.has(globalIndex)) {
-          newSet.delete(globalIndex);
-        } else {
-          newSet.add(globalIndex);
-        }
       } else {
-        // Toggle single row (normal click)
+        // Toggle single row (normal click, Ctrl+Click, or checkbox change)
         if (newSet.has(globalIndex)) {
           newSet.delete(globalIndex);
         } else {
@@ -2284,8 +2393,38 @@ function ReportsPageContent() {
                       <MaterialIcon name="tune" className="text-primary-600 transition-transform duration-200" size="sm" />
                     </div>
                     <span className="text-base font-bold text-slate-800" id="filters-panel-title">الفلاتر المتقدمة</span>
+                    {/* عرض عدد الفلاتر المحددة */}
+                    {(selectedDepartmentIds.size > 0 || selectedOfficeIds.size > 0 || selectedAssetTypeIds.size > 0 || 
+                      selectedAssetStatusIds.size > 0 || selectedAssetNameIds.size > 0 || selectedCustodianIds.size > 0 ||
+                      minValue || maxValue || minPurchaseValue || maxPurchaseValue || minCurrentValue || maxCurrentValue ||
+                      isActiveFilter !== 'all' || purchaseDateFrom || purchaseDateTo) && (
+                      <Badge variant="primary" size="sm" className="animate-scale-in shadow-sm">
+                        {selectedDepartmentIds.size + selectedOfficeIds.size + selectedAssetTypeIds.size + 
+                         selectedAssetStatusIds.size + selectedAssetNameIds.size + selectedCustodianIds.size +
+                         (minValue || maxValue ? 1 : 0) + (minPurchaseValue || maxPurchaseValue ? 1 : 0) + 
+                         (minCurrentValue || maxCurrentValue ? 1 : 0) + (isActiveFilter !== 'all' ? 1 : 0) +
+                         (purchaseDateFrom || purchaseDateTo ? 1 : 0)} مفعل
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* زر مسح جميع الفلاتر */}
+                    {(selectedDepartmentIds.size > 0 || selectedOfficeIds.size > 0 || selectedAssetTypeIds.size > 0 || 
+                      selectedAssetStatusIds.size > 0 || selectedAssetNameIds.size > 0 || selectedCustodianIds.size > 0 ||
+                      minValue || maxValue || minPurchaseValue || maxPurchaseValue || minCurrentValue || maxCurrentValue ||
+                      isActiveFilter !== 'all' || purchaseDateFrom || purchaseDateTo || searchTerm) && (
+                      <Button
+                        onClick={resetFilters}
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<MaterialIcon name="clear_all" className="transition-transform duration-200 group-hover:rotate-90" size="sm" />}
+                        className="text-xs group hover:shadow-md hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200 animate-scale-in"
+                        title="مسح جميع الفلاتر (Ctrl+R)"
+                      >
+                        <span className="hidden sm:inline">مسح الكل</span>
+                        <span className="sm:hidden">مسح</span>
+                      </Button>
+                    )}
                     {/* Filter Presets */}
                     <div className="relative">
                       <Button
@@ -3468,7 +3607,11 @@ function ReportsPageContent() {
                             key={idx}
                             className={`hover:shadow-xl hover:border-primary-300 transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98] border-2 ${isSelected ? 'border-primary-400 bg-primary-50/50 shadow-md' : 'border-slate-200/60'
                               } bg-gradient-to-br from-white to-slate-50/30 cursor-pointer`}
-                            onClick={(e) => handleRowToggle(globalIndex, idx, e)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleRowToggle(globalIndex, idx, e);
+                            }}
                           >
                             <CardBody padding="md">
                               <div className="space-y-3">
@@ -3620,7 +3763,11 @@ function ReportsPageContent() {
                             key={idx}
                             className={`hover:shadow-xl hover:border-primary-300 transition-all duration-300 ease-out hover:scale-[1.01] active:scale-[0.99] border-2 ${isSelected ? 'border-primary-400 bg-primary-50/50 shadow-md' : 'border-slate-200/60'
                               } bg-gradient-to-br from-white to-slate-50/30 cursor-pointer`}
-                            onClick={(e) => handleRowToggle(globalIndex, idx, e)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleRowToggle(globalIndex, idx, e);
+                            }}
                           >
                             <CardBody padding="md">
                               <div className="space-y-3">
@@ -3630,9 +3777,13 @@ function ReportsPageContent() {
                                       checked={isSelected}
                                       onChange={(e) => {
                                         e.stopPropagation();
+                                        e.preventDefault();
                                         handleRowToggle(globalIndex, idx, e as any);
                                       }}
-                                      onClick={(e) => e.stopPropagation()}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                      }}
                                       className="mt-1 flex-shrink-0"
                                     />
                                     <div className="flex-1 min-w-0">
@@ -3862,11 +4013,16 @@ function ReportsPageContent() {
                                 role="row"
                                 aria-rowindex={idx + 1}
                                 aria-selected={isSelected}
-                                onClick={(e) => handleRowToggle(globalIndex, idx, e)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleRowToggle(globalIndex, idx, e);
+                                }}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter' || e.key === ' ') {
                                     e.preventDefault();
-                                    handleRowToggle(globalIndex, idx);
+                                    e.stopPropagation();
+                                    handleRowToggle(globalIndex, idx, e);
                                   }
                                 }}
                                 tabIndex={0}
@@ -3876,10 +4032,14 @@ function ReportsPageContent() {
                                     checked={isSelected}
                                     onChange={(e) => {
                                       e.stopPropagation();
+                                      e.preventDefault();
                                       handleRowToggle(globalIndex, idx, e as any);
                                     }}
                                     aria-label={`تحديد ${assetDetail.assetName}`}
-                                    onClick={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                    }}
                                   />
                                 </td>
                                 {visibleColumns.department && (
