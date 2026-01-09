@@ -867,24 +867,28 @@ function ReportsPageContent() {
       });
     }
 
-    // تحديد المكاتب المتاحة بناءً على الإدارات المحددة
+    // تحديد المكاتب المتاحة بناءً على الإدارات المحددة والمكاتب المحددة
     let availableOfficeIds = new Set<string>();
+    
+    // إذا تم تحديد مكاتب، أضف المكاتب المحددة
+    if (selectedOfficeIds.size > 0) {
+      selectedOfficeIds.forEach(officeId => {
+        availableOfficeIds.add(officeId);
+      });
+    }
+    
+    // إذا تم تحديد إدارات، أضف المكاتب التابعة لتلك الإدارات
     if (selectedDepartmentIds.size > 0) {
       allOffices.forEach(office => {
         if (selectedDepartmentIds.has(office.get('department_id') || '')) {
           availableOfficeIds.add(office.get('id') || '');
         }
       });
-    } else {
-      // إذا لم يتم تحديد إدارات، جميع المكاتب متاحة
+    } else if (selectedOfficeIds.size === 0) {
+      // إذا لم يتم تحديد إدارات ولا مكاتب، جميع المكاتب متاحة
       allOffices.forEach(office => {
         availableOfficeIds.add(office.get('id') || '');
       });
-    }
-
-    // إذا تم تحديد مكاتب، استخدم المكاتب المحددة فقط
-    if (selectedOfficeIds.size > 0) {
-      availableOfficeIds = new Set(selectedOfficeIds);
     }
 
     // حساب العدادات بناءً على الأصول في المكاتب المتاحة (وليس المفلترة)
@@ -943,11 +947,39 @@ function ReportsPageContent() {
     });
 
     // فلترة المكاتب بناءً على الإدارات المحددة
+    // إظهار المكاتب التابعة للإدارات المحددة + المكاتب المحددة مسبقاً
     let filteredOffices = allOffices;
     if (selectedDepartmentIds.size > 0) {
-      filteredOffices = allOffices.filter(office => 
+      const officesFromSelectedDepts = allOffices.filter(office => 
         selectedDepartmentIds.has(office.get('department_id') || '')
       );
+      
+      // إضافة المكاتب المحددة مسبقاً حتى لو لم تكن تابعة للإدارات المحددة
+      const selectedOffices = allOffices.filter(office => 
+        selectedOfficeIds.has(office.get('id') || '')
+      );
+      
+      // دمج المكاتب مع تجنب التكرار
+      const officeIdsSet = new Set<string>();
+      filteredOffices = [];
+      
+      // إضافة المكاتب التابعة للإدارات المحددة
+      officesFromSelectedDepts.forEach(office => {
+        const officeId = office.get('id') || '';
+        if (!officeIdsSet.has(officeId)) {
+          officeIdsSet.add(officeId);
+          filteredOffices.push(office);
+        }
+      });
+      
+      // إضافة المكاتب المحددة مسبقاً
+      selectedOffices.forEach(office => {
+        const officeId = office.get('id') || '';
+        if (!officeIdsSet.has(officeId)) {
+          officeIdsSet.add(officeId);
+          filteredOffices.push(office);
+        }
+      });
     }
 
     return {
@@ -1062,8 +1094,15 @@ function ReportsPageContent() {
   const filteredAssets = useMemo(() => {
     let filtered = allAssetDetails;
 
-    // فلتر الإدارات
-    if (selectedDepartmentIds.size > 0) {
+    // فلتر المكاتب (إذا تم تحديد مكاتب، استخدمها مباشرة بغض النظر عن الإدارات)
+    if (selectedOfficeIds.size > 0) {
+      filtered = filtered.filter(detail => {
+        const officeId = allOffices.find(o => o.get('name') === detail.officeName)?.get('id');
+        return officeId && selectedOfficeIds.has(officeId);
+      });
+    } 
+    // فلتر الإدارات (فقط إذا لم يتم تحديد مكاتب)
+    else if (selectedDepartmentIds.size > 0) {
       const selectedOfficeIdsFromDepts = new Set<string>();
       allOffices.forEach(office => {
         if (selectedDepartmentIds.has(office.get('department_id') || '')) {
@@ -1073,14 +1112,6 @@ function ReportsPageContent() {
       filtered = filtered.filter(detail => {
         const officeId = allOffices.find(o => o.get('name') === detail.officeName)?.get('id');
         return officeId && selectedOfficeIdsFromDepts.has(officeId);
-      });
-    }
-
-    // فلتر المكاتب
-    if (selectedOfficeIds.size > 0) {
-      filtered = filtered.filter(detail => {
-        const officeId = allOffices.find(o => o.get('name') === detail.officeName)?.get('id');
-        return officeId && selectedOfficeIds.has(officeId);
       });
     }
 

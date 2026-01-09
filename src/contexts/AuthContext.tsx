@@ -7,6 +7,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -24,6 +25,7 @@ interface AuthContextType {
   loading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,20 +50,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const savedUser = window.localStorage.getItem("user");
-
-    if (savedUser) {
+    const loadUserFromStorage = () => {
       try {
-        const userData = JSON.parse(savedUser);
-        const userModel = new BaseModel(userData);
-        setUser(userModel as AuthUser);
-      } catch (error) {
-        // Silently handle parsing errors and clear invalid data
-        window.localStorage.removeItem("user");
-      }
-    }
+        const savedUser = window.localStorage.getItem("user");
 
-    setLoading(false);
+        if (savedUser) {
+          try {
+            const userData = JSON.parse(savedUser);
+            // التحقق من صحة البيانات قبل استخدامها
+            if (userData && typeof userData === 'object') {
+              const userModel = new BaseModel(userData);
+              setUser(userModel as AuthUser);
+            } else {
+              // بيانات غير صالحة، مسحها
+              window.localStorage.removeItem("user");
+              window.localStorage.removeItem("userData");
+            }
+          } catch (parseError) {
+            // خطأ في parsing البيانات، مسحها
+            console.error("Error parsing user data from localStorage:", parseError);
+            window.localStorage.removeItem("user");
+            window.localStorage.removeItem("userData");
+          }
+        }
+      } catch (storageError) {
+        // خطأ في الوصول إلى localStorage
+        console.error("Error accessing localStorage:", storageError);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserFromStorage();
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
@@ -140,13 +160,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const matchingUser = BaseModel.fromFirestore(foundUser);
       setUser(matchingUser as AuthUser);
+      
+      // حفظ بيانات المستخدم في localStorage
       if (typeof window !== "undefined") {
         try {
-          window.localStorage.setItem("user", JSON.stringify(matchingUser.getData()));
-          window.localStorage.setItem("userData", JSON.stringify(matchingUser.getData()));
+          const userData = matchingUser.getData();
+          // التحقق من صحة البيانات قبل حفظها
+          if (userData && typeof userData === 'object') {
+            window.localStorage.setItem("user", JSON.stringify(userData));
+            window.localStorage.setItem("userData", JSON.stringify(userData));
+          }
         } catch (storageError) {
           // If localStorage fails, continue anyway - user is still logged in
           // This can happen in private browsing mode or when storage is full
+          console.error("Error saving user data to localStorage:", storageError);
         }
       }
     } catch (error) {
@@ -164,13 +191,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     setUser(null);
     if (typeof window !== "undefined") {
-      window.localStorage.removeItem("user");
-      window.localStorage.removeItem("userData");
+      try {
+        // مسح جميع بيانات المستخدم من localStorage
+        window.localStorage.removeItem("user");
+        window.localStorage.removeItem("userData");
+        // مسح أي بيانات أخرى متعلقة بالجلسة إذا كانت موجودة
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < window.localStorage.length; i++) {
+          const key = window.localStorage.key(i);
+          if (key && (key.startsWith('user') || key.startsWith('session'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => window.localStorage.removeItem(key));
+      } catch (storageError) {
+        console.error("Error clearing user data from localStorage:", storageError);
+        // الاستمرار حتى لو فشل مسح localStorage
+      }
     }
   }, []);
 
+  // حساب حالة المصادقة (memoized للتحسين)
+  const isAuthenticated = useMemo(() => {
+    return user !== null;
+  }, [user]);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
