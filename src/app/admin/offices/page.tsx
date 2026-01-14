@@ -3,6 +3,7 @@
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
@@ -24,11 +25,11 @@ import { useCallback, useEffect, useState } from "react";
 function isAdmin(role: string | null | undefined): boolean {
   if (!role) return false;
   const normalizedRole = role.trim().toLowerCase();
-  return normalizedRole === 'مدير' || 
-         normalizedRole === 'admin' || 
-         normalizedRole === 'administrator' ||
-         normalizedRole === 'مدير النظام' ||
-         normalizedRole === 'system admin';
+  return normalizedRole === 'مدير' ||
+    normalizedRole === 'admin' ||
+    normalizedRole === 'administrator' ||
+    normalizedRole === 'مدير النظام' ||
+    normalizedRole === 'system admin';
 }
 
 function OfficesPageContent() {
@@ -73,7 +74,7 @@ function OfficesPageContent() {
       const deptDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("departments"));
       const departmentsData = BaseModel.fromFirestoreArray(deptDocs);
       setDepartments(departmentsData);
-      
+
       // جلب جميع المكاتب من جميع الإدارات
       const allOffices: BaseModel[] = [];
       for (const dept of departmentsData) {
@@ -92,7 +93,7 @@ function OfficesPageContent() {
           });
         }
       }
-      
+
       setOffices(allOffices);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -108,12 +109,12 @@ function OfficesPageContent() {
       showWarning("يرجى اختيار الإدارة");
       return;
     }
-    
+
     try {
       const data = formData.getData();
       const officeId = editingOffice?.get('id');
       const editingDeptId = editingOffice?.get('department_id');
-      
+
       if (officeId && editingDeptId) {
         const docRef = firestoreApi.getSubDocument(
           "departments",
@@ -160,7 +161,7 @@ function OfficesPageContent() {
     const id = deletingOffice.get('id');
     const deptId = deletingOffice.get('department_id');
     if (!id || !deptId) return;
-    
+
     try {
       setDeleteLoading(true);
       const docRef = firestoreApi.getSubDocument(
@@ -203,7 +204,7 @@ function OfficesPageContent() {
       showWarning("لم يتم تحديد أي مكاتب للحذف");
       return;
     }
-    
+
     try {
       setBulkDeleteLoading(true);
       let successCount = 0;
@@ -318,10 +319,10 @@ function OfficesPageContent() {
       const updatePromises = dataArray.map(async (item) => {
         const office = selectedOfficesForBulkEdit.find(o => o.get('id') === item.id);
         if (!office || !item.id) return;
-        
+
         const deptId = office.get('department_id');
         if (!deptId) return;
-        
+
         const docRef = firestoreApi.getSubDocument(
           "departments",
           deptId,
@@ -337,7 +338,7 @@ function OfficesPageContent() {
       });
 
       await Promise.all(updatePromises);
-      
+
       setIsBulkEditModalOpen(false);
       setSelectedOfficesForBulkEdit([]);
       setBulkEditFormDataArray([]);
@@ -362,7 +363,7 @@ function OfficesPageContent() {
         try {
           let name = '';
           let departmentName = '';
-          
+
           for (const key of Object.keys(row)) {
             const keyLower = key.toLowerCase().trim();
             if (keyLower.includes('اسم') && !keyLower.includes('إدارة') || keyLower === 'name') {
@@ -371,7 +372,7 @@ function OfficesPageContent() {
               departmentName = row[key]?.toString().trim() || '';
             }
           }
-          
+
           if (!name) {
             name = (row['اسم المكتب'] || row['الاسم'] || row['name'] || row['Name'] || '').toString().trim();
           }
@@ -392,7 +393,7 @@ function OfficesPageContent() {
           }
 
           // البحث عن الإدارة
-          const department = departments.find(d => 
+          const department = departments.find(d =>
             d.get('name')?.toLowerCase().includes(departmentName.toLowerCase()) ||
             departmentName.toLowerCase().includes(d.get('name')?.toLowerCase() || '')
           );
@@ -415,7 +416,7 @@ function OfficesPageContent() {
           const notes = (row['الملاحظات'] || row['notes'] || row['Notes'] || '').toString().trim();
 
           // التحقق من عدم التكرار
-          const existing = offices.find(o => 
+          const existing = offices.find(o =>
             o.get('name') === name && o.get('department_id') === deptId
           );
           if (existing) {
@@ -470,24 +471,24 @@ function OfficesPageContent() {
   };
 
   const columns = [
-    { 
-      key: 'department_id', 
+    {
+      key: 'department_id',
       label: 'الإدارة',
       render: (item: BaseModel) => getDepartmentName(item.get('department_id')),
       sortable: true,
     },
-    { 
-      key: 'name', 
+    {
+      key: 'name',
       label: 'اسم المكتب',
       sortable: true,
     },
-    { 
-      key: 'floor', 
+    {
+      key: 'floor',
       label: 'الطابق',
       sortable: true,
     },
-    { 
-      key: 'room', 
+    {
+      key: 'room',
       label: 'الغرفة',
       sortable: true,
     },
@@ -495,86 +496,61 @@ function OfficesPageContent() {
 
   return (
     <MainLayout>
-      {/* Page Header */}
-      <div className="mb-10 relative animate-fade-in-down">
-        {/* Decorative Background */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-full blur-3xl -z-10 animate-pulse-soft"></div>
-        <div className="absolute top-10 left-10 w-48 h-48 bg-gradient-to-br from-success-500/5 to-warning-500/5 rounded-full blur-3xl -z-10 animate-pulse-soft" style={{ animationDelay: '0.5s' }}></div>
-        
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-110 material-transition animate-float">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <MaterialIcon name="meeting_room" className="text-white relative z-10 group-hover:scale-110 material-transition" size="3xl" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm animate-pulse-soft"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm animate-pulse-soft" style={{ animationDelay: '0.3s' }}></div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl sm:text-5xl font-black text-gradient-primary">
-                    المكاتب
-                  </h1>
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200 animate-fade-in">
-                    <MaterialIcon name="meeting_room" className="text-primary-600" size="sm" />
-                    <span className="text-xs font-semibold text-primary-700">{offices.length}</span>
-                  </div>
-                </div>
-                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2 animate-fade-in">
-                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
-                  <span>إدارة وإضافة المكاتب في النظام</span>
-                </p>
-              </div>
-            </div>
-          </div>
-          {canAdd && (
-            <div className="flex gap-4 animate-fade-in-left">
-              <Button
-                onClick={() => setIsImportModalOpen(true)}
-                leftIcon={<MaterialIcon name="upload_file" size="md" />}
-                size="lg"
-                variant="outline"
-                className="shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:scale-105 material-transition font-bold border-2 hover:border-primary-400 hover:bg-primary-50"
-              >
-                استيراد من Excel
-              </Button>
-              <Button
-                onClick={() => {
-                  setEditingOffice(null);
-                  setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
-                  setIsModalOpen(true);
-                }}
-                leftIcon={<PlusIcon className="w-5 h-5" />}
-                size="lg"
-                variant="primary"
-                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
-              >
-                إضافة مكتب جديد
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <AdminPageHeader
+          title="المكاتب"
+          subtitle="إدارة وإضافة المكاتب في النظام"
+          iconName="meeting_room"
+          count={offices.length}
+          actions={
+            canAdd ? (
+              <>
+                <Button
+                  onClick={() => setIsImportModalOpen(true)}
+                  leftIcon={<MaterialIcon name="upload_file" size="md" />}
+                  size="lg"
+                  variant="outline"
+                  className="shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:scale-105 material-transition font-bold border-2 hover:border-primary-400 hover:bg-primary-50"
+                >
+                  استيراد من Excel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditingOffice(null);
+                    setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
+                    setIsModalOpen(true);
+                  }}
+                  leftIcon={<PlusIcon className="w-5 h-5" />}
+                  size="lg"
+                  variant="primary"
+                  className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+                >
+                  إضافة مكتب جديد
+                </Button>
+              </>
+            ) : null
+          }
+        />
 
-      {/* Data Table */}
-      <DataTable
-        data={offices}
-        columns={columns}
-        onEdit={canEdit ? handleEdit : undefined}
-        onDelete={canDelete ? handleDelete : undefined}
-        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
-        onBulkDelete={canDelete ? handleBulkDelete : undefined}
-        onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
-        isAdmin={isUserAdmin}
-        onAddNew={canAdd ? () => {
-          setEditingOffice(null);
-          setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
-          setIsModalOpen(true);
-        } : undefined}
-        title="المكاتب"
-        exportFileName="offices"
-        loading={loading}
-      />
+        {/* Data Table */}
+        <DataTable
+          data={offices}
+          columns={columns}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
+          onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+          onBulkDelete={canDelete ? handleBulkDelete : undefined}
+          onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
+          isAdmin={isUserAdmin}
+          onAddNew={canAdd ? () => {
+            setEditingOffice(null);
+            setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
+            setIsModalOpen(true);
+          } : undefined}
+          title="المكاتب"
+          exportFileName="offices"
+          loading={loading}
+        />
 
         <Modal
           isOpen={isModalOpen}
@@ -586,7 +562,7 @@ function OfficesPageContent() {
           title={editingOffice ? "تعديل مكتب" : "إضافة مكتب جديد"}
           size="lg"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
@@ -596,7 +572,7 @@ function OfficesPageContent() {
                   setFormData(new BaseModel({ name: '', department_id: '', floor: '', room: '', notes: '' }));
                 }}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
               >
                 إلغاء
               </Button>
@@ -605,7 +581,7 @@ function OfficesPageContent() {
                 form="office-form"
                 variant="primary"
                 size="lg"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
               >
                 {editingOffice ? "تحديث" : "حفظ"}
               </Button>
@@ -622,7 +598,7 @@ function OfficesPageContent() {
                 newData.put('department_id', value);
                 setFormData(newData);
               }}
-              options={departments.map((dept) => ({
+              options={departments.map(dept => ({
                 value: dept.get('id'),
                 label: dept.get('name'),
               }))}
@@ -772,6 +748,7 @@ function OfficesPageContent() {
           variant="danger"
           loading={bulkDeleteLoading}
         />
+      </div>
     </MainLayout>
   );
 }

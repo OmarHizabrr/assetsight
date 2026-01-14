@@ -2,10 +2,12 @@
 
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/Badge";
 import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
+import { Card, CardBody } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
@@ -25,11 +27,11 @@ import { useCallback, useEffect, useState } from "react";
 function isAdmin(role: string | null | undefined): boolean {
   if (!role) return false;
   const normalizedRole = role.trim().toLowerCase();
-  return normalizedRole === 'مدير' || 
-         normalizedRole === 'admin' || 
-         normalizedRole === 'administrator' ||
-         normalizedRole === 'مدير النظام' ||
-         normalizedRole === 'system admin';
+  return normalizedRole === 'مدير' ||
+    normalizedRole === 'admin' ||
+    normalizedRole === 'administrator' ||
+    normalizedRole === 'مدير النظام' ||
+    normalizedRole === 'system admin';
 }
 
 function UsersPageContent() {
@@ -107,7 +109,7 @@ function UsersPageContent() {
       const deptDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("departments"));
       const departmentsData = BaseModel.fromFirestoreArray(deptDocs);
       setDepartments(departmentsData);
-      
+
       // جلب جميع المكاتب من جميع الإدارات
       const officesList: BaseModel[] = [];
       for (const dept of departmentsData) {
@@ -124,7 +126,7 @@ function UsersPageContent() {
       }
       setAllOffices(officesList);
       setOffices([]); // لا تظهر المكاتب حتى يتم اختيار الإدارة
-      
+
       // جلب جميع المستخدمين من الجدول المستقل users/userId/
       const userDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("users"));
       const usersData = BaseModel.fromFirestoreArray(userDocs);
@@ -141,26 +143,26 @@ function UsersPageContent() {
     try {
       const submitData = formData.getData();
       submitData.is_active = formData.getValue<boolean>('is_active') ? 1 : 0;
-      
+
       // التحقق من تكرار رقم الموظف
       const employeeNumber = submitData.employee_number?.trim();
       if (!employeeNumber) {
         showWarning("يجب إدخال رقم الموظف");
         return;
       }
-      
+
       // التحقق من عدم تكرار رقم الموظف
       const existingUser = users.find(u => {
         const userEmpNum = u.get('employee_number')?.trim();
         const isSameUser = editingUser?.get('id') === u.get('id');
         return userEmpNum === employeeNumber && !isSameUser;
       });
-      
+
       if (existingUser) {
         showWarning("رقم الموظف موجود بالفعل. يرجى استخدام رقم آخر");
         return;
       }
-      
+
       // إذا كان الدور "مدير"، إعطاء صلاحية لجميع الصفحات
       if (submitData.role === 'مدير') {
         submitData.permissions = allPages.map(page => page.path);
@@ -169,7 +171,7 @@ function UsersPageContent() {
         const permissions = formData.getValue<string[]>('permissions') || [];
         submitData.permissions = Array.from(new Set(permissions));
       }
-      
+
       // إذا لم يتم إدخال كلمة مرور جديدة عند التعديل، لا نحدثها
       if (editingUser && !submitData.password) {
         delete submitData.password;
@@ -181,13 +183,13 @@ function UsersPageContent() {
           return;
         }
       }
-      
+
       // حذف confirm_password قبل الحفظ
       delete submitData.confirm_password;
-      
+
       const userId = editingUser?.get('id');
       let finalUserId = userId;
-      
+
       if (userId) {
         // تحديث مستخدم موجود
         const docRef = firestoreApi.getDocument("users", userId);
@@ -199,7 +201,7 @@ function UsersPageContent() {
           showWarning("يجب إدخال كلمة المرور للمستخدم الجديد");
           return;
         }
-        
+
         // التحقق من تطابق كلمة المرور
         if (submitData.password !== submitData.confirm_password) {
           showWarning("كلمة المرور وتأكيد كلمة المرور غير متطابقين");
@@ -210,7 +212,7 @@ function UsersPageContent() {
         await firestoreApi.setData(docRef, submitData);
         finalUserId = newId;
       }
-      
+
       // حفظ الصلاحيات في subcollection powers/{userId}/powers (فقط للمستخدمين غير المديرين)
       if (finalUserId && submitData.role !== 'مدير') {
         try {
@@ -226,13 +228,13 @@ function UsersPageContent() {
               }
             }
           }
-          
+
           // دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
           const normalizePath = (path: string): string => {
             if (!path || path === '/') return '/';
             return path.replace(/\/+$/, ''); // إزالة جميع الشرطات المائلة في النهاية
           };
-          
+
           // حفظ الصلاحيات الجديدة (فقط الصفحات المحددة)
           const permissionsToSave = submitData.permissions || [];
           for (const pagePath of permissionsToSave) {
@@ -270,7 +272,7 @@ function UsersPageContent() {
           console.error("Error deleting permissions for admin:", error);
         }
       }
-      
+
       setIsModalOpen(false);
       setEditingUser(null);
       setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
@@ -291,13 +293,13 @@ function UsersPageContent() {
     // عدم إظهار كلمة المرور عند التعديل
     userData.password = '';
     userData.confirm_password = '';
-    
+
     // دالة لتطبيع المسار (إزالة الشرطة المائلة في النهاية)
     const normalizePath = (path: string): string => {
       if (!path || path === '/') return '/';
       return path.replace(/\/+$/, ''); // إزالة جميع الشرطات المائلة في النهاية
     };
-    
+
     // تحميل الصلاحيات من subcollection powers/{userId}/powers
     const userId = user.get('id');
     if (userId) {
@@ -308,7 +310,7 @@ function UsersPageContent() {
           const data = doc.data();
           return normalizePath(data.page_path || '');
         }).filter(path => path && path !== '/'); // إزالة القيم الفارغة والصفحة الرئيسية
-        
+
         userData.permissions = Array.from(new Set(pagePaths));
         console.log(`Loaded ${userData.permissions.length} permissions from subcollection for user ${userId}`);
       } catch (error) {
@@ -329,7 +331,7 @@ function UsersPageContent() {
         userData.permissions = Array.from(new Set(userData.permissions));
       }
     }
-    
+
     // تعيين الإدارة المختارة وتصفية المكاتب
     const departmentId = userData.department_id || '';
     setSelectedDepartmentId(departmentId);
@@ -339,7 +341,7 @@ function UsersPageContent() {
     } else {
       setOffices([]);
     }
-    
+
     setFormData(new BaseModel(userData));
     setShowPassword(false);
     setShowConfirmPassword(false);
@@ -355,7 +357,7 @@ function UsersPageContent() {
     if (!deletingUser) return;
     const id = deletingUser.get('id');
     if (!id) return;
-    
+
     try {
       setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("users", id);
@@ -380,7 +382,7 @@ function UsersPageContent() {
       return new BaseModel(itemData);
     });
     setBulkEditFormDataArray(formDataArray);
-    
+
     // تهيئة department IDs و offices لكل مستخدم
     const deptIds: Record<number, string> = {};
     const officesMap: Record<number, BaseModel[]> = {};
@@ -394,7 +396,7 @@ function UsersPageContent() {
     });
     setBulkEditSelectedDepartmentIds(deptIds);
     setBulkEditOfficesMap(officesMap);
-    
+
     setIsBulkEditModalOpen(true);
   };
 
@@ -412,7 +414,7 @@ function UsersPageContent() {
       showWarning("لم يتم تحديد أي مستخدمين للحذف");
       return;
     }
-    
+
     try {
       setBulkDeleteLoading(true);
       let successCount = 0;
@@ -514,7 +516,7 @@ function UsersPageContent() {
 
       const updatePromises = dataArray.map(async (item) => {
         if (!item.id) return;
-        
+
         const updates: any = {
           employee_number: item.employee_number || '',
           username: item.username || '',
@@ -527,16 +529,16 @@ function UsersPageContent() {
           user_type: item.user_type || 'موظف',
           notes: item.notes || '',
         };
-        
+
         // معالجة is_active
         updates.is_active = item.is_active === true || item.is_active === 1 ? 1 : 0;
-        
+
         const docRef = firestoreApi.getDocument("users", item.id);
         await firestoreApi.updateData(docRef, updates);
       });
 
       await Promise.all(updatePromises);
-      
+
       setIsBulkEditModalOpen(false);
       setSelectedUsersForBulkEdit([]);
       setBulkEditFormDataArray([]);
@@ -556,13 +558,13 @@ function UsersPageContent() {
     const newArray = [...bulkEditFormDataArray];
     const newData = new BaseModel(newArray[index].getData());
     newData.put(key, value);
-    
+
     // إذا تم تغيير department_id، تحديث offices المتاحة
     if (key === 'department_id') {
       const newDeptIds = { ...bulkEditSelectedDepartmentIds };
       newDeptIds[index] = value;
       setBulkEditSelectedDepartmentIds(newDeptIds);
-      
+
       const newOfficesMap = { ...bulkEditOfficesMap };
       if (value) {
         const filteredOffices = allOffices.filter(office => office.get('department_id') === value);
@@ -575,7 +577,7 @@ function UsersPageContent() {
       }
       setBulkEditOfficesMap(newOfficesMap);
     }
-    
+
     newArray[index] = newData;
     setBulkEditFormDataArray(newArray);
   }, [bulkEditFormDataArray, bulkEditSelectedDepartmentIds, bulkEditOfficesMap, allOffices]);
@@ -623,10 +625,10 @@ function UsersPageContent() {
             // ثانياً: البحث في جميع مفاتيح الصف (مرونة عالية)
             const normalizedKeys = keys.map(normalizeKey);
             const rowKeys = Object.keys(row);
-            
+
             for (const rowKey of rowKeys) {
               const normalizedRowKey = normalizeKey(rowKey);
-              
+
               // البحث عن تطابق كامل
               if (normalizedKeys.some(nk => normalizedRowKey === nk)) {
                 const value = row[rowKey];
@@ -634,7 +636,7 @@ function UsersPageContent() {
                   return value.toString().trim();
                 }
               }
-              
+
               // البحث عن تطابق جزئي (يحتوي على)
               if (normalizedKeys.some(nk => normalizedRowKey.includes(nk) || nk.includes(normalizedRowKey))) {
                 const value = row[rowKey];
@@ -715,7 +717,7 @@ function UsersPageContent() {
           // البحث عن المكتب بالاسم (اختياري)
           let officeId = '';
           if (officeName && departmentId) {
-            const office = allOffices.find(o => 
+            const office = allOffices.find(o =>
               o.get('name') === officeName && o.get('department_id') === departmentId
             );
             if (office) {
@@ -753,7 +755,7 @@ function UsersPageContent() {
             notes: notes || '',
             permissions: permissions,
           };
-          
+
           console.log(`إضافة مستخدم جديد:`, userData);
           await firestoreApi.setData(docRef, userData);
 
@@ -815,7 +817,7 @@ function UsersPageContent() {
     // إعادة تعيين المكتب عند تغيير الإدارة
     newData.put('office_id', '');
     setFormData(newData);
-    
+
     if (departmentId) {
       // تصفية المكاتب بناءً على الإدارة المختارة
       const filteredOffices = allOffices.filter(office => office.get('department_id') === departmentId);
@@ -827,38 +829,38 @@ function UsersPageContent() {
   };
 
   // فلترة المستخدمين حسب النوع
-  const filteredUsers = userTypeFilter === 'all' 
-    ? users 
+  const filteredUsers = userTypeFilter === 'all'
+    ? users
     : users.filter(user => user.get('user_type') === userTypeFilter);
 
   const columns = [
-    { 
-      key: 'employee_number', 
+    {
+      key: 'employee_number',
       label: 'رقم الموظف',
       sortable: true,
     },
-    { 
-      key: 'username', 
+    {
+      key: 'username',
       label: 'اسم المستخدم',
       sortable: true,
     },
-    { 
-      key: 'full_name', 
+    {
+      key: 'full_name',
       label: 'الاسم الكامل',
       sortable: true,
     },
-    { 
-      key: 'email', 
+    {
+      key: 'email',
       label: 'البريد الإلكتروني',
       sortable: true,
     },
-    { 
-      key: 'phone', 
+    {
+      key: 'phone',
       label: 'الهاتف',
       sortable: true,
     },
-    { 
-      key: 'user_type', 
+    {
+      key: 'user_type',
       label: 'نوع المستخدم',
       render: (item: BaseModel) => {
         const userType = item.get('user_type') || 'موظف';
@@ -870,25 +872,25 @@ function UsersPageContent() {
       },
       sortable: true,
     },
-    { 
-      key: 'department_id', 
+    {
+      key: 'department_id',
       label: 'الإدارة',
       render: (item: BaseModel) => getDepartmentName(item.get('department_id')),
       sortable: true,
     },
-    { 
-      key: 'office_id', 
+    {
+      key: 'office_id',
       label: 'المكتب',
       render: (item: BaseModel) => getOfficeName(item.get('office_id')),
       sortable: true,
     },
-    { 
-      key: 'role', 
+    {
+      key: 'role',
       label: 'الدور',
       sortable: true,
     },
-    { 
-      key: 'is_active', 
+    {
+      key: 'is_active',
       label: 'الحالة',
       render: (item: BaseModel) => {
         const isActive = item.getValue<number>('is_active') === 1 || item.getValue<boolean>('is_active') === true;
@@ -921,141 +923,120 @@ function UsersPageContent() {
 
   return (
     <MainLayout>
-      {/* Page Header */}
-      <div className="mb-4 relative animate-fade-in-down w-full">
-        {/* Decorative Background */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-full blur-3xl -z-10 animate-pulse-soft"></div>
-        <div className="absolute top-10 left-10 w-48 h-48 bg-gradient-to-br from-success-500/5 to-warning-500/5 rounded-full blur-3xl -z-10 animate-pulse-soft" style={{ animationDelay: '0.5s' }}></div>
-        
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-0 w-full">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-3">
-              <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-xl shadow-primary-500/40 overflow-hidden group hover:scale-110 material-transition animate-float">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <MaterialIcon name="people" className="text-white relative z-10 group-hover:scale-110 material-transition" size="2xl" />
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-white/20 rounded-full blur-sm animate-pulse-soft"></div>
-                <div className="absolute -bottom-2 -left-2 w-5 h-5 bg-white/10 rounded-full blur-sm animate-pulse-soft" style={{ animationDelay: '0.3s' }}></div>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Page Header */}
+        <AdminPageHeader
+          title="المستخدمون"
+          subtitle="إدارة وإضافة المستخدمين في النظام"
+          iconName="people"
+          count={users.length}
+          actions={
+            canAdd ? (
+              <>
+                <Button
+                  onClick={() => setIsImportModalOpen(true)}
+                  size="lg"
+                  variant="outline"
+                  className="shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:scale-105 material-transition font-bold border-2 hover:border-primary-400 hover:bg-primary-50"
+                >
+                  <span className="flex items-center gap-2">
+                    <MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />
+                    <span>استيراد من Excel</span>
+                  </span>
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditingUser(null);
+                    setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+                    setSelectedDepartmentId('');
+                    setOffices([]);
+                    setShowPassword(false);
+                    setShowConfirmPassword(false);
+                    setIsModalOpen(true);
+                  }}
+                  size="lg"
+                  variant="primary"
+                  className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+                >
+                  <span className="flex items-center gap-2">
+                    <MaterialIcon name="add" className="w-5 h-5" size="lg" />
+                    <span>إضافة مستخدم جديد</span>
+                  </span>
+                </Button>
+              </>
+            ) : null
+          }
+        />
+
+        {/* Filter Section */}
+        <Card className="mb-4 border-2 border-slate-200/80 dark:border-slate-700 bg-gradient-to-br from-white to-slate-50/40 dark:from-slate-800 dark:to-slate-700/30 shadow-lg animate-fade-in w-full">
+          <CardBody padding="sm" className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/40 dark:to-primary-800/30 flex items-center justify-center shadow-sm">
+                <MaterialIcon name="filter_alt" className="text-primary-600 dark:text-primary-400" size="md" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-3xl sm:text-4xl font-black text-gradient-primary">
-                    المستخدمون
-                  </h1>
-                  <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 bg-primary-50 rounded-full border border-primary-200 animate-fade-in">
-                    <MaterialIcon name="people" className="text-primary-600" size="sm" />
-                    <span className="text-xs font-semibold text-primary-700">{users.length}</span>
-                  </div>
-                </div>
-                <p className="text-slate-600 text-sm sm:text-base font-semibold flex items-center gap-1.5 animate-fade-in">
-                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
-                  <span>إدارة وإضافة المستخدمين في النظام</span>
-                </p>
+              <div className="min-w-0">
+                <div className="font-extrabold text-slate-800 dark:text-slate-200 text-sm">فلترة المستخدمين</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">حسب نوع المستخدم</div>
               </div>
             </div>
-          </div>
-          {canAdd && (
-            <div className="flex flex-col sm:flex-row gap-2 animate-fade-in-left">
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
               <Button
-                onClick={() => setIsImportModalOpen(true)}
-                size="lg"
-                variant="outline"
-                className="shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:scale-105 material-transition font-bold border-2 hover:border-primary-400 hover:bg-primary-50"
+                variant={userTypeFilter === 'all' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setUserTypeFilter('all')}
+                className="font-semibold w-full"
               >
-                <span className="flex items-center gap-2">
-                  <MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />
-                  <span>استيراد من Excel</span>
-                </span>
+                الكل ({users.length})
               </Button>
               <Button
-                onClick={() => {
-                  setEditingUser(null);
-                  setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
-          setSelectedDepartmentId('');
-          setOffices([]);
-          setShowPassword(false);
-          setShowConfirmPassword(false);
-                  setIsModalOpen(true);
-                }}
-                size="lg"
-                variant="primary"
-                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+                variant={userTypeFilter === 'موظف' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setUserTypeFilter('موظف')}
+                className="font-semibold w-full"
               >
-                <span className="flex items-center gap-2">
-                  <MaterialIcon name="add" className="w-5 h-5" size="lg" />
-                  <span>إضافة مستخدم جديد</span>
-                </span>
+                موظف ({users.filter(u => u.get('user_type') === 'موظف' || !u.get('user_type')).length})
+              </Button>
+              <Button
+                variant={userTypeFilter === 'مستخدم نظام' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setUserTypeFilter('مستخدم نظام')}
+                className="font-semibold w-full"
+              >
+                مستخدم نظام ({users.filter(u => u.get('user_type') === 'مستخدم نظام').length})
               </Button>
             </div>
-          )}
-        </div>
-        
-        {/* Decorative Background */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/5 to-accent-500/5 rounded-full blur-3xl -z-10"></div>
-      </div>
+          </CardBody>
+        </Card>
 
-      {/* Filter Section */}
-      <div className="mb-3 p-3 bg-white rounded-xl border-2 border-slate-200/80 shadow-sm animate-fade-in w-full">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
-          <div className="flex items-center gap-1.5">
-            <MaterialIcon name="filter_alt" className="text-primary-600" size="md" />
-            <span className="font-bold text-slate-700 text-sm">فلتر حسب نوع المستخدم:</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Button
-              variant={userTypeFilter === 'all' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setUserTypeFilter('all')}
-              className="font-semibold"
-            >
-              الكل ({users.length})
-            </Button>
-            <Button
-              variant={userTypeFilter === 'موظف' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setUserTypeFilter('موظف')}
-              className="font-semibold"
-            >
-              موظف ({users.filter(u => u.get('user_type') === 'موظف' || !u.get('user_type')).length})
-            </Button>
-            <Button
-              variant={userTypeFilter === 'مستخدم نظام' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setUserTypeFilter('مستخدم نظام')}
-              className="font-semibold"
-            >
-              مستخدم نظام ({users.filter(u => u.get('user_type') === 'مستخدم نظام').length})
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Data Table */}
-      <DataTable
-        data={filteredUsers}
-        columns={columns}
-        onEdit={canEdit ? handleEdit : undefined}
-        onDelete={canDelete ? handleDelete : undefined}
-        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
-        onBulkDelete={canDelete ? handleBulkDelete : undefined}
-        onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
-        isAdmin={isUserAdmin}
-        onAddNew={canAdd ? () => {
-          setEditingUser(null);
-          setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
-          setSelectedDepartmentId('');
-          setOffices([]);
-          setShowPassword(false);
-          setShowConfirmPassword(false);
-          setIsModalOpen(true);
-        } : undefined}
-        onView={(item) => {
-          // يمكن إضافة صفحة عرض التفاصيل لاحقاً
-          handleEdit(item);
-        }}
-        title="المستخدمون"
-        exportFileName="users"
-        loading={loading}
-      />
+        {/* Data Table */}
+        <DataTable
+          data={filteredUsers}
+          columns={columns}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
+          onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+          onBulkDelete={canDelete ? handleBulkDelete : undefined}
+          onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
+          isAdmin={isUserAdmin}
+          onAddNew={canAdd ? () => {
+            setEditingUser(null);
+            setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
+            setSelectedDepartmentId('');
+            setOffices([]);
+            setShowPassword(false);
+            setShowConfirmPassword(false);
+            setIsModalOpen(true);
+          } : undefined}
+          onView={(item) => {
+            // يمكن إضافة صفحة عرض التفاصيل لاحقاً
+            handleEdit(item);
+          }}
+          title="المستخدمون"
+          exportFileName="users"
+          loading={loading}
+        />
 
         <Modal
           isOpen={isModalOpen}
@@ -1063,15 +1044,15 @@ function UsersPageContent() {
             setIsModalOpen(false);
             setEditingUser(null);
             setFormData(new BaseModel({ employee_number: '', username: '', full_name: '', email: '', phone: '', department_id: '', office_id: '', role: '', user_type: 'موظف', password: '', confirm_password: '', permissions: [], is_active: true, notes: '' }));
-          setSelectedDepartmentId('');
-          setOffices([]);
-          setShowPassword(false);
-          setShowConfirmPassword(false);
+            setSelectedDepartmentId('');
+            setOffices([]);
+            setShowPassword(false);
+            setShowConfirmPassword(false);
           }}
           title={editingUser ? "تعديل مستخدم" : "إضافة مستخدم جديد"}
           size="full"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
@@ -1085,7 +1066,7 @@ function UsersPageContent() {
                   setShowConfirmPassword(false);
                 }}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
               >
                 إلغاء
               </Button>
@@ -1094,7 +1075,7 @@ function UsersPageContent() {
                 form="user-form"
                 variant="primary"
                 size="lg"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
               >
                 {editingUser ? "تحديث" : "حفظ"}
               </Button>
@@ -1102,7 +1083,7 @@ function UsersPageContent() {
           }
         >
           <form id="user-form" onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="رقم الموظف"
                 type="text"
@@ -1131,7 +1112,7 @@ function UsersPageContent() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="الاسم الكامل"
                 type="text"
@@ -1159,7 +1140,7 @@ function UsersPageContent() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="الهاتف"
                 type="tel"
@@ -1196,7 +1177,7 @@ function UsersPageContent() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <SearchableSelect
                 label="نوع المستخدم"
                 value={formData.get('user_type') || 'موظف'}
@@ -1243,7 +1224,7 @@ function UsersPageContent() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label={editingUser ? "كلمة المرور (اتركها فارغة للحفاظ على الكلمة الحالية)" : "كلمة المرور"}
                 type="password"
@@ -1287,12 +1268,12 @@ function UsersPageContent() {
                   <h3 className="text-lg font-semibold text-gray-900">الصلاحيات</h3>
                   <span className="text-sm text-gray-500">اختر الصفحات التي يمكن للمستخدم الوصول إليها</span>
                 </div>
-                
+
                 {/* عرض الصفحات المضافة */}
                 {(() => {
                   const permissions = Array.from(new Set(formData.getValue<string[]>('permissions') || []));
                   const addedPages = allPages.filter(page => permissions.includes(page.path));
-                  
+
                   if (addedPages.length > 0) {
                     return (
                       <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200">
@@ -1328,26 +1309,26 @@ function UsersPageContent() {
                   }
                   return null;
                 })()}
-                
+
                 {/* قائمة الصفحات المتاحة (بدون المضافة) */}
                 {(() => {
                   const permissions = Array.from(new Set(formData.getValue<string[]>('permissions') || []));
                   const availablePages = allPages.filter(page => !permissions.includes(page.path));
-                  
+
                   if (availablePages.length > 0) {
                     return (
                       <div>
                         <h4 className="text-sm font-semibold text-gray-700 mb-2">إضافة صفحة جديدة:</h4>
-                        <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
                           {availablePages.map((page) => {
                             // التحقق مرة أخرى من أن الصفحة غير موجودة في الصلاحيات
                             const permissions = Array.from(new Set(formData.getValue<string[]>('permissions') || []));
                             const isAlreadyAdded = permissions.includes(page.path);
-                            
+
                             if (isAlreadyAdded) {
                               return null; // لا تعرض الصفحة إذا كانت موجودة بالفعل
                             }
-                            
+
                             return (
                               <Checkbox
                                 key={page.path}
@@ -1358,12 +1339,12 @@ function UsersPageContent() {
                                     const newData = new BaseModel(formData.getData());
                                     // الحصول على الصلاحيات الحالية وإزالة التكرارات أولاً
                                     const currentPermissions = Array.from(new Set(newData.getValue<string[]>('permissions') || []));
-                                    
+
                                     // التأكد مرة أخرى من عدم وجود الصفحة قبل الإضافة
                                     if (!currentPermissions.includes(page.path)) {
                                       currentPermissions.push(page.path);
                                     }
-                                    
+
                                     // إزالة التكرارات مرة أخرى للتأكد
                                     const uniquePermissions = Array.from(new Set(currentPermissions));
                                     newData.put('permissions', uniquePermissions);
@@ -1570,6 +1551,7 @@ function UsersPageContent() {
           variant="danger"
           loading={bulkDeleteLoading}
         />
+      </div>
     </MainLayout>
   );
 }

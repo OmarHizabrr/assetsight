@@ -289,7 +289,7 @@
 
   /* Modals - Desktop */
   .modal-dialog {
-    max-width: 500px !important;
+    max-width: 800px;
   }
 
   .modal-lg .modal-dialog {

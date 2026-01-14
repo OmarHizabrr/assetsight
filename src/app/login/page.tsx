@@ -6,6 +6,8 @@ import authMaskLight from "@/assets/images/pages/auth-mask-light.png";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import Image from "next/image";
@@ -26,28 +28,28 @@ export default function LoginPage() {
     }
     setError('');
     setFieldErrors({});
-    
+
     // التحقق الصارم من الحقول قبل الإرسال
     const employeeNumber = credentials.employee_number?.trim() || '';
     const password = credentials.password?.trim() || '';
-    
+
     if (!employeeNumber || employeeNumber.length === 0) {
       setFieldErrors({ employee_number: 'يرجى إدخال رقم الموظف' });
       return;
     }
-    
+
     if (!password || password.length === 0) {
       setFieldErrors({ password: 'يرجى إدخال كلمة المرور' });
       return;
     }
-    
+
     try {
       await login({ employee_number: employeeNumber, password: password });
       router.push('/');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل الدخول';
       setError(errorMessage);
-      
+
       // تحديد نوع الخطأ وإظهاره في الحقل المناسب
       if (errorMessage.includes('رقم الموظف')) {
         setFieldErrors({ employee_number: errorMessage });
@@ -57,7 +59,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();
@@ -77,14 +79,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-12"
-      style={{
-        background: isDark
-          ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)'
-          : '#f8f7fa',
-      }}
+    <div
+      className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-10 sm:py-12"
     >
+      <div className="absolute top-4 left-4 z-20">
+        <ThemeToggle variant="icon" size="md" />
+      </div>
+
       {/* Background Mask Image */}
       <div className="absolute inset-0 z-0 opacity-30">
         <Image
@@ -92,8 +93,6 @@ export default function LoginPage() {
           alt="Background"
           fill
           className="object-cover"
-          priority
-          unoptimized
         />
       </div>
 
@@ -112,18 +111,16 @@ export default function LoginPage() {
                 width={500}
                 height={500}
                 className="object-contain animate-fade-in"
-                priority
-                unoptimized
               />
             </div>
             <div className="text-center space-y-3">
-              <h2 
+              <h2
                 className="text-3xl font-bold"
                 style={{ color: isDark ? 'rgb(248, 250, 252)' : 'rgb(15, 23, 42)' }}
               >
                 مرحباً بك في AssetSight
               </h2>
-              <p 
+              <p
                 className="text-lg"
                 style={{ color: isDark ? 'rgb(203, 213, 225)' : 'rgb(71, 85, 105)' }}
               >
@@ -134,13 +131,9 @@ export default function LoginPage() {
 
           {/* Right Side - Login Form */}
           <div className="w-full">
-            <Card 
-              variant="elevated" 
+            <Card
+              variant="elevated"
               className="w-full max-w-md mx-auto shadow-2xl shadow-primary/20 backdrop-blur-md hover:shadow-primary-lg material-transition hover-lift-smooth glass-morphism"
-              style={{
-                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.98)',
-                borderColor: isDark ? 'rgba(71, 85, 105, 0.6)' : 'rgba(226, 232, 240, 0.8)',
-              }}
             >
               <CardBody padding="lg">
                 {/* Logo */}
@@ -153,28 +146,15 @@ export default function LoginPage() {
                       fill
                       className="object-contain relative z-10"
                       priority
-                      unoptimized
                     />
                   </div>
                   <div className="text-center space-y-2 animate-fade-in-down" style={{ animationDelay: '0.1s' }}>
-                    <h1 
-                      className="text-3xl font-bold"
-                      style={{
-                        color: isDark 
-                          ? 'rgba(248, 250, 252, 0.15)' 
-                          : 'rgba(15, 23, 42, 0.15)',
-                        textShadow: isDark
-                          ? '0 0 0 rgba(248, 250, 252, 0.95), 0 2px 12px rgba(0, 0, 0, 0.5), 0 4px 20px rgba(0, 0, 0, 0.3)'
-                          : '0 0 0 rgba(15, 23, 42, 0.9), 0 2px 12px rgba(255, 255, 255, 0.7), 0 4px 20px rgba(255, 255, 255, 0.4)',
-                        // تجنب استخدام background shorthand مع backgroundClip
-                        backgroundImage: 'none',
-                        backgroundClip: 'border-box',
-                        WebkitBackgroundClip: 'border-box',
-                      }}
+                    <h1
+                      className="text-3xl font-black text-slate-900 dark:text-slate-50"
                     >
                       AssetSight
                     </h1>
-                    <p 
+                    <p
                       className="text-sm font-medium"
                       style={{ color: isDark ? 'rgb(203, 213, 225)' : 'rgb(71, 85, 105)' }}
                     >
@@ -190,125 +170,38 @@ export default function LoginPage() {
                       <span className="flex-1 font-semibold text-sm">{error}</span>
                     </div>
                   )}
-                  
+
                   <div className="space-y-1">
-                    <label 
-                      className="flex items-center gap-2 text-sm font-semibold mb-2"
-                      style={{ color: isDark ? 'rgb(226, 232, 240)' : 'rgb(51, 65, 85)' }}
-                    >
-                      <MaterialIcon name="person" className="text-primary-600" size="sm" />
-                      <span>رقم الموظف</span>
-                      <span className="text-error-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        required
-                        value={credentials.employee_number}
-                        onChange={(e) => handleInputChange('employee_number', e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="أدخل رقم الموظف"
-                        className={`block w-full rounded-xl border-2 px-4 py-3 pl-10 text-base font-medium material-transition focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-300 backdrop-blur-sm focus:shadow-xl hover:shadow-lg hover:scale-[1.005] focus:scale-[1.01] focus:ring-4 ${
-                          fieldErrors.employee_number
-                            ? 'border-error-500 focus:border-error-500 focus:ring-error-500/15 focus:shadow-error-500/25'
-                            : 'focus:border-primary-500 focus:ring-primary-500/15 focus:shadow-primary-500/25 hover:border-primary-400'
-                        }`}
-                        style={{
-                          backgroundColor: isDark ? 'rgba(71, 85, 105, 0.7)' : 'white',
-                          borderColor: fieldErrors.employee_number 
-                            ? '#ea5455' 
-                            : isDark 
-                              ? 'rgba(100, 116, 139, 0.7)' 
-                              : 'rgb(203, 213, 225)',
-                          color: isDark ? 'rgb(248, 250, 252)' : 'rgb(15, 23, 42)',
-                        }}
-                        onFocus={(e) => {
-                          if (isDark) {
-                            e.target.style.backgroundColor = 'rgba(71, 85, 105, 0.85)';
-                            e.target.style.borderColor = 'rgba(115, 103, 240, 0.7)';
-                          }
-                        }}
-                        onBlur={(e) => {
-                          if (isDark) {
-                            e.target.style.backgroundColor = 'rgba(71, 85, 105, 0.7)';
-                            e.target.style.borderColor = 'rgba(100, 116, 139, 0.7)';
-                          }
-                        }}
-                      />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <MaterialIcon 
-                          name={fieldErrors.employee_number ? "error" : "person"} 
-                          className={fieldErrors.employee_number ? "text-error-500" : "text-slate-400"} 
-                          size="sm" 
-                        />
-                      </div>
-                    </div>
-                    {fieldErrors.employee_number && (
-                      <div className="mt-1 flex items-center gap-1 text-xs text-error-600 animate-fade-in">
-                        <MaterialIcon name="error" className="text-error-500" size="sm" />
-                        <span>{fieldErrors.employee_number}</span>
-                      </div>
-                    )}
+                    <Input
+                      label="رقم الموظف"
+                      type="text"
+                      required
+                      inputMode="numeric"
+                      autoComplete="username"
+                      value={credentials.employee_number}
+                      onChange={(e) => handleInputChange('employee_number', e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="أدخل رقم الموظف"
+                      error={fieldErrors.employee_number}
+                      helperText={!fieldErrors.employee_number ? 'مثال: 10234' : undefined}
+                      rightIcon={<MaterialIcon name={fieldErrors.employee_number ? 'error' : 'person'} className={fieldErrors.employee_number ? 'text-error-500' : 'text-slate-400'} size="sm" />}
+                    />
                   </div>
-                  
+
                   <div className="space-y-1">
-                    <label 
-                      className="flex items-center gap-2 text-sm font-semibold mb-2"
-                      style={{ color: isDark ? 'rgb(226, 232, 240)' : 'rgb(51, 65, 85)' }}
-                    >
-                      <MaterialIcon name="lock" className="text-primary-600" size="sm" />
-                      <span>كلمة المرور</span>
-                      <span className="text-error-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="password"
-                        required
-                        value={credentials.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="أدخل كلمة المرور"
-                        className={`block w-full rounded-xl border-2 px-4 py-3 pl-10 text-base font-medium material-transition focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all duration-300 backdrop-blur-sm focus:shadow-xl hover:shadow-lg hover:scale-[1.005] focus:scale-[1.01] focus:ring-4 ${
-                          fieldErrors.password
-                            ? 'border-error-500 focus:border-error-500 focus:ring-error-500/15 focus:shadow-error-500/25'
-                            : 'focus:border-primary-500 focus:ring-primary-500/15 focus:shadow-primary-500/25 hover:border-primary-400'
-                        }`}
-                        style={{
-                          backgroundColor: isDark ? 'rgba(71, 85, 105, 0.7)' : 'white',
-                          borderColor: fieldErrors.password 
-                            ? '#ea5455' 
-                            : isDark 
-                              ? 'rgba(100, 116, 139, 0.7)' 
-                              : 'rgb(203, 213, 225)',
-                          color: isDark ? 'rgb(248, 250, 252)' : 'rgb(15, 23, 42)',
-                        }}
-                        onFocus={(e) => {
-                          if (isDark) {
-                            e.target.style.backgroundColor = 'rgba(71, 85, 105, 0.85)';
-                            e.target.style.borderColor = 'rgba(115, 103, 240, 0.7)';
-                          }
-                        }}
-                        onBlur={(e) => {
-                          if (isDark) {
-                            e.target.style.backgroundColor = 'rgba(71, 85, 105, 0.7)';
-                            e.target.style.borderColor = 'rgba(100, 116, 139, 0.7)';
-                          }
-                        }}
-                      />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <MaterialIcon 
-                          name={fieldErrors.password ? "error" : "lock"} 
-                          className={fieldErrors.password ? "text-error-500" : "text-slate-400"} 
-                          size="sm" 
-                        />
-                      </div>
-                    </div>
-                    {fieldErrors.password && (
-                      <div className="mt-1 flex items-center gap-1 text-xs text-error-600 animate-fade-in">
-                        <MaterialIcon name="error" className="text-error-500" size="sm" />
-                        <span>{fieldErrors.password}</span>
-                      </div>
-                    )}
+                    <Input
+                      label="كلمة المرور"
+                      type="password"
+                      required
+                      autoComplete="current-password"
+                      value={credentials.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="أدخل كلمة المرور"
+                      error={fieldErrors.password}
+                      rightIcon={<MaterialIcon name={fieldErrors.password ? 'error' : 'lock'} className={fieldErrors.password ? 'text-error-500' : 'text-slate-400'} size="sm" />}
+                      showPasswordToggle
+                    />
                   </div>
 
                   <Button
@@ -320,12 +213,12 @@ export default function LoginPage() {
                     className="mt-6 hover-lift-smooth"
                   >
                     {loading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="animate-spin">⏳</span>
+                      <span className="flex items-center justify-center gap-2">
+                        <MaterialIcon name="progress_activity" className="text-white/90 animate-spin" size="md" />
                         <span>جاري تسجيل الدخول...</span>
                       </span>
                     ) : (
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center justify-center gap-2">
                         <MaterialIcon name="login" className="text-white material-transition group-hover:translate-x-1" size="md" />
                         <span>تسجيل الدخول</span>
                       </span>
@@ -334,13 +227,13 @@ export default function LoginPage() {
                 </form>
 
                 {/* Footer */}
-                <div 
+                <div
                   className="mt-8 pt-6 border-t text-center"
                   style={{
                     borderTopColor: isDark ? 'rgba(71, 85, 105, 0.6)' : 'rgb(226, 232, 240)',
                   }}
                 >
-                  <p 
+                  <p
                     className="text-xs"
                     style={{ color: isDark ? 'rgb(148, 163, 184)' : 'rgb(100, 116, 139)' }}
                   >

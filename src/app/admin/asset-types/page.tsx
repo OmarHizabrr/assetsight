@@ -3,6 +3,7 @@
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
@@ -23,11 +24,11 @@ import { useEffect, useState } from "react";
 function isAdmin(role: string | null | undefined): boolean {
   if (!role) return false;
   const normalizedRole = role.trim().toLowerCase();
-  return normalizedRole === 'مدير' || 
-         normalizedRole === 'admin' || 
-         normalizedRole === 'administrator' ||
-         normalizedRole === 'مدير النظام' ||
-         normalizedRole === 'system admin';
+  return normalizedRole === 'مدير' ||
+    normalizedRole === 'admin' ||
+    normalizedRole === 'administrator' ||
+    normalizedRole === 'مدير النظام' ||
+    normalizedRole === 'system admin';
 }
 
 function AssetTypesPageContent() {
@@ -114,7 +115,7 @@ function AssetTypesPageContent() {
     if (!deletingAssetType) return;
     const id = deletingAssetType.get('id');
     if (!id) return;
-    
+
     try {
       setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("assetTypes", id);
@@ -152,7 +153,7 @@ function AssetTypesPageContent() {
       showWarning("لم يتم تحديد أي أنواع للحذف");
       return;
     }
-    
+
     try {
       setBulkDeleteLoading(true);
       let successCount = 0;
@@ -254,7 +255,7 @@ function AssetTypesPageContent() {
 
       const updatePromises = dataArray.map(async (item) => {
         if (!item.id) return;
-        
+
         const docRef = firestoreApi.getDocument("assetTypes", item.id);
         await firestoreApi.updateData(docRef, {
           name: item.name || '',
@@ -265,7 +266,7 @@ function AssetTypesPageContent() {
       });
 
       await Promise.all(updatePromises);
-      
+
       setIsBulkEditModalOpen(false);
       setSelectedAssetTypesForBulkEdit([]);
       setBulkEditFormDataArray([]);
@@ -351,18 +352,18 @@ function AssetTypesPageContent() {
   };
 
   const columns = [
-    { 
-      key: 'name', 
+    {
+      key: 'name',
       label: 'اسم نوع الأصل',
       sortable: true,
     },
-    { 
-      key: 'category', 
+    {
+      key: 'category',
       label: 'الفئة',
       sortable: true,
     },
-    { 
-      key: 'description', 
+    {
+      key: 'description',
       label: 'الوصف',
       sortable: true,
     },
@@ -370,76 +371,61 @@ function AssetTypesPageContent() {
 
   return (
     <MainLayout>
-      {/* Compact Page Header */}
-      <div className="mb-4 relative">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30 overflow-hidden group hover:scale-105 material-transition">
-              <MaterialIcon name="category" className="text-white relative z-10" size="lg" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white">
-                  أنواع الأصول
-                </h1>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary-50 dark:bg-primary-900/30 rounded-lg border border-primary-200 dark:border-primary-800">
-                  <MaterialIcon name="category" className="text-primary-600 dark:text-primary-400 text-xs" size="sm" />
-                  <span className="text-xs font-bold text-primary-700 dark:text-primary-300">{assetTypes.length}</span>
-                </div>
-              </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                إدارة وإضافة أنواع الأصول في النظام
-              </p>
-            </div>
-          </div>
-          {canAdd && (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setIsImportModalOpen(true)}
-                leftIcon={<MaterialIcon name="upload_file" size="sm" />}
-                size="md"
-                variant="outline"
-                className="text-sm font-semibold"
-              >
-                استيراد
-              </Button>
-              <Button
-                onClick={() => {
-                  setEditingAssetType(null);
-                  setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
-                  setIsModalOpen(true);
-                }}
-                leftIcon={<PlusIcon className="w-4 h-4" />}
-                size="md"
-                variant="primary"
-                className="text-sm font-semibold"
-              >
-                إضافة نوع جديد
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <AdminPageHeader
+          title="أنواع الأصول"
+          subtitle="إدارة وإضافة أنواع الأصول في النظام"
+          iconName="category"
+          count={assetTypes.length}
+          actions={
+            canAdd ? (
+              <>
+                <Button
+                  onClick={() => setIsImportModalOpen(true)}
+                  leftIcon={<MaterialIcon name="upload_file" size="sm" />}
+                  size="md"
+                  variant="outline"
+                  className="text-sm font-semibold"
+                >
+                  استيراد
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditingAssetType(null);
+                    setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
+                    setIsModalOpen(true);
+                  }}
+                  leftIcon={<PlusIcon className="w-4 h-4" />}
+                  size="md"
+                  variant="primary"
+                  className="text-sm font-semibold"
+                >
+                  إضافة نوع جديد
+                </Button>
+              </>
+            ) : null
+          }
+        />
 
-      {/* Data Table */}
-      <DataTable
-        data={assetTypes}
-        columns={columns}
-        onEdit={canEdit ? handleEdit : undefined}
-        onDelete={canDelete ? handleDelete : undefined}
-        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
-        onBulkDelete={canDelete ? handleBulkDelete : undefined}
-        onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
-        isAdmin={isUserAdmin}
-        onAddNew={canAdd ? () => {
-          setEditingAssetType(null);
-          setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
-          setIsModalOpen(true);
-        } : undefined}
-        title="أنواع الأصول"
-        exportFileName="asset-types"
-        loading={loading}
-      />
+        {/* Data Table */}
+        <DataTable
+          data={assetTypes}
+          columns={columns}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
+          onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+          onBulkDelete={canDelete ? handleBulkDelete : undefined}
+          onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
+          isAdmin={isUserAdmin}
+          onAddNew={canAdd ? () => {
+            setEditingAssetType(null);
+            setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
+            setIsModalOpen(true);
+          } : undefined}
+          title="أنواع الأصول"
+          exportFileName="asset-types"
+          loading={loading}
+        />
 
         <Modal
           isOpen={isModalOpen}
@@ -451,7 +437,7 @@ function AssetTypesPageContent() {
           title={editingAssetType ? "تعديل نوع الأصل" : "إضافة نوع جديد"}
           size="lg"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
@@ -461,7 +447,7 @@ function AssetTypesPageContent() {
                   setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
                 }}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
               >
                 إلغاء
               </Button>
@@ -470,7 +456,7 @@ function AssetTypesPageContent() {
                 form="asset-type-form"
                 variant="primary"
                 size="lg"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
               >
                 {editingAssetType ? "تحديث" : "حفظ"}
               </Button>
@@ -620,6 +606,7 @@ function AssetTypesPageContent() {
           variant="danger"
           loading={bulkDeleteLoading}
         />
+      </div>
     </MainLayout>
   );
 }

@@ -20,18 +20,18 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
     { keys: ['Ctrl', 'K'], description: 'البحث السريع', category: 'التنقل' },
     { keys: ['/'], description: 'تركيز على البحث', category: 'التنقل' },
     { keys: ['Esc'], description: 'إغلاق Modal/Dialog', category: 'التنقل' },
-    
+
     // Actions
     { keys: ['Ctrl', 'N'], description: 'إنشاء جديد', category: 'الإجراءات' },
     { keys: ['Ctrl', 'S'], description: 'حفظ', category: 'الإجراءات' },
     { keys: ['Ctrl', 'E'], description: 'تعديل', category: 'الإجراءات' },
     { keys: ['Ctrl', 'Delete'], description: 'حذف', category: 'الإجراءات' },
-    
+
     // View
     { keys: ['Ctrl', 'Shift', 'D'], description: 'تبديل المظهر', category: 'العرض' },
     { keys: ['Ctrl', 'B'], description: 'تبديل Sidebar', category: 'العرض' },
     { keys: ['Ctrl', '1-9'], description: 'الانتقال للتاب رقم', category: 'العرض' },
-    
+
     // Help
     { keys: ['Ctrl', '?'], description: 'إظهار هذه القائمة', category: 'المساعدة' },
     { keys: ['Alt', 'H'], description: 'الصفحة الرئيسية', category: 'المساعدة' },
@@ -43,7 +43,12 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="⌨️ اختصارات لوحة المفاتيح"
+      title={
+        <span className="inline-flex items-center gap-2">
+          <MaterialIcon name="keyboard" size="md" />
+          <span>اختصارات لوحة المفاتيح</span>
+        </span>
+      }
       size="xl"
     >
       <div className="space-y-6">
@@ -57,7 +62,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
               {shortcuts
                 .filter(s => s.category === category)
                 .map((shortcut, index) => (
-                  <div 
+                  <div
                     key={index}
                     className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl material-transition group"
                   >

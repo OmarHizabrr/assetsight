@@ -30,7 +30,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               ref={ref}
               id={checkboxId}
               type="checkbox"
-              className={`h-5 w-5 rounded-lg border-2 border-slate-300 text-primary-600 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 material-transition cursor-pointer accent-primary-600 shadow-md hover:shadow-lg hover:border-primary-400 hover:scale-110 ${className}`}
+              className={`h-5 w-5 rounded-lg border-2 border-slate-300 dark:border-slate-500 text-primary-600 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 material-transition cursor-pointer accent-primary-600 shadow-md hover:shadow-lg hover:border-primary-400 hover:scale-110 ${className}`}
               {...props}
             />
           </div>
@@ -38,13 +38,13 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             <div className="flex-1">
               <label
                 htmlFor={checkboxId}
-                className="text-sm font-medium text-slate-700 cursor-pointer"
+                className="text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer"
               >
                 {label}
                 {props.required && <span className="text-error-500 mr-1">*</span>}
               </label>
               {helperText && (
-                <p className="mt-1 text-xs text-secondary-500">{helperText}</p>
+                <p className="mt-1 text-xs text-secondary-500 dark:text-slate-400">{helperText}</p>
               )}
             </div>
           )}

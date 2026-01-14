@@ -95,9 +95,16 @@ export interface Asset {
   location_office_id: string;
   custodian_user_id?: string;
   warranty_end?: string;
+  start_use_date?: string;
+  depreciation_enabled?: number | boolean;
   depreciation_method?: string;
   expected_lifetime_years?: number;
   residual_value?: number;
+  annual_depreciation?: number;
+  accumulated_depreciation?: number;
+  book_value?: number;
+  last_depreciation_year?: number;
+  depreciation_status?: string;
   supplier?: string;
   invoice_number?: string;
   last_maintenance_date?: string;
@@ -105,6 +112,21 @@ export interface Asset {
   created_by?: string;
   created_at?: string;
   updated_at?: string;
+  notes?: string;
+  timestamp?: string;
+}
+
+export interface DepreciationTransaction {
+  id?: string;
+  asset_id: string;
+  year: number;
+  depreciation_amount: number;
+  accumulated_before: number;
+  accumulated_after: number;
+  book_value_before: number;
+  book_value_after: number;
+  method?: string;
+  run_id?: string;
   notes?: string;
   timestamp?: string;
 }

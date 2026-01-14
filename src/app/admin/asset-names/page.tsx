@@ -3,6 +3,7 @@
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
@@ -24,11 +25,11 @@ import * as XLSX from 'xlsx';
 function isAdmin(role: string | null | undefined): boolean {
   if (!role) return false;
   const normalizedRole = role.trim().toLowerCase();
-  return normalizedRole === 'مدير' || 
-         normalizedRole === 'admin' || 
-         normalizedRole === 'administrator' ||
-         normalizedRole === 'مدير النظام' ||
-         normalizedRole === 'system admin';
+  return normalizedRole === 'مدير' ||
+    normalizedRole === 'admin' ||
+    normalizedRole === 'administrator' ||
+    normalizedRole === 'مدير النظام' ||
+    normalizedRole === 'system admin';
 }
 
 function AssetNamesPageContent() {
@@ -116,7 +117,7 @@ function AssetNamesPageContent() {
     if (!deletingAssetName) return;
     const id = deletingAssetName.get('id');
     if (!id) return;
-    
+
     try {
       setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("assetNames", id);
@@ -156,9 +157,9 @@ function AssetNamesPageContent() {
       showWarning("لم يتم تحديد أي أسماء للحذف");
       return;
     }
-    
+
     console.log(`Starting bulk delete for ${deletingAssetNames.length} asset names`);
-    
+
     try {
       setBulkDeleteLoading(true);
       let successCount = 0;
@@ -270,7 +271,7 @@ function AssetNamesPageContent() {
 
       const updatePromises = dataArray.map(async (item) => {
         if (!item.id) return;
-        
+
         const docRef = firestoreApi.getDocument("assetNames", item.id);
         await firestoreApi.updateData(docRef, {
           name: item.name || '',
@@ -281,7 +282,7 @@ function AssetNamesPageContent() {
       });
 
       await Promise.all(updatePromises);
-      
+
       setIsBulkEditModalOpen(false);
       setSelectedAssetNamesForBulkEdit([]);
       setBulkEditFormDataArray([]);
@@ -313,7 +314,7 @@ function AssetNamesPageContent() {
   const readExcelFile = async (file: File): Promise<Array<Record<string, any>>> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
@@ -323,7 +324,7 @@ function AssetNamesPageContent() {
           }
 
           let workbook: XLSX.WorkBook;
-          
+
           if (file.name.endsWith('.csv')) {
             // قراءة CSV
             workbook = XLSX.read(data, { type: 'string' });
@@ -334,7 +335,7 @@ function AssetNamesPageContent() {
 
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          
+
           if (!worksheet) {
             reject(new Error('الملف لا يحتوي على جداول'));
             return;
@@ -342,7 +343,7 @@ function AssetNamesPageContent() {
 
           // تحويل إلى JSON
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' }) as Record<string, any>[];
-          
+
           if (jsonData.length === 0) {
             reject(new Error('الملف فارغ'));
             return;
@@ -380,7 +381,7 @@ function AssetNamesPageContent() {
 
         // محاولة قراءة من الأعمدة المسماة (بدعم للرأسيات العربية والإنجليزية)
         const rowKeys = Object.keys(row);
-        
+
         // البحث عن عمود اسم الأصل
         for (const key of rowKeys) {
           const keyLower = key.toLowerCase().trim();
@@ -392,14 +393,14 @@ function AssetNamesPageContent() {
             break;
           }
         }
-        
+
         // إذا لم نجد من الرأسيات، جرب الأسماء الشائعة
         if (!name) {
           name = (
-            row['اسم الأصل'] || 
+            row['اسم الأصل'] ||
             row['اسم الاصل'] ||
-            row['asset_name'] || 
-            row['name'] || 
+            row['asset_name'] ||
+            row['name'] ||
             row['Name'] ||
             row['Asset Name'] ||
             ''
@@ -417,14 +418,14 @@ function AssetNamesPageContent() {
             break;
           }
         }
-        
+
         // إذا لم نجد من الرأسيات، جرب الأسماء الشائعة
         if (!category) {
           category = (
-            row['الفئة'] || 
+            row['الفئة'] ||
             row['الفئه'] ||
-            row['category'] || 
-            row['Category'] || 
+            row['category'] ||
+            row['Category'] ||
             ''
           ).toString().trim();
         }
@@ -434,7 +435,7 @@ function AssetNamesPageContent() {
         if (!name) {
           const rowKeys = Object.keys(row);
           const rowValues = Object.values(row);
-          
+
           // محاولة قراءة من الفهرس (العمود الأول = اسم الأصل، العمود الثاني = الفئة)
           if (rowValues.length >= 1) {
             const firstValue = rowValues[0]?.toString().trim() || '';
@@ -450,7 +451,7 @@ function AssetNamesPageContent() {
             }
           }
         }
-        
+
         // إذا لم نجد الفئة بعد، جرب قراءة من الفهرس الثاني
         if (!category && Object.values(row).length >= 2) {
           const rowValues = Object.values(row);
@@ -464,16 +465,16 @@ function AssetNamesPageContent() {
         }
 
         const description = (
-          row['الوصف'] || 
-          row['description'] || 
-          row['Description'] || 
+          row['الوصف'] ||
+          row['description'] ||
+          row['Description'] ||
           ''
         ).toString().trim();
 
         const notes = (
-          row['الملاحظات'] || 
-          row['notes'] || 
-          row['Notes'] || 
+          row['الملاحظات'] ||
+          row['notes'] ||
+          row['Notes'] ||
           ''
         ).toString().trim();
 
@@ -486,7 +487,7 @@ function AssetNamesPageContent() {
             if (category) existingData.category = category;
             if (description) existingData.description = description;
             if (notes) existingData.notes = notes;
-            
+
             const docRef = firestoreApi.getDocument("assetNames", existing.get('id'));
             await firestoreApi.updateData(docRef, existingData);
             successCount++;
@@ -514,31 +515,31 @@ function AssetNamesPageContent() {
     }
 
     // عرض النتائج
-      if (errorCount > 0) {
-        const errorMessage = errors.slice(0, 10).join('\n');
-        const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
-        showWarning(`تم استيراد ${successCount} اسم بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
-      } else {
-        showSuccess(`تم استيراد ${successCount} اسم بنجاح`);
-      }
+    if (errorCount > 0) {
+      const errorMessage = errors.slice(0, 10).join('\n');
+      const moreErrors = errors.length > 10 ? `\n... و ${errors.length - 10} خطأ آخر` : '';
+      showWarning(`تم استيراد ${successCount} اسم بنجاح\nفشل: ${errorCount}\n\nالأخطاء:\n${errorMessage}${moreErrors}`);
+    } else {
+      showSuccess(`تم استيراد ${successCount} اسم بنجاح`);
+    }
 
     // إعادة تحميل البيانات
     loadAssetNames();
   };
 
   const columns = [
-    { 
-      key: 'name', 
+    {
+      key: 'name',
       label: 'اسم الأصل',
       sortable: true,
     },
-    { 
-      key: 'category', 
+    {
+      key: 'category',
       label: 'الفئة',
       sortable: true,
     },
-    { 
-      key: 'description', 
+    {
+      key: 'description',
       label: 'الوصف',
       sortable: true,
     },
@@ -546,36 +547,14 @@ function AssetNamesPageContent() {
 
   return (
     <MainLayout>
-      {/* Page Header */}
-      <div className="mb-10 relative">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <MaterialIcon name="label" className="text-white relative z-10" size="3xl" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
-                    أسماء الأصول
-                  </h1>
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
-                    <MaterialIcon name="label" className="text-primary-600" size="sm" />
-                    <span className="text-xs font-semibold text-primary-700">{assetNames.length}</span>
-                  </div>
-                </div>
-                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
-                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
-                  <span>إدارة وإضافة أسماء الأصول في النظام</span>
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-4">
-            {canAdd && (
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <AdminPageHeader
+          title="أسماء الأصول"
+          subtitle="إدارة وإضافة أسماء الأصول في النظام"
+          iconName="label"
+          count={assetNames.length}
+          actions={
+            canAdd ? (
               <>
                 <Button
                   onClick={handleImportClick}
@@ -600,30 +579,29 @@ function AssetNamesPageContent() {
                   إضافة اسم جديد
                 </Button>
               </>
-            )}
-          </div>
-        </div>
-      </div>
+            ) : null
+          }
+        />
 
-      {/* Data Table */}
-      <DataTable
-        data={assetNames}
-        columns={columns}
-        onEdit={canEdit ? handleEdit : undefined}
-        onDelete={canDelete ? handleDelete : undefined}
-        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
-        onBulkDelete={canDelete ? handleBulkDelete : undefined}
-        onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
-        isAdmin={isUserAdmin}
-        onAddNew={canAdd ? () => {
-          setEditingAssetName(null);
-          setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
-          setIsModalOpen(true);
-        } : undefined}
-        title="أسماء الأصول"
-        exportFileName="asset-names"
-        loading={loading}
-      />
+        {/* Data Table */}
+        <DataTable
+          data={assetNames}
+          columns={columns}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
+          onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+          onBulkDelete={canDelete ? handleBulkDelete : undefined}
+          onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
+          isAdmin={isUserAdmin}
+          onAddNew={canAdd ? () => {
+            setEditingAssetName(null);
+            setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
+            setIsModalOpen(true);
+          } : undefined}
+          title="أسماء الأصول"
+          exportFileName="asset-names"
+          loading={loading}
+        />
 
         <Modal
           isOpen={isModalOpen}
@@ -635,7 +613,7 @@ function AssetNamesPageContent() {
           title={editingAssetName ? "تعديل اسم الأصل" : "إضافة اسم جديد"}
           size="lg"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
@@ -645,7 +623,7 @@ function AssetNamesPageContent() {
                   setFormData(new BaseModel({ name: '', category: '', description: '', notes: '' }));
                 }}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
               >
                 إلغاء
               </Button>
@@ -654,7 +632,7 @@ function AssetNamesPageContent() {
                 form="asset-name-form"
                 variant="primary"
                 size="lg"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
               >
                 {editingAssetName ? "تحديث" : "حفظ"}
               </Button>
@@ -804,6 +782,7 @@ function AssetNamesPageContent() {
           variant="danger"
           loading={bulkDeleteLoading}
         />
+      </div>
     </MainLayout>
   );
 }

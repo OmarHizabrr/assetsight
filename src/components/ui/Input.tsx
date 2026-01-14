@@ -1,6 +1,5 @@
 'use client';
 
-import { useDarkMode } from '@/hooks/useDarkMode';
 import { InputHTMLAttributes, TextareaHTMLAttributes, forwardRef, useEffect, useId, useRef, useState } from 'react';
 
 type InputElementProps = InputHTMLAttributes<HTMLInputElement>;
@@ -53,15 +52,15 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
     const hasRightElement = rightIcon || showPasswordToggle;
     const [isFocused, setIsFocused] = useState(false);
     const [hasValue, setHasValue] = useState(false);
-    const { isDark: isDarkMode } = useDarkMode();
-    
-    // Determine if we should use textarea (for text fields) or input (for special types)
-    const useTextarea = !type || ['text', 'email', 'tel', 'url', 'search', 'password'].includes(type);
-    
+
+    // Determine if we should use textarea. Use it only when multiline is explicitly needed.
+    // Rendering a textarea for normal single-line fields can lead to odd input behavior.
+    const useTextarea = (rows ?? 1) > 1;
+
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const actualRef = useTextarea ? textareaRef : inputRef;
-    
+
     // Forward ref
     useEffect(() => {
       if (typeof ref === 'function') {
@@ -85,11 +84,11 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
         const paddingBottom = 10;
         const borderWidth = 4;
         const totalPadding = paddingTop + paddingBottom + borderWidth;
-        
+
         const scrollHeight = textarea.scrollHeight;
         const minHeight = rows ? `${rows * lineHeightPx + totalPadding}px` : `${lineHeightPx + totalPadding}px`;
         const calculatedMinHeight = parseInt(minHeight);
-        
+
         const newHeight = Math.max(scrollHeight, calculatedMinHeight);
         textarea.style.height = `${newHeight}px`;
         textarea.style.lineHeight = '1';
@@ -98,7 +97,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
       setTimeout(() => {
         adjustHeight();
       }, 0);
-      
+
       textarea.addEventListener('input', adjustHeight);
       textarea.addEventListener('paste', () => {
         setTimeout(adjustHeight, 0);
@@ -109,17 +108,17 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
         }
       });
       window.addEventListener('resize', adjustHeight);
-      
+
       const observer = new MutationObserver(() => {
         adjustHeight();
       });
-      observer.observe(textarea, { 
-        attributes: true, 
+      observer.observe(textarea, {
+        attributes: true,
         attributeFilter: ['value', 'data-value'],
         childList: true,
         characterData: true,
       });
-      
+
       let lastValue = textarea.value;
       const checkValueChange = () => {
         const currentValue = textarea.value;
@@ -128,7 +127,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
           setTimeout(adjustHeight, 0);
         }
       };
-      
+
       const valueCheckInterval = setInterval(checkValueChange, 100);
 
       return () => {
@@ -156,7 +155,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
       : 'rounded-lg border-2';
 
     const baseStyles = `block w-full ${variantBaseStyles} ${sizeStyles[size]} font-medium material-transition focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed min-w-0 resize-none`;
-    
+
     const inputStyles = hasError
       ? variant === 'filled'
         ? 'bg-error-50 dark:!bg-slate-600/70 text-error-900 dark:!text-slate-50 placeholder-error-400 dark:!placeholder-slate-300 hover:bg-error-100 dark:hover:!bg-slate-600/80 focus:bg-white dark:focus:!bg-slate-600/90 focus:border-error-500 focus:ring-4 focus:ring-error-100 dark:focus:ring-error-900/30'
@@ -187,12 +186,6 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
       paddingTop: '0.625rem',
       paddingBottom: '0.625rem',
       borderRadius: '0.75rem',
-      // Force dark mode colors via inline styles for maximum priority
-      ...(isDarkMode && {
-        backgroundColor: 'rgba(71, 85, 105, 0.7)',
-        color: 'rgb(248, 250, 252)',
-        borderColor: 'rgba(100, 116, 139, 0.7)',
-      }),
     };
 
     // Track value changes for floating label effect
@@ -223,10 +216,10 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-bold text-slate-700 mb-2.5 material-transition"
+            className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2.5 material-transition"
             aria-required={props.required}
           >
-            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">{label}</span>
+            <span className="bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-100 dark:to-slate-200 bg-clip-text text-transparent">{label}</span>
             {props.required && (
               <span className="text-error-500 font-black ml-1" aria-label="حقل مطلوب">*</span>
             )}
@@ -235,23 +228,22 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
         <div className="relative group">
           {/* Premium Glow effect on focus */}
           {variant === 'outlined' && (
-            <div 
+            <div
               className={`absolute -inset-0.5 rounded-lg opacity-0 group-focus-within:opacity-100 material-transition blur-sm -z-10`}
-              style={{ 
-                background: hasError 
+              style={{
+                background: hasError
                   ? 'linear-gradient(135deg, rgba(234, 84, 85, 0.3) 0%, rgba(234, 84, 85, 0.1) 100%)'
                   : 'linear-gradient(135deg, rgba(115, 103, 240, 0.3) 0%, rgba(115, 103, 240, 0.1) 100%)',
                 transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             />
           )}
-          
+
           {/* Required asterisk - positioned inside the field on the left side (RTL) */}
           {props.required && (
-            <span 
-              className={`absolute top-1/2 transform -translate-y-1/2 text-error-500 text-lg font-bold z-30 pointer-events-none ${
-                leftIcon ? 'left-10' : 'left-2.5'
-              }`}
+            <span
+              className={`absolute top-1/2 transform -translate-y-1/2 text-error-500 text-lg font-bold z-30 pointer-events-none ${leftIcon ? 'left-10' : 'left-2.5'
+                }`}
               style={{
                 lineHeight: 1,
                 display: 'block',
@@ -262,17 +254,16 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
             </span>
           )}
 
-          
+
           {leftIcon && (
-            <div 
-              className={`absolute left-3.5 top-1/2 transform -translate-y-1/2 pointer-events-none z-20 material-transition ${
-                isFocused ? 'text-primary-500' : hasError ? 'text-error-500' : 'text-slate-400'
-              }`}
+            <div
+              className={`absolute left-3.5 top-1/2 transform -translate-y-1/2 pointer-events-none z-20 material-transition ${isFocused ? 'text-primary-500' : hasError ? 'text-error-500' : 'text-slate-400'
+                }`}
             >
               {leftIcon}
             </div>
           )}
-          
+
           {useTextarea ? (
             <textarea
               ref={textareaRef}
@@ -320,12 +311,12 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
               {...(props as InputElementProps)}
             />
           )}
-          
+
           {showPasswordToggle && onTogglePassword && (
             <button
               type="button"
               onClick={onTogglePassword}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 p-1.5 rounded-md text-slate-400 hover:text-primary-600 hover:bg-primary-50 active:bg-primary-100 material-transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500/20 active:scale-95"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 p-1.5 rounded-md text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-slate-700/60 active:bg-primary-100 dark:active:bg-slate-700/80 material-transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500/20 active:scale-95"
               tabIndex={-1}
               aria-label={isPasswordVisible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
             >
@@ -361,17 +352,16 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
             </button>
           )}
           {rightIcon && !showPasswordToggle && (
-            <div 
-              className={`absolute right-3.5 top-1/2 transform -translate-y-1/2 z-10 material-transition ${
-                isFocused ? 'text-primary-500' : hasError ? 'text-error-500' : 'text-slate-400'
-              }`}
+            <div
+              className={`absolute right-3.5 top-1/2 transform -translate-y-1/2 z-10 material-transition ${isFocused ? 'text-primary-500' : hasError ? 'text-error-500' : 'text-slate-400'
+                }`}
             >
               {rightIcon}
             </div>
           )}
         </div>
         {error && (
-          <p 
+          <p
             id={`${inputId}-error`}
             role="alert"
             className="mt-1 text-xs text-error-600 animate-fade-in flex items-center gap-1 error-message"
@@ -384,7 +374,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
           </p>
         )}
         {helperText && !error && (
-          <p 
+          <p
             id={`${inputId}-helper`}
             className="mt-1 text-xs text-secondary-500 animate-fade-in flex items-center gap-1"
             aria-live="polite"

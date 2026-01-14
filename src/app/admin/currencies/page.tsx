@@ -3,6 +3,7 @@
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
@@ -24,11 +25,11 @@ import { useEffect, useState } from "react";
 function isAdmin(role: string | null | undefined): boolean {
   if (!role) return false;
   const normalizedRole = role.trim().toLowerCase();
-  return normalizedRole === 'مدير' || 
-         normalizedRole === 'admin' || 
-         normalizedRole === 'administrator' ||
-         normalizedRole === 'مدير النظام' ||
-         normalizedRole === 'system admin';
+  return normalizedRole === 'مدير' ||
+    normalizedRole === 'admin' ||
+    normalizedRole === 'administrator' ||
+    normalizedRole === 'مدير النظام' ||
+    normalizedRole === 'system admin';
 }
 
 function CurrenciesPageContent() {
@@ -83,7 +84,7 @@ function CurrenciesPageContent() {
     try {
       const data = formData.getData();
       data.is_default = formData.getValue<boolean>('is_default') ? 1 : 0;
-      
+
       // إذا تم تحديد كعملة افتراضية، إلغاء التحديد من باقي العملات
       if (data.is_default === 1) {
         for (const currency of currencies) {
@@ -93,7 +94,7 @@ function CurrenciesPageContent() {
           }
         }
       }
-      
+
       if (editingCurrency?.get('id')) {
         const docRef = firestoreApi.getDocument("currencies", editingCurrency.get('id'));
         await firestoreApi.updateData(docRef, data);
@@ -130,7 +131,7 @@ function CurrenciesPageContent() {
     if (!deletingCurrency) return;
     const id = deletingCurrency.get('id');
     if (!id) return;
-    
+
     try {
       setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("currencies", id);
@@ -172,7 +173,7 @@ function CurrenciesPageContent() {
       showWarning("لم يتم تحديد أي عملات للحذف");
       return;
     }
-    
+
     try {
       setBulkDeleteLoading(true);
       let successCount = 0;
@@ -297,23 +298,23 @@ function CurrenciesPageContent() {
 
       const updatePromises = dataArray.map(async (item) => {
         if (!item.id) return;
-        
+
         const updates: any = {
           name: item.name || '',
           code: item.code || '',
           symbol: item.symbol || '',
           notes: item.notes || '',
         };
-        
+
         // معالجة is_default
         updates.is_default = item.is_default === true || item.is_default === 1 ? 1 : 0;
-        
+
         const docRef = firestoreApi.getDocument("currencies", item.id);
         await firestoreApi.updateData(docRef, updates);
       });
 
       await Promise.all(updatePromises);
-      
+
       setIsBulkEditModalOpen(false);
       setSelectedCurrenciesForBulkEdit([]);
       setBulkEditFormDataArray([]);
@@ -339,7 +340,7 @@ function CurrenciesPageContent() {
           let name = '';
           let code = '';
           let symbol = '';
-          
+
           for (const key of Object.keys(row)) {
             const keyLower = key.toLowerCase().trim();
             if (keyLower.includes('اسم') || keyLower === 'name') {
@@ -350,7 +351,7 @@ function CurrenciesPageContent() {
               symbol = row[key]?.toString().trim() || '';
             }
           }
-          
+
           if (!name) {
             name = (row['اسم العملة'] || row['الاسم'] || row['name'] || row['Name'] || '').toString().trim();
           }
@@ -368,7 +369,7 @@ function CurrenciesPageContent() {
           }
 
           const isDefault = (
-            row['افتراضي'] || row['is_default'] || row['Is Default'] || 
+            row['افتراضي'] || row['is_default'] || row['Is Default'] ||
             row['default'] || row['Default'] || false
           );
           const notes = (row['الملاحظات'] || row['notes'] || row['Notes'] || '').toString().trim();
@@ -415,29 +416,29 @@ function CurrenciesPageContent() {
   };
 
   const columns = [
-    { 
-      key: 'name', 
+    {
+      key: 'name',
       label: 'اسم العملة',
       sortable: true,
     },
-    { 
-      key: 'code', 
+    {
+      key: 'code',
       label: 'رمز العملة',
       render: (item: BaseModel) => (
         <span className="font-mono font-semibold text-primary-600">{item.get('code')}</span>
       ),
       sortable: true,
     },
-    { 
-      key: 'symbol', 
+    {
+      key: 'symbol',
       label: 'الرمز',
       sortable: true,
       render: (item: BaseModel) => (
         <span className="text-lg font-bold text-slate-700">{item.get('symbol') || '-'}</span>
       ),
     },
-    { 
-      key: 'is_default', 
+    {
+      key: 'is_default',
       label: 'افتراضي',
       render: (item: BaseModel) => {
         const isDefault = item.getValue<number>('is_default') === 1 || item.getValue<boolean>('is_default') === true;
@@ -454,82 +455,61 @@ function CurrenciesPageContent() {
 
   return (
     <MainLayout>
-      {/* Page Header */}
-      <div className="mb-10 relative">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <MaterialIcon name="attach_money" className="text-white relative z-10" size="3xl" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
-                    العملات
-                  </h1>
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
-                    <MaterialIcon name="attach_money" className="text-primary-600" size="sm" />
-                    <span className="text-xs font-semibold text-primary-700">{currencies.length}</span>
-                  </div>
-                </div>
-                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
-                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
-                  <span>إدارة وإضافة العملات في النظام</span>
-                </p>
-              </div>
-            </div>
-          </div>
-          {canAdd && (
-            <div className="flex gap-4">
-              <Button
-                onClick={() => setIsImportModalOpen(true)}
-                leftIcon={<MaterialIcon name="upload_file" size="md" />}
-                size="lg"
-                variant="outline"
-                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold"
-              >
-                استيراد من Excel
-              </Button>
-              <Button
-                onClick={() => {
-                  setEditingCurrency(null);
-                  setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
-                  setIsModalOpen(true);
-                }}
-                leftIcon={<PlusIcon className="w-5 h-5" />}
-                size="lg"
-                variant="primary"
-                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
-              >
-                إضافة عملة جديدة
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <AdminPageHeader
+          title="العملات"
+          subtitle="إدارة وإضافة العملات في النظام"
+          iconName="attach_money"
+          count={currencies.length}
+          actions={
+            canAdd ? (
+              <>
+                <Button
+                  onClick={() => setIsImportModalOpen(true)}
+                  leftIcon={<MaterialIcon name="upload_file" size="md" />}
+                  size="lg"
+                  variant="outline"
+                  className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold"
+                >
+                  استيراد من Excel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditingCurrency(null);
+                    setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
+                    setIsModalOpen(true);
+                  }}
+                  leftIcon={<PlusIcon className="w-5 h-5" />}
+                  size="lg"
+                  variant="primary"
+                  className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+                >
+                  إضافة عملة جديدة
+                </Button>
+              </>
+            ) : null
+          }
+        />
 
-      {/* Data Table */}
-      <DataTable
-        data={currencies}
-        columns={columns}
-        onEdit={canEdit ? handleEdit : undefined}
-        onDelete={canDelete ? handleDelete : undefined}
-        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
-        onBulkDelete={canDelete ? handleBulkDelete : undefined}
-        onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
-        isAdmin={isUserAdmin}
-        onAddNew={canAdd ? () => {
-          setEditingCurrency(null);
-          setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
-          setIsModalOpen(true);
-        } : undefined}
-        title="العملات"
-        exportFileName="currencies"
-        loading={loading}
-      />
+        {/* Data Table */}
+        <DataTable
+          data={currencies}
+          columns={columns}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
+          onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+          onBulkDelete={canDelete ? handleBulkDelete : undefined}
+          onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
+          isAdmin={isUserAdmin}
+          onAddNew={canAdd ? () => {
+            setEditingCurrency(null);
+            setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
+            setIsModalOpen(true);
+          } : undefined}
+          title="العملات"
+          exportFileName="currencies"
+          loading={loading}
+        />
 
         <Modal
           isOpen={isModalOpen}
@@ -541,7 +521,7 @@ function CurrenciesPageContent() {
           title={editingCurrency ? "تعديل عملة" : "إضافة عملة جديدة"}
           size="lg"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
@@ -551,7 +531,7 @@ function CurrenciesPageContent() {
                   setFormData(new BaseModel({ name: '', code: '', symbol: '', is_default: false, notes: '' }));
                 }}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
               >
                 إلغاء
               </Button>
@@ -560,7 +540,7 @@ function CurrenciesPageContent() {
                 form="currency-form"
                 variant="primary"
                 size="lg"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
               >
                 {editingCurrency ? "تحديث" : "حفظ"}
               </Button>
@@ -712,7 +692,7 @@ function CurrenciesPageContent() {
                 <Checkbox
                   label=""
                   checked={false}
-                  onChange={() => {}}
+                  onChange={() => { }}
                 />
               ),
             },
@@ -744,6 +724,7 @@ function CurrenciesPageContent() {
           variant="danger"
           loading={bulkDeleteLoading}
         />
+      </div>
     </MainLayout>
   );
 }

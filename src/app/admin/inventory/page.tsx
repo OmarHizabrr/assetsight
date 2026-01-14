@@ -2,6 +2,7 @@
 
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { PlusIcon } from "@/components/icons";
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -10,7 +11,6 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
@@ -75,7 +75,7 @@ function InventoryPageContent() {
       const deptDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("departments"));
       const departmentsData = BaseModel.fromFirestoreArray(deptDocs);
       setDepartments(departmentsData);
-      
+
       // جلب جميع المكاتب
       const allOffices: BaseModel[] = [];
       for (const dept of departmentsData) {
@@ -91,7 +91,7 @@ function InventoryPageContent() {
         }
       }
       setOffices(allOffices);
-      
+
       // جلب جميع دورات الجرد من جميع الإدارات
       const allCycles: BaseModel[] = [];
       for (const dept of departmentsData) {
@@ -107,7 +107,7 @@ function InventoryPageContent() {
         }
       }
       setCycles(allCycles);
-      
+
       // جلب جميع عناصر الجرد من جميع الدورات
       const allItems: BaseModel[] = [];
       for (const cycle of allCycles) {
@@ -156,12 +156,12 @@ function InventoryPageContent() {
       showWarning("يرجى اختيار الإدارة");
       return;
     }
-    
+
     try {
       const data = cycleFormData.getData();
       const cycleId = editingCycle?.get('id');
       const editingDeptId = editingCycle?.get('department_id');
-      
+
       if (cycleId && editingDeptId) {
         const docRef = firestoreApi.getSubDocument(
           "departments",
@@ -199,18 +199,18 @@ function InventoryPageContent() {
       showWarning("يرجى اختيار الجولة");
       return;
     }
-    
+
     const cycle = cycles.find(c => c.get('id') === cycleId);
     const deptId = cycle?.get('department_id');
     if (!deptId) {
       showWarning("معلومات الجولة غير صحيحة");
       return;
     }
-    
+
     try {
       const data = itemFormData.getData();
       data.found = itemFormData.getValue<boolean>('found') ? 1 : 0;
-      
+
       const itemId = editingItem?.get('id');
       if (itemId) {
         const docRef = firestoreApi.getNestedSubDocument(
@@ -286,10 +286,10 @@ function InventoryPageContent() {
         const cycleId = cycle.get('id');
         const deptId = cycle.get('department_id');
         if (!cycleId || !deptId) return;
-        
+
         const formData = bulkEditCycleFormDataArray[index];
         if (!formData) return;
-        
+
         const updates = formData.getData();
         const docRef = firestoreApi.getSubDocument(
           "departments",
@@ -301,7 +301,7 @@ function InventoryPageContent() {
       });
 
       await Promise.all(updatePromises);
-      
+
       setIsBulkEditCycleModalOpen(false);
       setSelectedCyclesForBulkEdit([]);
       setBulkEditCycleFormDataArray([]);
@@ -326,20 +326,20 @@ function InventoryPageContent() {
         const itemId = item.get('id');
         const cycleId = item.get('cycle_id');
         if (!itemId || !cycleId) return;
-        
+
         const cycle = cycles.find(c => c.get('id') === cycleId);
         const deptId = cycle?.get('department_id');
         if (!deptId) return;
-        
+
         const formData = bulkEditItemFormDataArray[index];
         if (!formData) return;
-        
+
         const updates = formData.getData();
         // معالجة found
         if ('found' in updates) {
           updates.found = formData.getValue<boolean>('found') ? 1 : 0;
         }
-        
+
         const docRef = firestoreApi.getNestedSubDocument(
           "departments",
           deptId,
@@ -352,7 +352,7 @@ function InventoryPageContent() {
       });
 
       await Promise.all(updatePromises);
-      
+
       setIsBulkEditItemModalOpen(false);
       setSelectedItemsForBulkEdit([]);
       setBulkEditItemFormDataArray([]);
@@ -387,7 +387,7 @@ function InventoryPageContent() {
       const id = deletingCycle.get('id');
       const deptId = deletingCycle.get('department_id');
       if (!id || !deptId) return;
-      
+
       try {
         setDeleteLoading(true);
         const docRef = firestoreApi.getSubDocument(
@@ -411,7 +411,7 @@ function InventoryPageContent() {
       const id = deletingItem.get('id');
       const cycleId = deletingItem.get('cycle_id');
       if (!id || !cycleId) return;
-      
+
       try {
         setDeleteLoading(true);
         const cycle = cycles.find(c => c.get('id') === cycleId);
@@ -458,28 +458,28 @@ function InventoryPageContent() {
     return cycle?.get('name') || '-';
   };
 
-  const filteredItems = selectedCycleId 
+  const filteredItems = selectedCycleId
     ? items.filter(item => item.get('cycle_id') === selectedCycleId)
     : items;
 
   const cycleColumns = [
-    { 
-      key: 'name', 
+    {
+      key: 'name',
       label: 'اسم الجولة',
       sortable: true,
     },
-    { 
-      key: 'start_date', 
+    {
+      key: 'start_date',
       label: 'تاريخ البداية',
       sortable: true,
     },
-    { 
-      key: 'end_date', 
+    {
+      key: 'end_date',
       label: 'تاريخ النهاية',
       sortable: true,
     },
-    { 
-      key: 'department_id', 
+    {
+      key: 'department_id',
       label: 'الإدارة',
       render: (item: BaseModel) => getDepartmentName(item.get('department_id')),
       sortable: true,
@@ -487,25 +487,25 @@ function InventoryPageContent() {
   ];
 
   const itemColumns = [
-    { 
-      key: 'cycle_id', 
+    {
+      key: 'cycle_id',
       label: 'الجولة',
       render: (item: BaseModel) => getCycleName(item.get('cycle_id')),
       sortable: true,
     },
-    { 
-      key: 'scanned_tag', 
+    {
+      key: 'scanned_tag',
       label: 'التاج الممسوح',
       sortable: true,
     },
-    { 
-      key: 'scanned_office_id', 
+    {
+      key: 'scanned_office_id',
       label: 'مكتب المسح',
       render: (item: BaseModel) => getOfficeName(item.get('scanned_office_id')),
       sortable: true,
     },
-    { 
-      key: 'found', 
+    {
+      key: 'found',
       label: 'موجود',
       render: (item: BaseModel) => {
         const found = item.getValue<number>('found') === 1 || item.getValue<boolean>('found') === true;
@@ -513,8 +513,8 @@ function InventoryPageContent() {
       },
       sortable: true,
     },
-    { 
-      key: 'note', 
+    {
+      key: 'note',
       label: 'ملاحظة',
       sortable: true,
     },
@@ -522,24 +522,16 @@ function InventoryPageContent() {
 
   return (
     <MainLayout>
-      {/* Page Header */}
-      <div className="mb-10">
-        <div className="space-y-3">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 relative overflow-hidden group hover:scale-105 material-transition">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-              <span className="text-3xl relative z-10">📋</span>
-            </div>
-            <div className="flex-1">
-              <h1 className="text-5xl font-black bg-gradient-to-r from-slate-900 via-primary-700 to-slate-900 bg-clip-text text-transparent mb-2">الجرد</h1>
-              <p className="text-slate-600 text-lg font-semibold">إدارة دورات الجرد وعناصر الجرد</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Page Header */}
+        <AdminPageHeader
+          title="الجرد"
+          subtitle="إدارة دورات الجرد وعناصر الجرد"
+          iconName="checklist"
+        />
 
-      {/* Content Card */}
-      <Card variant="elevated" className="mb-6 shadow-2xl border-0 bg-white/80 backdrop-blur-xl overflow-hidden">
+        {/* Content Card */}
+        <Card variant="elevated" className="mb-6 shadow-2xl border-0 bg-white/80 backdrop-blur-xl overflow-hidden">
           <CardBody padding="md">
             <Tabs
               tabs={[
@@ -644,13 +636,13 @@ function InventoryPageContent() {
           title={editingCycle ? "تعديل دورة جرد" : "إضافة دورة جرد جديدة"}
           size="lg"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsCycleModalOpen(false)}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
               >
                 إلغاء
               </Button>
@@ -659,7 +651,7 @@ function InventoryPageContent() {
                 form="cycle-form"
                 variant="primary"
                 size="lg"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
               >
                 {editingCycle ? "تحديث" : "حفظ"}
               </Button>
@@ -720,13 +712,13 @@ function InventoryPageContent() {
           title={editingItem ? "تعديل عنصر جرد" : "إضافة عنصر جرد جديد"}
           size="lg"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsItemModalOpen(false)}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
               >
                 إلغاء
               </Button>
@@ -735,7 +727,7 @@ function InventoryPageContent() {
                 form="item-form"
                 variant="primary"
                 size="lg"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
               >
                 {editingItem ? "تحديث" : "حفظ"}
               </Button>
@@ -820,7 +812,7 @@ function InventoryPageContent() {
           title={`تحرير جماعي (${selectedCyclesForBulkEdit.length} دورة)`}
           size="full"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
@@ -830,7 +822,7 @@ function InventoryPageContent() {
                   setBulkEditCycleFormDataArray([]);
                 }}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
                 disabled={bulkEditCycleLoading}
               >
                 إلغاء
@@ -840,7 +832,7 @@ function InventoryPageContent() {
                 variant="primary"
                 size="lg"
                 form="bulk-edit-cycle-form"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
                 isLoading={bulkEditCycleLoading}
               >
                 حفظ جميع التعديلات ({selectedCyclesForBulkEdit.length})
@@ -858,7 +850,7 @@ function InventoryPageContent() {
               {selectedCyclesForBulkEdit.map((cycle, index) => {
                 const formData = bulkEditCycleFormDataArray[index];
                 if (!formData) return null;
-                
+
                 return (
                   <div key={cycle.get('id') || index} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                     <h4 className="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-300">
@@ -905,9 +897,9 @@ function InventoryPageContent() {
             setBulkEditItemFormDataArray([]);
           }}
           title={`تحرير جماعي (${selectedItemsForBulkEdit.length} عنصر)`}
-          size="full"
+          size="xl"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
@@ -917,7 +909,7 @@ function InventoryPageContent() {
                   setBulkEditItemFormDataArray([]);
                 }}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
                 disabled={bulkEditItemLoading}
               >
                 إلغاء
@@ -927,7 +919,7 @@ function InventoryPageContent() {
                 variant="primary"
                 size="lg"
                 form="bulk-edit-item-form"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
                 isLoading={bulkEditItemLoading}
               >
                 حفظ جميع التعديلات ({selectedItemsForBulkEdit.length})
@@ -945,7 +937,7 @@ function InventoryPageContent() {
               {selectedItemsForBulkEdit.map((item, index) => {
                 const formData = bulkEditItemFormDataArray[index];
                 if (!formData) return null;
-                
+
                 return (
                   <div key={item.get('id') || index} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                     <h4 className="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-300">
@@ -981,6 +973,7 @@ function InventoryPageContent() {
             </div>
           </form>
         </Modal>
+      </div>
     </MainLayout>
   );
 }

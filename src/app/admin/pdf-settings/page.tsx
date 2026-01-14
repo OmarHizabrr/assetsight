@@ -1,17 +1,18 @@
 'use client';
 
+import logoText from "@/assets/images/logos/logo-text.png";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { PdfSettingsService } from "@/lib/services/PdfSettingsService";
-import { PdfSettingsModel, defaultPdfSettings } from "@/lib/models/PdfSettingsModel";
-import { MaterialIcon } from "@/components/icons/MaterialIcon";
-import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/contexts/ToastContext";
-import logoText from "@/assets/images/logos/logo-text.png";
+import { PdfSettingsModel, defaultPdfSettings } from "@/lib/models/PdfSettingsModel";
+import { PdfSettingsService } from "@/lib/services/PdfSettingsService";
+import { useEffect, useRef, useState } from "react";
 
 function PdfSettingsPageContent() {
   const settingsService = PdfSettingsService.getInstance();
@@ -44,7 +45,7 @@ function PdfSettingsPageContent() {
     setSaving(true);
     const success = settingsService.saveSettings(settings);
     setSaving(false);
-    
+
     if (success) {
       showToast('تم حفظ إعدادات PDF بنجاح', 'success');
     } else {
@@ -121,12 +122,14 @@ function PdfSettingsPageContent() {
   return (
     <ProtectedRoute>
       <MainLayout>
-        <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
+          <AdminPageHeader
+            title="إعدادات PDF"
+            subtitle="تخصيص رأس وتذييل ملفات PDF"
+            iconName="picture_as_pdf"
+            className="mb-6"
+          />
           <Card variant="elevated" className="mb-6">
-            <CardHeader>
-              <h1 className="text-2xl font-bold text-slate-800">إعدادات PDF</h1>
-              <p className="text-sm text-slate-600 mt-1">تخصيص رأس وتذييل ملفات PDF</p>
-            </CardHeader>
             <CardBody>
               {/* إظهار/إخفاء الرأس والتذييل */}
               <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -293,8 +296,8 @@ function PdfSettingsPageContent() {
           }}
           title={
             editingField === 'rightHeader' ? 'تحرير الرأس الأيمن' :
-            editingField === 'leftHeader' ? 'تحرير الرأس الأيسر' :
-            'تحرير التذييل'
+              editingField === 'leftHeader' ? 'تحرير الرأس الأيسر' :
+                'تحرير التذييل'
           }
           size="full"
           footer={

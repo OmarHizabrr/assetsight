@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { useDarkMode } from "@/hooks/useDarkMode";
+import { Children, Fragment, cloneElement, isValidElement, useEffect, useRef, useState, type ReactElement } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ interface ModalProps {
   footer?: React.ReactNode;
   customWidth?: string | number;
   customMaxWidth?: string | number;
+  draggable?: boolean;
 }
 
 export function Modal({
@@ -28,39 +29,108 @@ export function Modal({
   footer,
   customWidth,
   customMaxWidth,
+  draggable = true,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const userInteractedRef = useRef(false);
   const { isDark: isDarkMode } = useDarkMode();
+
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const dragStateRef = useRef({
+    isDragging: false,
+    startClientX: 0,
+    startClientY: 0,
+    startX: 0,
+    startY: 0,
+  });
+
+  const renderResponsiveFooter = (node: React.ReactNode): React.ReactNode => {
+    return Children.map(node, (child) => {
+      if (!isValidElement(child)) return child;
+
+      const element = child as ReactElement<any>;
+
+      if (element.type === Fragment) {
+        return <>{renderResponsiveFooter(element.props.children)}</>;
+      }
+
+      const existingClassName = element.props?.className || '';
+      const responsiveWidthClass = 'w-full';
+
+      return cloneElement(element, {
+        className: `${existingClassName} ${responsiveWidthClass}`.trim(),
+      });
+    });
+  };
 
   // Focus management
   useEffect(() => {
+    let listenersAttached = false;
+    const markUserInteracted = (event: Event) => {
+      const target = event.target as Node | null;
+      const dialogEl = dialogRef.current;
+      if (!target || !dialogEl) return;
+      if (dialogEl.contains(target)) {
+        userInteractedRef.current = true;
+      }
+    };
+
     if (isOpen) {
       // Save current active element
       previousActiveElement.current = document.activeElement as HTMLElement;
-      
+
+      // Reset interaction flag on open
+      userInteractedRef.current = false;
+
       // Lock body scroll
       document.body.style.overflow = 'hidden';
-      
-      // Focus modal after a short delay to ensure it's rendered
+
+      // If user interacts with the modal quickly, don't run deferred auto-focus.
+      document.addEventListener('mousedown', markUserInteracted, true);
+      document.addEventListener('touchstart', markUserInteracted, true);
+      document.addEventListener('keydown', markUserInteracted, true);
+      listenersAttached = true;
+
+      // Focus management after render:
+      // - If user already focused something inside the modal (e.g. clicked an input), do not steal focus.
+      // - Otherwise, focus the first focusable control to prevent "first key" being dropped.
       setTimeout(() => {
-        const modalElement = modalRef.current?.querySelector('[role="dialog"]') as HTMLElement;
-        if (modalElement) {
-          modalElement.focus();
-        }
-      }, 100);
+        if (userInteractedRef.current) return;
+        const dialog = modalRef.current?.querySelector('[role="dialog"]') as HTMLElement | null;
+        if (!dialog) return;
+
+        const active = document.activeElement as HTMLElement | null;
+        const focusAlreadyInside = !!active && dialog.contains(active);
+        if (focusAlreadyInside) return;
+
+        const firstFocusable = dialog.querySelector(
+          'input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ) as HTMLElement | null;
+
+        (firstFocusable || dialog).focus();
+      }, 0);
+
+      // Reset drag position on open
+      setDragOffset({ x: 0, y: 0 });
     } else {
       // Restore body scroll
       document.body.style.overflow = 'unset';
-      
+
       // Restore focus to previous element
       if (previousActiveElement.current) {
         previousActiveElement.current.focus();
       }
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset';
+      if (listenersAttached) {
+        document.removeEventListener('mousedown', markUserInteracted, true);
+        document.removeEventListener('touchstart', markUserInteracted, true);
+        document.removeEventListener('keydown', markUserInteracted, true);
+      }
     };
   }, [isOpen]);
 
@@ -71,20 +141,20 @@ export function Modal({
         onClose();
       }
     };
-    
+
     const handleTab = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      
+
       const modal = modalRef.current?.querySelector('[role="dialog"]') as HTMLElement;
       if (!modal) return;
-      
+
       const focusableElements = modal.querySelectorAll(
         'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
       );
-      
+
       const firstElement = focusableElements[0] as HTMLElement;
       const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-      
+
       if (e.shiftKey && document.activeElement === firstElement) {
         e.preventDefault();
         lastElement?.focus();
@@ -93,12 +163,12 @@ export function Modal({
         firstElement?.focus();
       }
     };
-    
+
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       document.addEventListener('keydown', handleTab);
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.removeEventListener('keydown', handleTab);
@@ -107,11 +177,11 @@ export function Modal({
 
   // تحسين Sizes ليكون responsive - مستوحى من DawamWeb
   const sizes = {
-    sm: { maxWidth: '500px', width: '92vw', minHeight: 'auto' },
-    md: { maxWidth: '800px', width: '94vw', minHeight: 'auto' },
-    lg: { maxWidth: '1200px', width: '96vw', minHeight: 'auto' },
-    xl: { maxWidth: '1400px', width: '97vw', minHeight: 'auto' },
-    full: { maxWidth: '1800px', width: '98vw', minHeight: 'auto' },
+    sm: { maxWidth: 'min(500px, calc(100vw - 2rem))', width: 'calc(100vw - 2rem)', minHeight: 'auto' },
+    md: { maxWidth: 'min(800px, calc(100vw - 2rem))', width: 'calc(100vw - 2rem)', minHeight: 'auto' },
+    lg: { maxWidth: 'min(1200px, calc(100vw - 2rem))', width: 'calc(100vw - 2rem)', minHeight: 'auto' },
+    xl: { maxWidth: 'min(1400px, calc(100vw - 2rem))', width: 'calc(100vw - 2rem)', minHeight: 'auto' },
+    full: { maxWidth: 'min(1800px, calc(100vw - 2rem))', width: 'calc(100vw - 2rem)', minHeight: 'auto' },
   };
 
   const modalDialogClass = `modal-dialog modal-dialog-centered`;
@@ -120,7 +190,7 @@ export function Modal({
     <div
       ref={modalRef}
       className={`modal fade ${isOpen ? 'show' : ''}`}
-      style={{ 
+      style={{
         display: isOpen ? 'block' : 'none',
         position: 'fixed',
         top: 0,
@@ -164,24 +234,27 @@ export function Modal({
       />
 
       {/* Modal Dialog */}
-      <div 
-        className={`${modalDialogClass} ${isOpen ? 'animate-scale-in' : ''}`} 
-        role="document" 
+      <div
+        ref={dialogRef}
+        className={`${modalDialogClass} ${isOpen ? 'animate-scale-in' : ''}`}
+        role="document"
         onClick={(e) => e.stopPropagation()}
         style={{
           zIndex: 10000,
           position: 'relative',
           maxWidth: customMaxWidth ? (typeof customMaxWidth === 'number' ? `${customMaxWidth}px` : customMaxWidth) : sizes[size].maxWidth,
           width: customWidth === 'auto' ? 'fit-content' : (customWidth ? (typeof customWidth === 'number' ? `${customWidth}px` : customWidth) : sizes[size].width),
-          margin: '1.75rem auto',
+          margin: '1rem auto',
           display: 'flex',
           alignItems: 'center',
-          minHeight: 'calc(100vh - 3.5rem)',
+          minHeight: 'calc(100vh - 2rem)',
           animation: isOpen ? 'scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
           minWidth: customWidth === 'auto' ? 'min-content' : 0,
+          transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
+          willChange: draggable ? 'transform' : undefined,
         }}
       >
-        <div 
+        <div
           className="modal-content modal-content-enhanced"
           style={{
             backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'white',
@@ -192,7 +265,7 @@ export function Modal({
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            maxHeight: '92vh',
+            maxHeight: 'calc(100vh - 2rem)',
             height: 'auto',
             minHeight: 'min-content',
             backdropFilter: 'blur(20px)',
@@ -235,8 +308,117 @@ export function Modal({
             }}
           />
           {/* Modal Header */}
-          <div 
+          <div
             className="modal-header"
+            onMouseDown={(e) => {
+              if (!draggable) return;
+              // Only left click
+              if (e.button !== 0) return;
+              // Avoid dragging when clicking interactive elements inside header
+              const target = e.target as HTMLElement;
+              if (target.closest('button, a, input, textarea, select, [role="button"]')) return;
+              if (!dialogRef.current) return;
+
+              const rect = dialogRef.current.getBoundingClientRect();
+              dragStateRef.current = {
+                isDragging: true,
+                startClientX: e.clientX,
+                startClientY: e.clientY,
+                startX: dragOffset.x,
+                startY: dragOffset.y,
+              };
+
+              // Prevent text selection while dragging
+              e.preventDefault();
+
+              const handleMove = (ev: MouseEvent) => {
+                if (!dragStateRef.current.isDragging || !dialogRef.current) return;
+
+                const dx = ev.clientX - dragStateRef.current.startClientX;
+                const dy = ev.clientY - dragStateRef.current.startClientY;
+
+                const nextX = dragStateRef.current.startX + dx;
+                const nextY = dragStateRef.current.startY + dy;
+
+                const dialogRect = dialogRef.current.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+
+                // Constrain within viewport with small padding
+                const padding = 8;
+                const minX = -dialogRect.left + padding;
+                const maxX = viewportWidth - (dialogRect.right) - padding;
+                const minY = -dialogRect.top + padding;
+                const maxY = viewportHeight - (dialogRect.bottom) - padding;
+
+                setDragOffset({
+                  x: Math.min(Math.max(nextX, dragOffset.x + minX), dragOffset.x + maxX),
+                  y: Math.min(Math.max(nextY, dragOffset.y + minY), dragOffset.y + maxY),
+                });
+              };
+
+              const handleUp = () => {
+                dragStateRef.current.isDragging = false;
+                document.removeEventListener('mousemove', handleMove);
+                document.removeEventListener('mouseup', handleUp);
+              };
+
+              document.addEventListener('mousemove', handleMove);
+              document.addEventListener('mouseup', handleUp);
+            }}
+            onTouchStart={(e) => {
+              if (!draggable) return;
+              const touch = e.touches[0];
+              if (!touch) return;
+              const target = e.target as HTMLElement;
+              if (target.closest('button, a, input, textarea, select, [role="button"]')) return;
+              if (!dialogRef.current) return;
+
+              dragStateRef.current = {
+                isDragging: true,
+                startClientX: touch.clientX,
+                startClientY: touch.clientY,
+                startX: dragOffset.x,
+                startY: dragOffset.y,
+              };
+
+              const handleMove = (ev: TouchEvent) => {
+                const t = ev.touches[0];
+                if (!t || !dragStateRef.current.isDragging || !dialogRef.current) return;
+
+                const dx = t.clientX - dragStateRef.current.startClientX;
+                const dy = t.clientY - dragStateRef.current.startClientY;
+
+                const nextX = dragStateRef.current.startX + dx;
+                const nextY = dragStateRef.current.startY + dy;
+
+                const dialogRect = dialogRef.current.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+
+                const padding = 8;
+                const minX = -dialogRect.left + padding;
+                const maxX = viewportWidth - (dialogRect.right) - padding;
+                const minY = -dialogRect.top + padding;
+                const maxY = viewportHeight - (dialogRect.bottom) - padding;
+
+                setDragOffset({
+                  x: Math.min(Math.max(nextX, dragOffset.x + minX), dragOffset.x + maxX),
+                  y: Math.min(Math.max(nextY, dragOffset.y + minY), dragOffset.y + maxY),
+                });
+              };
+
+              const handleEnd = () => {
+                dragStateRef.current.isDragging = false;
+                document.removeEventListener('touchmove', handleMove);
+                document.removeEventListener('touchend', handleEnd);
+                document.removeEventListener('touchcancel', handleEnd);
+              };
+
+              document.addEventListener('touchmove', handleMove, { passive: true });
+              document.addEventListener('touchend', handleEnd);
+              document.addEventListener('touchcancel', handleEnd);
+            }}
             style={{
               background: 'linear-gradient(135deg, #7367f0 0%, #5e52d5 40%, #4a3fd0 70%, #3c35a8 100%)',
               padding: '1rem 1.5rem',
@@ -249,6 +431,9 @@ export function Modal({
               flexShrink: 0,
               zIndex: 1,
               boxShadow: '0 4px 20px rgba(115, 103, 240, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              cursor: draggable ? 'move' : undefined,
+              userSelect: draggable ? 'none' : undefined,
+              touchAction: draggable ? 'none' : undefined,
             }}
           >
             {/* Decorative Pattern */}
@@ -264,12 +449,12 @@ export function Modal({
               }}
             />
             {typeof title === 'string' ? (
-              <h5 
-                className="modal-title" 
-                id="modal-title" 
-                style={{ 
-                  color: 'white', 
-                  fontWeight: 700, 
+              <h5
+                className="modal-title"
+                id="modal-title"
+                style={{
+                  color: 'white',
+                  fontWeight: 700,
                   fontSize: '1.25rem',
                   margin: 0,
                   position: 'relative',
@@ -291,10 +476,10 @@ export function Modal({
                 {title}
               </h5>
             ) : (
-              <div 
-                className="modal-title" 
-                id="modal-title" 
-                style={{ 
+              <div
+                className="modal-title"
+                id="modal-title"
+                style={{
                   margin: 0,
                   position: 'relative',
                   zIndex: 1,
@@ -313,7 +498,7 @@ export function Modal({
                 onClick={onClose}
                 aria-label="إغلاق النافذة المنبثقة"
                 aria-keyshortcuts="Escape"
-                style={{ 
+                style={{
                   background: 'rgba(255, 255, 255, 0.2)',
                   border: 'none',
                   borderRadius: '50%',
@@ -347,15 +532,15 @@ export function Modal({
           </div>
 
           {/* Modal Body - Scrollable Content */}
-          <div 
+          <div
             className="modal-body"
-            style={{ 
+            style={{
               color: isDarkMode ? 'rgb(226, 232, 240)' : '#6f6b7d',
               padding: '1.25rem 1.5rem',
               overflowY: 'auto',
               overflowX: 'auto',
               flex: '1 1 auto',
-              background: isDarkMode 
+              background: isDarkMode
                 ? 'linear-gradient(to bottom, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 50%, rgba(15, 23, 42, 0.4) 100%)'
                 : 'linear-gradient(to bottom, #fafafa 0%, #ffffff 50%, #fafafa 100%)',
               minHeight: 0,
@@ -372,10 +557,10 @@ export function Modal({
               whiteSpace: 'normal',
             }}
           >
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: '1rem', 
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
               minHeight: 'min-content',
               width: '100%',
               wordWrap: 'break-word',
@@ -388,19 +573,20 @@ export function Modal({
 
           {/* Modal Footer - Fixed at Bottom, Outside Scroll Area */}
           {footer && (
-            <div 
+            <div
               className="modal-footer"
               style={{
                 padding: '1rem 1.5rem',
-                borderTop: isDarkMode 
-                  ? '2px solid rgba(71, 85, 105, 0.6)' 
+                borderTop: isDarkMode
+                  ? '2px solid rgba(71, 85, 105, 0.6)'
                   : '2px solid rgba(240, 239, 242, 0.8)',
                 background: isDarkMode
                   ? 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%)'
                   : 'linear-gradient(to bottom, rgba(255, 255, 255, 0.98) 0%, rgba(250, 250, 250, 0.95) 100%)',
                 display: 'flex',
+                flexDirection: 'column',
                 justifyContent: 'flex-end',
-                alignItems: 'center',
+                alignItems: 'stretch',
                 gap: '0.75rem',
                 flexShrink: 0,
                 flexGrow: 0,
@@ -418,7 +604,7 @@ export function Modal({
                 marginTop: 'auto', // Push footer to bottom
               }}
             >
-              {footer}
+              {renderResponsiveFooter(footer)}
             </div>
           )}
         </div>

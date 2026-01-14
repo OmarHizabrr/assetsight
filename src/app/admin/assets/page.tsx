@@ -2,6 +2,7 @@
 
 import { ProtectedRoute, usePermissions } from "@/components/auth/ProtectedRoute";
 import { MaterialIcon } from "@/components/icons/MaterialIcon";
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { BulkEditModal } from "@/components/ui/BulkEditModal";
 import { Button } from "@/components/ui/Button";
@@ -24,11 +25,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 function isAdmin(role: string | null | undefined): boolean {
   if (!role) return false;
   const normalizedRole = role.trim().toLowerCase();
-  return normalizedRole === 'مدير' || 
-         normalizedRole === 'admin' || 
-         normalizedRole === 'administrator' ||
-         normalizedRole === 'مدير النظام' ||
-         normalizedRole === 'system admin';
+  return normalizedRole === 'مدير' ||
+    normalizedRole === 'admin' ||
+    normalizedRole === 'administrator' ||
+    normalizedRole === 'مدير النظام' ||
+    normalizedRole === 'system admin';
 }
 
 function AssetsPageContent() {
@@ -71,6 +72,12 @@ function AssetsPageContent() {
   const [newAssetName, setNewAssetName] = useState('');
   const [newAssetType, setNewAssetType] = useState('');
   const [newAssetStatus, setNewAssetStatus] = useState('');
+  const calculateAnnualDepreciation = useCallback((purchaseValue: number, residualValue: number, usefulLifeYears: number) => {
+    if (!usefulLifeYears || usefulLifeYears <= 0) return 0;
+    const base = Math.max(0, (purchaseValue || 0) - (residualValue || 0));
+    const annual = base / usefulLifeYears;
+    return Number.isFinite(annual) ? annual : 0;
+  }, []);
   const [formData, setFormData] = useState<BaseModel>(new BaseModel({
     department_id: '',
     asset_name_id: '',
@@ -87,6 +94,8 @@ function AssetsPageContent() {
     location_office_id: '',
     custodian_user_id: '',
     warranty_end: '',
+    start_use_date: '',
+    depreciation_enabled: false,
     depreciation_method: '',
     expected_lifetime_years: 0,
     residual_value: 0,
@@ -118,44 +127,39 @@ function AssetsPageContent() {
         firestoreApi.getDocuments(firestoreApi.getCollection("assetStatuses")),
         firestoreApi.getDocuments(firestoreApi.getCollection("departments")),
       ]);
-      
+
       setAssets(BaseModel.fromFirestoreArray(assetDocs));
       setAssetNames(BaseModel.fromFirestoreArray(assetNameDocs));
       setAssetTypes(BaseModel.fromFirestoreArray(assetTypeDocs));
       setAssetStatuses(BaseModel.fromFirestoreArray(assetStatusDocs));
-      
+
       const departmentsData = BaseModel.fromFirestoreArray(deptDocs);
       setDepartments(departmentsData);
-      
+
       // جلب جميع المكاتب من جميع الإدارات
-      const officesList: BaseModel[] = [];
-      
-      for (const dept of departmentsData) {
+      const officePromises = departmentsData.map(async (dept) => {
         const deptId = dept.get('id');
-        if (deptId) {
-          // جلب المكاتب
-          const subCollectionRef = firestoreApi.getSubCollection("departments", deptId, "departments");
-          const officeDocs = await firestoreApi.getDocuments(subCollectionRef);
-          const offices = BaseModel.fromFirestoreArray(officeDocs);
-          offices.forEach(office => {
-            office.put('department_id', deptId);
-            officesList.push(office);
-          });
-        }
-      }
-      
+        if (!deptId) return [] as BaseModel[];
+        const subCollectionRef = firestoreApi.getSubCollection("departments", deptId, "departments");
+        const officeDocs = await firestoreApi.getDocuments(subCollectionRef);
+        const offices = BaseModel.fromFirestoreArray(officeDocs);
+        offices.forEach((office) => office.put('department_id', deptId));
+        return offices;
+      });
+
+      const officesByDept = await Promise.all(officePromises);
+      const officesList: BaseModel[] = officesByDept.flat();
+
       setAllOffices(officesList);
       setOffices([]); // لا تظهر المكاتب حتى يتم اختيار الإدارة
-      
-      // جلب جميع المستخدمين من الجدول المستقل users/userId/
-      const userDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("users"));
-      const usersData = BaseModel.fromFirestoreArray(userDocs);
-      setUsers(usersData);
-      
-      // جلب جميع العملات
-      const currencyDocs = await firestoreApi.getDocuments(firestoreApi.getCollection("currencies"));
-      const currenciesData = BaseModel.fromFirestoreArray(currencyDocs);
-      setCurrencies(currenciesData);
+
+      // جلب جميع المستخدمين + العملات (بالتوازي)
+      const [userDocs, currencyDocs] = await Promise.all([
+        firestoreApi.getDocuments(firestoreApi.getCollection("users")),
+        firestoreApi.getDocuments(firestoreApi.getCollection("currencies")),
+      ]);
+      setUsers(BaseModel.fromFirestoreArray(userDocs));
+      setCurrencies(BaseModel.fromFirestoreArray(currencyDocs));
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -179,7 +183,51 @@ function AssetsPageContent() {
       data.current_value = formData.getValue<number>('current_value') || 0;
       data.expected_lifetime_years = formData.getValue<number>('expected_lifetime_years') || 0;
       data.residual_value = formData.getValue<number>('residual_value') || 0;
-      
+      data.depreciation_enabled = formData.getValue<boolean>('depreciation_enabled') ? 1 : 0;
+
+      if (data.purchase_value < data.residual_value) {
+        showWarning('القيمة المتبقية لا يمكن أن تكون أكبر من قيمة الشراء');
+        return;
+      }
+
+      if (data.depreciation_enabled === 1) {
+        if (!data.start_use_date) {
+          showWarning('الرجاء تحديد تاريخ بدء الاستخدام لتفعيل الإهلاك');
+          return;
+        }
+
+        if (!data.expected_lifetime_years || data.expected_lifetime_years <= 0) {
+          showWarning('الرجاء إدخال عمر خدمة صحيح (بالسنوات) لتفعيل الإهلاك');
+          return;
+        }
+
+        const method = (data.depreciation_method || '').toString().trim();
+        if (!method) {
+          data.depreciation_method = 'straight_line';
+        }
+        const annual = calculateAnnualDepreciation(
+          data.purchase_value,
+          data.residual_value,
+          data.expected_lifetime_years
+        );
+        data.annual_depreciation = annual;
+
+        if (!editingAsset?.get('id')) {
+          data.accumulated_depreciation = 0;
+          data.book_value = Math.max(0, data.purchase_value);
+          data.last_depreciation_year = 0;
+          data.depreciation_status = 'active';
+        }
+      } else {
+        if (!editingAsset?.get('id')) {
+          data.annual_depreciation = 0;
+          data.accumulated_depreciation = 0;
+          data.book_value = Math.max(0, data.purchase_value);
+          data.last_depreciation_year = 0;
+          data.depreciation_status = 'inactive';
+        }
+      }
+
       // إضافة اسم الأصل إذا كان جديداً
       let assetNameId = data.asset_name_id;
       if (!assetNameId && newAssetName.trim()) {
@@ -289,6 +337,8 @@ function AssetsPageContent() {
       custodian_user_id: '',
       currency_id: '',
       warranty_end: '',
+      start_use_date: '',
+      depreciation_enabled: false,
       depreciation_method: '',
       expected_lifetime_years: 0,
       residual_value: 0,
@@ -304,11 +354,11 @@ function AssetsPageContent() {
     setNewAssetType('');
     setNewAssetStatus('');
   };
-  
+
   // تعيين العملة الافتراضية عند فتح النموذج
   useEffect(() => {
     if (isModalOpen && !editingAsset && currencies.length > 0) {
-      const defaultCurrency = currencies.find(c => 
+      const defaultCurrency = currencies.find(c =>
         c.getValue<number>('is_default') === 1 || c.getValue<boolean>('is_default') === true
       );
       if (defaultCurrency && !formData.get('currency_id')) {
@@ -321,7 +371,8 @@ function AssetsPageContent() {
     setEditingAsset(asset);
     const assetData = asset.getData();
     assetData.is_active = asset.getValue<number>('is_active') === 1 || asset.getValue<boolean>('is_active') === true;
-    
+    assetData.depreciation_enabled = asset.getValue<number>('depreciation_enabled') === 1 || asset.getValue<boolean>('depreciation_enabled') === true;
+
     // البحث عن الإدارة من خلال المكتب
     const officeId = asset.get('location_office_id');
     if (officeId) {
@@ -337,20 +388,20 @@ function AssetsPageContent() {
         }
       }
     }
-    
+
     setFormData(new BaseModel(assetData));
     setNewAssetName('');
     setNewAssetType('');
     setNewAssetStatus('');
     setIsModalOpen(true);
   };
-  
+
   // عند تغيير الإدارة، تصفية المكاتب
   const handleDepartmentChange = (departmentId: string) => {
     setSelectedDepartmentId(departmentId);
     updateField('department_id', departmentId);
     updateField('location_office_id', ''); // مسح اختيار المكتب عند تغيير الإدارة
-    
+
     if (departmentId) {
       // تصفية المكاتب حسب الإدارة المختارة
       const filteredOffices = allOffices.filter(office => office.get('department_id') === departmentId);
@@ -369,7 +420,7 @@ function AssetsPageContent() {
     if (!deletingAsset) return;
     const id = deletingAsset.get('id');
     if (!id) return;
-    
+
     try {
       setDeleteLoading(true);
       const docRef = firestoreApi.getDocument("assets", id);
@@ -401,9 +452,9 @@ function AssetsPageContent() {
       showWarning("لم يتم تحديد أي أصول للحذف");
       return;
     }
-    
+
     console.log(`Starting bulk delete for ${deletingAssets.length} assets`);
-    
+
     try {
       setBulkDeleteLoading(true);
       let successCount = 0;
@@ -451,7 +502,7 @@ function AssetsPageContent() {
       await loadData();
       setIsBulkDeleteModalOpen(false);
       setDeletingAssets([]);
-      
+
       // مسح التحديد بعد الحذف الناجح
       // سيتم مسحه تلقائياً عند إعادة تحميل البيانات
     } catch (error) {
@@ -518,7 +569,7 @@ function AssetsPageContent() {
       return new BaseModel(itemData);
     });
     setBulkEditFormDataArray(formDataArray);
-    
+
     // تهيئة department IDs و offices لكل أصل
     const deptIds: Record<number, string> = {};
     const officesMap: Record<number, BaseModel[]> = {};
@@ -535,7 +586,7 @@ function AssetsPageContent() {
     setBulkEditNewAssetNames({});
     setBulkEditNewAssetTypes({});
     setBulkEditNewAssetStatuses({});
-    
+
     setIsBulkEditModalOpen(true);
   };
 
@@ -545,7 +596,7 @@ function AssetsPageContent() {
 
       const updatePromises = dataArray.map(async (item) => {
         if (!item.id) return;
-        
+
         const updates: any = {
           asset_tag: item.asset_tag || '',
           serial_number: item.serial_number || '',
@@ -566,13 +617,13 @@ function AssetsPageContent() {
           residual_value: parseFloat(item.residual_value) || 0,
           notes: item.notes || '',
         };
-        
+
         const docRef = firestoreApi.getDocument("assets", item.id);
         await firestoreApi.updateData(docRef, updates);
       });
 
       await Promise.all(updatePromises);
-      
+
       setIsBulkEditModalOpen(false);
       setSelectedAssetsForBulkEdit([]);
       loadData();
@@ -589,13 +640,13 @@ function AssetsPageContent() {
     const newArray = [...bulkEditFormDataArray];
     const newData = new BaseModel(newArray[index].getData());
     newData.put(key, value);
-    
+
     // إذا تم تغيير department_id، تحديث offices المتاحة
     if (key === 'department_id') {
       const newDeptIds = { ...bulkEditSelectedDepartmentIds };
       newDeptIds[index] = value;
       setBulkEditSelectedDepartmentIds(newDeptIds);
-      
+
       const newOfficesMap = { ...bulkEditOfficesMap };
       if (value) {
         const filteredOffices = allOffices.filter(office => office.get('department_id') === value);
@@ -608,28 +659,28 @@ function AssetsPageContent() {
       }
       setBulkEditOfficesMap(newOfficesMap);
     }
-    
+
     // إذا تم تغيير asset_name_id، إعادة تعيين newAssetName
     if (key === 'asset_name_id') {
       const newNames = { ...bulkEditNewAssetNames };
       delete newNames[index];
       setBulkEditNewAssetNames(newNames);
     }
-    
+
     // إذا تم تغيير type_id، إعادة تعيين newAssetType
     if (key === 'type_id') {
       const newTypes = { ...bulkEditNewAssetTypes };
       delete newTypes[index];
       setBulkEditNewAssetTypes(newTypes);
     }
-    
+
     // إذا تم تغيير status_id، إعادة تعيين newAssetStatus
     if (key === 'status_id') {
       const newStatuses = { ...bulkEditNewAssetStatuses };
       delete newStatuses[index];
       setBulkEditNewAssetStatuses(newStatuses);
     }
-    
+
     newArray[index] = newData;
     setBulkEditFormDataArray(newArray);
   }, [bulkEditFormDataArray, bulkEditSelectedDepartmentIds, bulkEditOfficesMap, bulkEditNewAssetNames, bulkEditNewAssetTypes, bulkEditNewAssetStatuses, allOffices]);
@@ -777,17 +828,17 @@ function AssetsPageContent() {
       // ثانياً: البحث في جميع مفاتيح الصف
       const normalizedKeys = keys.map(normalizeKey);
       const rowKeys = Object.keys(row);
-      
+
       for (const rowKey of rowKeys) {
         const normalizedRowKey = normalizeKey(rowKey);
-        
+
         if (normalizedKeys.some(nk => normalizedRowKey === nk)) {
           const value = row[rowKey];
           if (value !== undefined && value !== null && value !== '') {
             return value.toString().trim();
           }
         }
-        
+
         if (normalizedKeys.some(nk => normalizedRowKey.includes(nk) || nk.includes(normalizedRowKey))) {
           const value = row[rowKey];
           if (value !== undefined && value !== null && value !== '') {
@@ -822,12 +873,12 @@ function AssetsPageContent() {
       if (departmentName && departmentName.trim() && !departmentsMap.has(departmentName.trim())) {
         uniqueDepartments.add(departmentName.trim());
       }
-      
+
       // جمع المكاتب الفريدة (فقط إذا لم تكن موجودة)
       if (officeName && officeName.trim() && departmentName && departmentName.trim()) {
         const deptNameTrimmed = departmentName.trim();
         const officeNameTrimmed = officeName.trim();
-        
+
         // إذا كانت الإدارة موجودة في Map، تحقق من المكتب مباشرة
         const existingDept = departmentsMap.get(deptNameTrimmed);
         if (existingDept) {
@@ -850,7 +901,7 @@ function AssetsPageContent() {
           }
         }
       }
-      
+
       // جمع المستخدمين الفريدين (فقط إذا لم يكونوا موجودين في Map) - المقارنة بالاسم الكامل (full_name) وليس username
       if (custodianName && custodianName.trim()) {
         const custodianNameTrimmed = custodianName.trim();
@@ -858,17 +909,17 @@ function AssetsPageContent() {
           uniqueUsers.add(custodianNameTrimmed);
         }
       }
-      
+
       // جمع العملات الفريدة (فقط إذا لم تكن موجودة في Map)
       if (currencyName && currencyName.trim() && !currenciesMap.has(currencyName.trim())) {
         uniqueCurrencies.add(currencyName.trim());
       }
-      
+
       // جمع أسماء الأصول الفريدة (فقط إذا لم تكن موجودة في Map)
       if (assetName && assetName.trim() && !assetNamesMap.has(assetName.trim())) {
         uniqueAssetNames.add(assetName.trim());
       }
-      
+
       // جمع أنواع الأصول الفريدة (فقط إذا لم تكن موجودة في Map) - مع trim() لمنع التكرار
       if (assetType && assetType.trim()) {
         const assetTypeTrimmed = assetType.trim();
@@ -876,7 +927,7 @@ function AssetsPageContent() {
           uniqueAssetTypes.add(assetTypeTrimmed);
         }
       }
-      
+
       // جمع حالات الأصول الفريدة (فقط إذا لم تكن موجودة في Map)
       if (assetStatus && assetStatus.trim() && !assetStatusesMap.has(assetStatus.trim())) {
         uniqueAssetStatuses.add(assetStatus.trim());
@@ -910,9 +961,9 @@ function AssetsPageContent() {
       const [deptNameFromKey, officeName] = officeKey.split('|');
       const deptNameTrimmed = (deptNameFromKey || deptName).trim();
       const officeNameTrimmed = officeName?.trim();
-      
+
       if (!officeNameTrimmed) continue;
-      
+
       // البحث عن الإدارة باستخدام اسم الإدارة من المفتاح أو من القيمة
       const dept = departmentsMap.get(deptNameTrimmed);
       if (dept) {
@@ -929,10 +980,10 @@ function AssetsPageContent() {
               room: '',
               notes: '',
             });
-            const newOffice = new BaseModel({ 
-              id: newOfficeId, 
+            const newOffice = new BaseModel({
+              id: newOfficeId,
               name: officeNameTrimmed,
-              department_id: deptId 
+              department_id: deptId
             });
             officesMap.set(officeMapKey, newOffice);
             setAllOffices(prev => [...prev, newOffice]);
@@ -956,9 +1007,9 @@ function AssetsPageContent() {
           role: 'user',
           is_active: 1,
         });
-        const newUser = new BaseModel({ 
-          id: newUserId, 
-          full_name: userNameTrimmed 
+        const newUser = new BaseModel({
+          id: newUserId,
+          full_name: userNameTrimmed
         });
         usersMap.set(userNameTrimmed, newUser);
         setUsers(prev => [...prev, newUser]);
@@ -973,8 +1024,8 @@ function AssetsPageContent() {
       if (currencyNameTrimmed && !currenciesMap.has(currencyNameTrimmed)) {
         const newCurrencyId = firestoreApi.getNewId("currencies");
         const currencyDocRef = firestoreApi.getDocument("currencies", newCurrencyId);
-        const currencyCode = currencyNameTrimmed.length >= 3 
-          ? currencyNameTrimmed.substring(0, 3).toUpperCase() 
+        const currencyCode = currencyNameTrimmed.length >= 3
+          ? currencyNameTrimmed.substring(0, 3).toUpperCase()
           : currencyNameTrimmed.toUpperCase();
         await firestoreApi.setData(currencyDocRef, {
           name: currencyNameTrimmed,
@@ -982,8 +1033,8 @@ function AssetsPageContent() {
           symbol: currencyNameTrimmed.substring(0, 1) || currencyCode.substring(0, 1),
           is_default: 0,
         });
-        const newCurrency = new BaseModel({ 
-          id: newCurrencyId, 
+        const newCurrency = new BaseModel({
+          id: newCurrencyId,
           name: currencyNameTrimmed,
           code: currencyCode,
         });
@@ -1056,7 +1107,7 @@ function AssetsPageContent() {
     // المرحلة الثالثة: معالجة الأصول بشكل متوازي (batch processing)
     const BATCH_SIZE = 50; // معالجة 50 سجل في كل مرة
     const batches: Array<Record<string, any>[]> = [];
-    
+
     for (let i = 0; i < data.length; i += BATCH_SIZE) {
       batches.push(data.slice(i, i + BATCH_SIZE));
     }
@@ -1065,164 +1116,164 @@ function AssetsPageContent() {
       // معالجة كل batch
       for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
         const batch = batches[batchIndex];
-        
+
         // معالجة السجلات في هذا batch بشكل متوازي
         const batchPromises = batch.map(async (row, rowIndex) => {
           const globalIndex = batchIndex * BATCH_SIZE + rowIndex;
-          
+
           try {
 
-          // استخراج البيانات من الصف
-          const assetTag = getValue(['كود الأصل', 'asset_tag', 'Asset Tag', 'asset_tag', 'ASSET_TAG'], row);
-          const assetName = getValue(['اسم الأصل', 'asset_name', 'Asset Name', 'name'], row);
-          const assetType = getValue(['نوع الأصل', 'type', 'Type', 'asset_type'], row);
-          const assetStatus = getValue(['حالة الأصل', 'status', 'Status', 'asset_status'], row);
-          const departmentName = getValue(['الإدارة', 'department', 'Department'], row);
-          const officeName = getValue(['المكتب', 'office', 'Office'], row);
-          const custodianName = getValue(['حامل الأصل', 'custodian', 'Custodian', 'user'], row);
-          const currencyName = getValue(['العملة', 'currency', 'Currency'], row);
-          const serialNumber = getValue(['الرقم التسلسلي', 'serial_number', 'Serial Number', 'serial'], row);
-          const category = getValue(['الفئة', 'category', 'Category'], row);
-          const description = getValue(['الوصف', 'description', 'Description'], row);
-          const purchaseDate = getValue(['تاريخ الشراء', 'purchase_date', 'Purchase Date', 'date'], row);
-          const purchaseValue = getValue(['قيمة الشراء', 'purchase_value', 'Purchase Value', 'value'], row);
-          const currentValue = getValue(['القيمة الحالية', 'current_value', 'Current Value'], row);
-          const currencyId = getValue(['currency_id', 'Currency ID'], row);
-          const warrantyEnd = getValue(['نهاية الضمان', 'warranty_end', 'Warranty End'], row);
-          const depreciationMethod = getValue(['طريقة الإهلاك', 'depreciation_method', 'Depreciation Method'], row);
-          const expectedLifetime = getValue(['عمر الخدمة', 'expected_lifetime_years', 'Expected Lifetime'], row);
-          const residualValue = getValue(['القيمة المتبقية', 'residual_value', 'Residual Value'], row);
-          const supplier = getValue(['المورد', 'supplier', 'Supplier'], row);
-          const invoiceNumber = getValue(['رقم الفاتورة', 'invoice_number', 'Invoice Number'], row);
-          const lastMaintenanceDate = getValue(['تاريخ آخر صيانة', 'last_maintenance_date', 'Last Maintenance Date'], row);
-          const isActive = getValue(['نشط', 'is_active', 'Is Active', 'active'], row);
-          // الافتراضي نشط إذا لم يتم تحديده
-          const finalIsActiveValue = isActive || '1';
-          const notes = getValue(['الملاحظات', 'notes', 'Notes'], row);
+            // استخراج البيانات من الصف
+            const assetTag = getValue(['كود الأصل', 'asset_tag', 'Asset Tag', 'asset_tag', 'ASSET_TAG'], row);
+            const assetName = getValue(['اسم الأصل', 'asset_name', 'Asset Name', 'name'], row);
+            const assetType = getValue(['نوع الأصل', 'type', 'Type', 'asset_type'], row);
+            const assetStatus = getValue(['حالة الأصل', 'status', 'Status', 'asset_status'], row);
+            const departmentName = getValue(['الإدارة', 'department', 'Department'], row);
+            const officeName = getValue(['المكتب', 'office', 'Office'], row);
+            const custodianName = getValue(['حامل الأصل', 'custodian', 'Custodian', 'user'], row);
+            const currencyName = getValue(['العملة', 'currency', 'Currency'], row);
+            const serialNumber = getValue(['الرقم التسلسلي', 'serial_number', 'Serial Number', 'serial'], row);
+            const category = getValue(['الفئة', 'category', 'Category'], row);
+            const description = getValue(['الوصف', 'description', 'Description'], row);
+            const purchaseDate = getValue(['تاريخ الشراء', 'purchase_date', 'Purchase Date', 'date'], row);
+            const purchaseValue = getValue(['قيمة الشراء', 'purchase_value', 'Purchase Value', 'value'], row);
+            const currentValue = getValue(['القيمة الحالية', 'current_value', 'Current Value'], row);
+            const currencyId = getValue(['currency_id', 'Currency ID'], row);
+            const warrantyEnd = getValue(['نهاية الضمان', 'warranty_end', 'Warranty End'], row);
+            const depreciationMethod = getValue(['طريقة الإهلاك', 'depreciation_method', 'Depreciation Method'], row);
+            const expectedLifetime = getValue(['عمر الخدمة', 'expected_lifetime_years', 'Expected Lifetime'], row);
+            const residualValue = getValue(['القيمة المتبقية', 'residual_value', 'Residual Value'], row);
+            const supplier = getValue(['المورد', 'supplier', 'Supplier'], row);
+            const invoiceNumber = getValue(['رقم الفاتورة', 'invoice_number', 'Invoice Number'], row);
+            const lastMaintenanceDate = getValue(['تاريخ آخر صيانة', 'last_maintenance_date', 'Last Maintenance Date'], row);
+            const isActive = getValue(['نشط', 'is_active', 'Is Active', 'active'], row);
+            // الافتراضي نشط إذا لم يتم تحديده
+            const finalIsActiveValue = isActive || '1';
+            const notes = getValue(['الملاحظات', 'notes', 'Notes'], row);
 
-          // البحث عن asset_name_id (تم إضافته في المرحلة الأولى) - مع trim
-          let assetNameId = '';
-          if (assetName && assetName.trim()) {
-            const found = assetNamesMap.get(assetName.trim());
-            assetNameId = found?.get('id') || '';
-          }
-
-          // البحث عن type_id (تم إضافته في المرحلة الأولى) - مع trim() لمنع التكرار
-          let typeId = '';
-          if (assetType && assetType.trim()) {
-            const assetTypeTrimmed = assetType.trim();
-            const found = assetTypesMap.get(assetTypeTrimmed);
-            typeId = found?.get('id') || '';
-          }
-
-          // البحث عن status_id (تم إضافته في المرحلة الأولى) - مع trim
-          let statusId = '';
-          if (assetStatus && assetStatus.trim()) {
-            const found = assetStatusesMap.get(assetStatus.trim());
-            statusId = found?.get('id') || '';
-          }
-
-          // البحث عن department_id و location_office_id (تم إضافتهما في المرحلة الأولى) - مع trim
-          let departmentId = '';
-          let locationOfficeId = '';
-          if (departmentName && departmentName.trim()) {
-            const foundDept = departmentsMap.get(departmentName.trim());
-            departmentId = foundDept?.get('id') || '';
-            
-            // البحث عن المكتب - مع trim
-            if (officeName && officeName.trim() && departmentId) {
-              const officeKey = `${departmentId}|${officeName.trim()}`;
-              const foundOffice = officesMap.get(officeKey);
-              locationOfficeId = foundOffice?.get('id') || '';
+            // البحث عن asset_name_id (تم إضافته في المرحلة الأولى) - مع trim
+            let assetNameId = '';
+            if (assetName && assetName.trim()) {
+              const found = assetNamesMap.get(assetName.trim());
+              assetNameId = found?.get('id') || '';
             }
-          }
 
-          // البحث عن custodian_user_id (تم إضافته في المرحلة الأولى) - المقارنة بالاسم الكامل (full_name) وليس username - مع trim()
-          let custodianUserId = '';
-          if (custodianName && custodianName.trim()) {
-            const custodianNameTrimmed = custodianName.trim();
-            const found = usersMap.get(custodianNameTrimmed);
-            custodianUserId = found?.get('id') || '';
-          }
+            // البحث عن type_id (تم إضافته في المرحلة الأولى) - مع trim() لمنع التكرار
+            let typeId = '';
+            if (assetType && assetType.trim()) {
+              const assetTypeTrimmed = assetType.trim();
+              const found = assetTypesMap.get(assetTypeTrimmed);
+              typeId = found?.get('id') || '';
+            }
 
-          // البحث عن currency_id (تم إضافته في المرحلة الأولى) - مع trim
-          let finalCurrencyId = currencyId || '';
-          if (!finalCurrencyId && currencyName && currencyName.trim()) {
-            const found = currenciesMap.get(currencyName.trim());
-            finalCurrencyId = found?.get('id') || '';
-          }
-          if (!finalCurrencyId) {
-            // استخدام العملة الافتراضية إذا لم يتم تحديد عملة
-            for (const currency of currencies) {
-              if (currency.getValue<number>('is_default') === 1 || currency.getValue<boolean>('is_default') === true) {
-                finalCurrencyId = currency.get('id') || '';
-                break;
+            // البحث عن status_id (تم إضافته في المرحلة الأولى) - مع trim
+            let statusId = '';
+            if (assetStatus && assetStatus.trim()) {
+              const found = assetStatusesMap.get(assetStatus.trim());
+              statusId = found?.get('id') || '';
+            }
+
+            // البحث عن department_id و location_office_id (تم إضافتهما في المرحلة الأولى) - مع trim
+            let departmentId = '';
+            let locationOfficeId = '';
+            if (departmentName && departmentName.trim()) {
+              const foundDept = departmentsMap.get(departmentName.trim());
+              departmentId = foundDept?.get('id') || '';
+
+              // البحث عن المكتب - مع trim
+              if (officeName && officeName.trim() && departmentId) {
+                const officeKey = `${departmentId}|${officeName.trim()}`;
+                const foundOffice = officesMap.get(officeKey);
+                locationOfficeId = foundOffice?.get('id') || '';
               }
             }
+
+            // البحث عن custodian_user_id (تم إضافته في المرحلة الأولى) - المقارنة بالاسم الكامل (full_name) وليس username - مع trim()
+            let custodianUserId = '';
+            if (custodianName && custodianName.trim()) {
+              const custodianNameTrimmed = custodianName.trim();
+              const found = usersMap.get(custodianNameTrimmed);
+              custodianUserId = found?.get('id') || '';
+            }
+
+            // البحث عن currency_id (تم إضافته في المرحلة الأولى) - مع trim
+            let finalCurrencyId = currencyId || '';
+            if (!finalCurrencyId && currencyName && currencyName.trim()) {
+              const found = currenciesMap.get(currencyName.trim());
+              finalCurrencyId = found?.get('id') || '';
+            }
+            if (!finalCurrencyId) {
+              // استخدام العملة الافتراضية إذا لم يتم تحديد عملة
+              for (const currency of currencies) {
+                if (currency.getValue<number>('is_default') === 1 || currency.getValue<boolean>('is_default') === true) {
+                  finalCurrencyId = currency.get('id') || '';
+                  break;
+                }
+              }
+            }
+
+            // تحديد حالة النشاط (الافتراضي نشط)
+            const finalIsActive = (finalIsActiveValue === '0' || finalIsActiveValue === 'لا' || finalIsActiveValue === 'no' || finalIsActiveValue === 'No' || finalIsActiveValue === 'false' || finalIsActiveValue === 'False') ? 0 : 1;
+
+            // إضافة أصل جديد
+            const newId = firestoreApi.getNewId("assets");
+            const docRef = firestoreApi.getDocument("assets", newId);
+            const assetData = {
+              department_id: departmentId || '',
+              asset_name_id: assetNameId || '',
+              asset_tag: assetTag || generateAssetTag(),
+              serial_number: serialNumber || '',
+              type_id: typeId || '',
+              status_id: statusId || '',
+              category: category || '',
+              description: description || '',
+              purchase_date: purchaseDate || '',
+              purchase_value: parseFloat(purchaseValue) || 0,
+              currency_id: finalCurrencyId || '',
+              current_value: parseFloat(currentValue) || 0,
+              location_office_id: locationOfficeId || '',
+              custodian_user_id: custodianUserId || '',
+              warranty_end: warrantyEnd || '',
+              depreciation_method: depreciationMethod || '',
+              expected_lifetime_years: parseFloat(expectedLifetime) || 0,
+              residual_value: parseFloat(residualValue) || 0,
+              supplier: supplier || '',
+              invoice_number: invoiceNumber || '',
+              last_maintenance_date: lastMaintenanceDate || '',
+              is_active: finalIsActive,
+              notes: notes || '',
+            };
+
+            await firestoreApi.setData(docRef, assetData);
+
+            // تحديث التقدم
+            setImportProgress(prev => ({ ...prev, current: prev.current + 1 }));
+
+            return { success: true, index: globalIndex };
+          } catch (error) {
+            const errorMsg = `سطر ${globalIndex + 2}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`;
+            return { success: false, index: globalIndex, error: errorMsg };
           }
+        });
 
-          // تحديد حالة النشاط (الافتراضي نشط)
-          const finalIsActive = (finalIsActiveValue === '0' || finalIsActiveValue === 'لا' || finalIsActiveValue === 'no' || finalIsActiveValue === 'No' || finalIsActiveValue === 'false' || finalIsActiveValue === 'False') ? 0 : 1;
+        // انتظار اكتمال جميع السجلات في هذا batch
+        const batchResults = await Promise.all(batchPromises);
 
-          // إضافة أصل جديد
-          const newId = firestoreApi.getNewId("assets");
-          const docRef = firestoreApi.getDocument("assets", newId);
-          const assetData = {
-            department_id: departmentId || '',
-            asset_name_id: assetNameId || '',
-            asset_tag: assetTag || generateAssetTag(),
-            serial_number: serialNumber || '',
-            type_id: typeId || '',
-            status_id: statusId || '',
-            category: category || '',
-            description: description || '',
-            purchase_date: purchaseDate || '',
-            purchase_value: parseFloat(purchaseValue) || 0,
-            currency_id: finalCurrencyId || '',
-            current_value: parseFloat(currentValue) || 0,
-            location_office_id: locationOfficeId || '',
-            custodian_user_id: custodianUserId || '',
-            warranty_end: warrantyEnd || '',
-            depreciation_method: depreciationMethod || '',
-            expected_lifetime_years: parseFloat(expectedLifetime) || 0,
-            residual_value: parseFloat(residualValue) || 0,
-            supplier: supplier || '',
-            invoice_number: invoiceNumber || '',
-            last_maintenance_date: lastMaintenanceDate || '',
-            is_active: finalIsActive,
-            notes: notes || '',
-          };
-          
-          await firestoreApi.setData(docRef, assetData);
-          
-          // تحديث التقدم
-          setImportProgress(prev => ({ ...prev, current: prev.current + 1 }));
-          
-          return { success: true, index: globalIndex };
-        } catch (error) {
-          const errorMsg = `سطر ${globalIndex + 2}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`;
-          return { success: false, index: globalIndex, error: errorMsg };
-        }
-      });
-
-      // انتظار اكتمال جميع السجلات في هذا batch
-      const batchResults = await Promise.all(batchPromises);
-      
-      // معالجة النتائج
-      batchResults.forEach(result => {
-        if (result.success) {
-          successCount++;
-        } else {
-          errorCount++;
-          if (result.error) {
-            errors.push(result.error);
+        // معالجة النتائج
+        batchResults.forEach(result => {
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+            if (result.error) {
+              errors.push(result.error);
+            }
           }
-        }
-      });
-      
-      // تحديث التقدم بعد كل batch
-      setImportProgress({ current: (batchIndex + 1) * BATCH_SIZE, total: data.length });
-    }
+        });
+
+        // تحديث التقدم بعد كل batch
+        setImportProgress({ current: (batchIndex + 1) * BATCH_SIZE, total: data.length });
+      }
 
       // تحديث التقدم النهائي
       setImportProgress({ current: data.length, total: data.length });
@@ -1245,54 +1296,54 @@ function AssetsPageContent() {
   };
 
   const columns = useMemo(() => [
-    { 
-      key: 'asset_tag', 
+    {
+      key: 'asset_tag',
       label: 'كود الأصل',
       sortable: true,
     },
-    { 
-      key: 'asset_name_id', 
+    {
+      key: 'asset_name_id',
       label: 'اسم الأصل',
       render: (item: BaseModel) => getAssetName(item.get('asset_name_id')),
       sortable: true,
     },
-    { 
-      key: 'type_id', 
+    {
+      key: 'type_id',
       label: 'النوع',
       render: (item: BaseModel) => getAssetType(item.get('type_id')),
       sortable: true,
     },
-    { 
-      key: 'status_id', 
+    {
+      key: 'status_id',
       label: 'الحالة',
       render: (item: BaseModel) => getAssetStatus(item.get('status_id')),
       sortable: true,
     },
-    { 
-      key: 'department', 
+    {
+      key: 'department',
       label: 'الإدارة',
       render: (item: BaseModel) => getDepartmentName(item.get('location_office_id')),
       sortable: true,
     },
-    { 
-      key: 'location_office_id', 
+    {
+      key: 'location_office_id',
       label: 'المكتب',
       render: (item: BaseModel) => getOfficeName(item.get('location_office_id')),
       sortable: true,
     },
-    { 
-      key: 'custodian_user_id', 
+    {
+      key: 'custodian_user_id',
       label: 'حامل الأصل',
       render: (item: BaseModel) => getUserName(item.get('custodian_user_id')),
       sortable: true,
     },
-    { 
-      key: 'purchase_date', 
+    {
+      key: 'purchase_date',
       label: 'تاريخ الشراء',
       sortable: true,
     },
-    { 
-      key: 'purchase_value', 
+    {
+      key: 'purchase_value',
       label: 'قيمة الشراء',
       render: (item: BaseModel) => {
         const value = item.getValue<number>('purchase_value') || 0;
@@ -1306,14 +1357,14 @@ function AssetsPageContent() {
       },
       sortable: true,
     },
-    { 
-      key: 'currency_id', 
+    {
+      key: 'currency_id',
       label: 'العملة',
       render: (item: BaseModel) => getCurrencyName(item.get('currency_id')),
       sortable: true,
     },
-    { 
-      key: 'warranty_end', 
+    {
+      key: 'warranty_end',
       label: 'نهاية الضمان',
       sortable: true,
     },
@@ -1321,83 +1372,60 @@ function AssetsPageContent() {
 
   return (
     <MainLayout>
-      {/* Page Header */}
-      <div className="mb-10 relative">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center shadow-2xl shadow-primary-500/40 overflow-hidden group hover:scale-105 material-transition">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 material-transition"></div>
-                <MaterialIcon name="inventory" className="text-white relative z-10" size="3xl" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white/20 rounded-full blur-sm"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent">
-                    الأصول
-                  </h1>
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary-50 rounded-full border border-primary-200">
-                    <MaterialIcon name="inventory" className="text-primary-600" size="sm" />
-                    <span className="text-xs font-semibold text-primary-700">{assets.length}</span>
-                  </div>
-                </div>
-                <p className="text-slate-600 text-base sm:text-lg font-semibold flex items-center gap-2">
-                  <MaterialIcon name="info" className="text-slate-400" size="sm" />
-                  <span>إدارة وإضافة الأصول في النظام</span>
-                </p>
-              </div>
-            </div>
-          </div>
-          {canAdd && (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={() => setIsImportModalOpen(true)}
-                size="lg"
-                variant="outline"
-                className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold border-2 hover:border-primary-400"
-              >
-                <span className="flex items-center gap-2">
-                  <MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />
-                  <span>استيراد من Excel</span>
-                </span>
-              </Button>
-              <Button
-                onClick={() => {
-                  setEditingAsset(null);
-                  resetForm();
-                  setIsModalOpen(true);
-                }}
-                size="lg"
-                variant="primary"
-                className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
-              >
-                <span className="flex items-center gap-2">
-                  <MaterialIcon name="add" className="w-5 h-5" size="lg" />
-                  <span>إضافة أصل جديد</span>
-                </span>
-              </Button>
-            </div>
-          )}
-        </div>
-        
-        {/* Decorative Background */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-500/5 to-accent-500/5 rounded-full blur-3xl -z-10"></div>
-      </div>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Page Header */}
+        <AdminPageHeader
+          title="الأصول"
+          subtitle="إدارة وإضافة الأصول في النظام"
+          iconName="inventory"
+          count={assets.length}
+          actions={
+            canAdd ? (
+              <>
+                <Button
+                  onClick={() => setIsImportModalOpen(true)}
+                  size="lg"
+                  variant="outline"
+                  className="shadow-lg hover:shadow-xl hover:scale-105 material-transition font-bold border-2 hover:border-primary-400"
+                >
+                  <span className="flex items-center gap-2">
+                    <MaterialIcon name="upload_file" className="w-5 h-5" size="lg" />
+                    <span>استيراد من Excel</span>
+                  </span>
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditingAsset(null);
+                    resetForm();
+                    setIsModalOpen(true);
+                  }}
+                  size="lg"
+                  variant="primary"
+                  className="shadow-2xl shadow-primary-500/40 hover:shadow-2xl hover:shadow-primary-500/50 hover:scale-105 material-transition font-bold"
+                >
+                  <span className="flex items-center gap-2">
+                    <MaterialIcon name="add" className="w-5 h-5" size="lg" />
+                    <span>إضافة أصل جديد</span>
+                  </span>
+                </Button>
+              </>
+            ) : null
+          }
+        />
 
-      {/* Data Table */}
-      <DataTable
-        data={assets}
-        columns={columns}
-        onEdit={canEdit ? handleEdit : undefined}
-        onDelete={canDelete ? handleDelete : undefined}
-        onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
-        onBulkDelete={canDelete ? handleBulkDelete : undefined}
-        onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
-        isAdmin={isUserAdmin}
-        loading={loading}
-        pageSizeOptions={[7, 10, 25, 50, 100, 250, 500, 1000]}
-      />
+        {/* Data Table */}
+        <DataTable
+          data={assets}
+          columns={columns}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
+          onBulkEdit={(canEdit || canDelete) ? handleBulkEdit : undefined}
+          onBulkDelete={canDelete ? handleBulkDelete : undefined}
+          onDeleteAll={isUserAdmin ? handleDeleteAll : undefined}
+          isAdmin={isUserAdmin}
+          loading={loading}
+          pageSizeOptions={[7, 10, 25, 50, 100, 250, 500, 1000]}
+        />
 
         <Modal
           isOpen={isModalOpen}
@@ -1412,7 +1440,7 @@ function AssetsPageContent() {
           title={editingAsset ? "تعديل أصل" : "إضافة أصل جديد"}
           size="full"
           footer={
-            <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+            <div className="flex flex-col justify-end gap-3 w-full">
               <Button
                 type="button"
                 variant="outline"
@@ -1425,7 +1453,7 @@ function AssetsPageContent() {
                   setNewAssetStatus('');
                 }}
                 size="lg"
-                className="w-full sm:w-auto font-bold"
+                className="w-full font-bold"
               >
                 إلغاء
               </Button>
@@ -1434,7 +1462,7 @@ function AssetsPageContent() {
                 variant="primary"
                 size="lg"
                 form="asset-form"
-                className="w-full sm:w-auto font-bold shadow-xl shadow-primary-500/30"
+                className="w-full font-bold shadow-xl shadow-primary-500/30"
               >
                 {editingAsset ? "تحديث" : "حفظ"}
               </Button>
@@ -1443,7 +1471,7 @@ function AssetsPageContent() {
         >
           <form id="asset-form" onSubmit={handleSubmit} className="space-y-4">
             {/* معلومات أساسية */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <SearchableSelect
                 label="الإدارة"
                 value={formData.get('department_id') || selectedDepartmentId}
@@ -1466,7 +1494,7 @@ function AssetsPageContent() {
                 placeholder={!selectedDepartmentId ? "اختر الإدارة أولاً" : offices.length === 0 ? "لا توجد مكاتب في هذه الإدارة" : "اختر المكتب"}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <SearchableSelect
                   label="اسم الأصل"
@@ -1553,7 +1581,7 @@ function AssetsPageContent() {
                 <p className="text-xs text-slate-500 mt-1.5 mr-1">سيتم توليده تلقائياً</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <SearchableSelect
                   label="نوع الأصل"
@@ -1673,7 +1701,7 @@ function AssetsPageContent() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <SearchableSelect
                 label="حامل الأصل"
                 value={formData.get('custodian_user_id')}
@@ -1694,9 +1722,9 @@ function AssetsPageContent() {
                 fullWidth={false}
               />
             </div>
-            
+
             {/* التواريخ - صف 5 */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="تاريخ الشراء"
                 type="date"
@@ -1712,9 +1740,9 @@ function AssetsPageContent() {
                 fullWidth={false}
               />
             </div>
-            
+
             {/* تاريخ الصيانة - صف 6 */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="تاريخ آخر صيانة"
                 type="date"
@@ -1734,9 +1762,9 @@ function AssetsPageContent() {
                 fullWidth={false}
               />
             </div>
-            
+
             {/* القيم المالية - صف 7 */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="قيمة الشراء"
                 type="number"
@@ -1754,9 +1782,8 @@ function AssetsPageContent() {
                 fullWidth={false}
               />
             </div>
-            
-            {/* القيمة المتبقية والإهلاك - صف 8 */}
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="القيمة المتبقية"
                 type="number"
@@ -1765,18 +1792,34 @@ function AssetsPageContent() {
                 onChange={(e) => updateField('residual_value', parseFloat(e.target.value) || 0)}
                 fullWidth={false}
               />
-              <Input
+              <SearchableSelect
                 label="طريقة الإهلاك"
-                type="text"
-                value={formData.get('depreciation_method')}
-                onChange={(e) => updateField('depreciation_method', e.target.value)}
-                placeholder="مثل: خطي، متسارع"
+                value={formData.get('depreciation_method') || 'straight_line'}
+                onChange={(value) => updateField('depreciation_method', value)}
+                options={[
+                  { value: 'straight_line', label: 'قسط ثابت (straight_line)' },
+                ]}
+                placeholder="اختر طريقة الإهلاك"
                 fullWidth={false}
               />
             </div>
-            
-            {/* عمر الخدمة والفئة - صف 9 */}
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="تاريخ بدء الاستخدام"
+                type="date"
+                value={formData.get('start_use_date')}
+                onChange={(e) => updateField('start_use_date', e.target.value)}
+                fullWidth={false}
+              />
+              <Checkbox
+                label="تفعيل الإهلاك"
+                checked={formData.getValue<boolean>('depreciation_enabled') === true || formData.getValue<number>('depreciation_enabled') === 1}
+                onChange={(e) => updateField('depreciation_enabled', e.target.checked)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="عمر الخدمة المتوقع (بالسنوات)"
                 type="number"
@@ -1784,6 +1827,22 @@ function AssetsPageContent() {
                 onChange={(e) => updateField('expected_lifetime_years', parseFloat(e.target.value) || 0)}
                 fullWidth={false}
               />
+              <Input
+                label="الإهلاك السنوي المتوقع"
+                type="number"
+                step="0.01"
+                value={calculateAnnualDepreciation(
+                  formData.getValue<number>('purchase_value') || 0,
+                  formData.getValue<number>('residual_value') || 0,
+                  formData.getValue<number>('expected_lifetime_years') || 0
+                ).toFixed(2)}
+                disabled
+                helperText="يتم احتسابه تلقائيًا عند تفعيل الإهلاك"
+                fullWidth={false}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="الفئة"
                 type="text"
@@ -1793,9 +1852,9 @@ function AssetsPageContent() {
                 fullWidth={false}
               />
             </div>
-            
+
             {/* المورد ورقم الفاتورة - صف 10 */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="المورد"
                 type="text"
@@ -1813,9 +1872,9 @@ function AssetsPageContent() {
                 fullWidth={false}
               />
             </div>
-            
+
             {/* الوصف والملاحظات - صف 9 */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Textarea
                 label="الوصف"
                 value={formData.get('description')}
@@ -2036,6 +2095,7 @@ function AssetsPageContent() {
           isLoading={bulkEditLoading}
           infoMessage="يمكنك تعديل كل أصل بشكل منفصل. سيتم حفظ جميع التعديلات عند الضغط على 'حفظ جميع التعديلات'."
         />
+      </div>
     </MainLayout>
   );
 }
